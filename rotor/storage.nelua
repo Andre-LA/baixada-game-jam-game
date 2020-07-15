@@ -1,0 +1,194 @@
+require 'rotor.generational_index'
+require 'rotor.optional'
+require 'vector'
+
+
+## local make_storage = generalize(function(T)
+   local T: type = @#[T]#
+
+   local StorageT <codename #['Storage_'..T.codename]#> = @record{
+      next_free_ids: vector(GenerationalIndex),
+      entries: vector(T),
+      generations: vector(optional(uinteger)), -- generation[x] = 0 means that there is not x entry
+      len: isize
+   }
+
+   ## StorageT.value.is_storage = true
+   ## StorageT.value.subtype = T
+
+   local function is_valid_entry(storage: StorageT*, gidx: GenerationalIndex): boolean
+      local gen = storage.generations[gidx.index]
+
+      if not gen.filled then
+         return false
+      elseif gidx.generation ~= gen:get() then
+         return false
+      end
+
+      return true
+   end
+
+   function StorageT.new(): StorageT
+      local newstorage: StorageT;
+      newstorage.next_free_ids:push(GenerationalIndex.new(0, 0))
+      return newstorage
+   end
+
+   function StorageT:new_entry(entry_content: T): (GenerationalIndex, T*)
+      if #self.next_free_ids == 0 then
+         self.next_free_ids:push(GenerationalIndex.new(0, 0))
+      end
+      local last_free_id = &self.next_free_ids[#self.next_free_ids - 1]
+
+      local last_free_id_idx = last_free_id.index
+      local last_free_id_gen = last_free_id.generation
+
+      self.entries:insert(last_free_id_idx, entry_content)
+
+      local newgen: optional(uinteger);
+      newgen:set(last_free_id_gen)
+      self.generations:insert(last_free_id_idx, newgen)
+
+      if last_free_id.index >= self.len then -- storage needs to grow
+         self.len = last_free_id_idx + 1
+         last_free_id.index = last_free_id.index + 1
+         last_free_id.generation = 0
+      else
+         self.next_free_ids:pop()
+      end
+
+      -- return a copy of the gen_idx of this new entry and a pointer of the entry content
+      local entry: T* = &self.entries[last_free_id_idx]
+      return GenerationalIndex.new(last_free_id_idx, last_free_id_gen), entry
+   end
+
+   function StorageT:get_entry(gen_idx: GenerationalIndex): optional(T*)
+      local result: optional(T*)
+      local gen = self.generations[gen_idx.index]
+      if gen.filled then
+         if gen_idx.generation == gen:get() then
+            result:set(&self.entries[gen_idx.index])
+         end
+      end
+      return result
+   end
+
+   function StorageT:remove_entry(gen_idx: GenerationalIndex): boolean
+      local try_get = self:get_entry(gen_idx)
+      if not try_get.filled then
+         return false
+      end
+
+      self.entries[gen_idx.index] = (@T)()
+      local gen = self.generations[gen_idx.index]
+      gen:clear()
+
+      if gen_idx.index == self.len then
+         local last_i = 0_u
+         for i = 0_u, < self.len do
+            local gen_i = self.generations[i]
+            if gen_i.filled then
+               last_i = i
+            end
+         end
+         self.len = last_i
+      end
+
+      self.next_free_ids:push(GenerationalIndex.new(gen_idx.index, gen_idx.generation + 1))
+
+      return false
+   end
+
+   ## return StorageT
+## end)
+
+global Storage = #[make_storage]#
+
+## if TEST then --[
+   require 'string'
+
+   local ok_color: string = string.char(27) .. '[' .. tostring(32) .. 'm'
+   local err_color: string = string.char(27) .. '[' .. tostring(31) .. 'm'
+   local reset_color: string = string.char(27) .. '[' .. tostring(0) .. 'm'
+
+   local function _assert(cnd: boolean, msg: string)
+      local final_msg: stringview = err_color .. msg
+      assert(cnd, final_msg)
+   end
+
+   local TEST_X_VALUE = 123
+   local TEST_Y_VALUE = 789
+
+   -- record and storage type
+   local Vec = @record{
+      x: number,
+      y: number
+   }
+
+   local StorageVec: type = @Storage(Vec);
+   local storage_test: StorageVec = StorageVec.new()
+
+   _assert(#storage_test.next_free_ids == 1, 'test error: # of next_free_ids should be 1')
+   _assert(#storage_test.entries == 0, 'test error: # of entries should be 0')
+   _assert(#storage_test.generations == 0, 'test error: # of generations should be 0')
+   _assert(storage_test.len == 0, 'test error: len should be 0')
+
+   _assert(storage_test.next_free_ids[0].index == 0, 'test error: index of the next_free_ids[0] should be 0')
+   _assert(storage_test.next_free_ids[0].generation == 0, 'test error: generation of the next_free_ids[0] should be 0')
+
+   local new_entry_id, new_entry = storage_test:new_entry({TEST_X_VALUE, TEST_Y_VALUE})
+
+   _assert(new_entry_id.index == 0, 'test error: new_entry_id.index should be 0')
+   _assert(new_entry_id.generation == 0, 'test error: new_entry_id.generation should be 0')
+   _assert(new_entry.x == TEST_X_VALUE, 'test error: new_entry.x should be TEST_X_VALUE')
+   _assert(new_entry.y == TEST_Y_VALUE, 'test error: new_entry.x should be TEST_Y_VALUE')
+
+   _assert(#storage_test.next_free_ids == 1, 'test error: # of next_free_ids should be 1')
+   _assert(storage_test.next_free_ids[0].index == 1, 'test error: index of the next_free_ids[0] should be 1')
+   _assert(storage_test.next_free_ids[0].generation == 0, 'test error: generation of the next_free_ids[0] should be 0')
+
+   _assert(#storage_test.entries == 1, 'test error: # of entries should be 1')
+   _assert(storage_test.entries[0].x == TEST_X_VALUE, 'test error: .entries[0] should be TEST_X_VALUE')
+   _assert(storage_test.entries[0].y == TEST_Y_VALUE, 'test error: .entries[0] should be TEST_Y_VALUE')
+
+   _assert(#storage_test.generations == 1, 'test error: # of generations should be 1')
+   _assert(storage_test.generations[0].filled, 'test error: .generations[0] should be .filled')
+   _assert(storage_test.generations[0]:get() == 0, 'test error: .generations[0]:get() should be 0')
+
+   _assert(storage_test.len == 1, 'test error: len should be 1, got')
+
+   local possible_entry = storage_test:get_entry(new_entry_id)
+
+   _assert(possible_entry.filled, 'test error: obtained entry from storage is no filled')
+
+   local entry = possible_entry:get()
+   _assert(entry.x == TEST_X_VALUE and entry.y == TEST_Y_VALUE, 'test error: entry values are different')
+
+   local new_entry_id_2, new_entry_2 = storage_test:new_entry({TEST_X_VALUE + 1, TEST_Y_VALUE + 1})
+   _assert(new_entry_id_2.index == 1, 'test error: new_entry_id.index should be 0')
+   _assert(new_entry_id_2.generation == 0, 'test error: new_entry_id.generation should be 0')
+   _assert(new_entry_2.x == TEST_X_VALUE+1, 'test error: new_entry.x should be TEST_X_VALUE')
+   _assert(new_entry_2.y == TEST_Y_VALUE+1, 'test error: new_entry.x should be TEST_Y_VALUE')
+
+   _assert(#storage_test.next_free_ids == 1, 'test error: # of next_free_ids should be 1')
+   _assert(storage_test.next_free_ids[0].index == 2, 'test error: index of the next_free_ids[0] should be 2')
+   _assert(storage_test.next_free_ids[0].generation == 0, 'test error: generation of the next_free_ids[0] should be 0')
+
+   _assert(#storage_test.entries == 2, 'test error: # of entries should be 2')
+   _assert(storage_test.entries[0].x == TEST_X_VALUE, 'test error: .entries[0] should be TEST_X_VALUE')
+   _assert(storage_test.entries[0].y == TEST_Y_VALUE, 'test error: .entries[0] should be TEST_Y_VALUE')
+   _assert(storage_test.entries[1].x == TEST_X_VALUE+1, 'test error: .entries[1] should be TEST_X_VALUE+1')
+   _assert(storage_test.entries[1].y == TEST_Y_VALUE+1, 'test error: .entries[1] should be TEST_Y_VALUE+1')
+
+   _assert(#storage_test.generations == 2, 'test error: # of generations should be 2')
+   _assert(storage_test.generations[0].filled, 'test error: .generations[0] should be .filled')
+   _assert(storage_test.generations[0]:get() == 0, 'test error: .generations[0]:get() should be 0')
+   _assert(storage_test.generations[1].filled, 'test error: .generations[1] should be .filled')
+   _assert(storage_test.generations[1]:get() == 0, 'test error: .generations[1]:get() should be 0')
+
+   _assert(storage_test.len == 2, 'test error: len should be 2, got')
+
+   print(ok_color .. 'storage test: ok' .. reset_color)
+## end --]
+
+

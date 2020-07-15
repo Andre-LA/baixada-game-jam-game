@@ -1,0 +1,21 @@
+global GenerationalIndex = @record{
+   index: isize,
+   generation: uinteger
+}
+
+function GenerationalIndex.new(idx: isize, gen: uinteger): GenerationalIndex
+   local new_generational_index = (@GenerationalIndex){index = idx, generation = gen};
+   return new_generational_index
+end
+
+function GenerationalIndex:equals(other_gidx: GenerationalIndex): boolean
+   return self.index == other_gidx.index and self.generation == other_gidx.generation
+end
+
+function GenerationalIndex:copy(gidx_to_copy: GenerationalIndex): GenerationalIndex
+   return GenerationalIndex.new(gidx_to_copy.index, gidx_to_copy.generation)
+end
+
+function GenerationalIndex.__eq(gidx1: GenerationalIndex, gidx2: GenerationalIndex) <inline>
+   return gidx1:equals(gidx2)
+end

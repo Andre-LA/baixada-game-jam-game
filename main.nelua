@@ -1,0 +1,44 @@
+require 'string'
+require 'vector'
+
+require 'config'
+
+require 'raylib'
+require 'rotor'
+
+-- [ Main game records [
+global GameWindow = @record{
+   width: integer,
+   height: integer,
+   title: string
+}
+-- ] Main game records ]
+
+-- [ Game initialization [
+local game_window: GameWindow = {
+   #[WIN_WIDTH]#,
+   #[WIN_HEIGHT]#,
+   #[WIN_TITLE]#
+}
+
+Raylib.InitWindow(game_window.width // 1, game_window.height // 1, game_window.title)
+Raylib.SetTargetFPS(60)
+-- ] Game initialization ]
+
+-- [ Game loop [
+while not Raylib.WindowShouldClose() do
+   -- [ Update [
+
+   -- ] Update ]
+
+   -- [ Draw [
+   Raylib.BeginDrawing()
+      Raylib.ClearBackground(RAYWHITE)
+   Raylib.EndDrawing()
+   -- ] Draw ]
+end
+-- ] Game loop ]
+
+-- [ Game De-initialization [
+Raylib.CloseWindow()
+-- ] Game De-initialization ]
