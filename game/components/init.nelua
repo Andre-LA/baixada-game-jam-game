@@ -1,0 +1,110 @@
+require 'raylib'
+require 'rotor'
+
+require 'vector'
+
+-- [ components [
+global Player = @record{
+   walkstop_mask: uinteger,
+}
+
+global Cog = @record{
+   direction: Vector2,
+   engaged: boolean,
+}
+
+global Box = @record{
+   walkstop_mask: uinteger,
+   minimum_distance: number,
+}
+
+global Position = @record{
+   position: Vector2
+}
+
+global Velocity = @record{
+   direction: Vector2,
+   speed: number
+}
+
+global Collider = @record{
+   local_rect: Rectangle,
+   global_rect: Rectangle,
+   entity_id: GenerationalIndex,
+   entity_tag: EntityTag
+}
+
+global Intersection = @record{
+   collider: Collider,
+   rect: Rectangle,
+   state: CollisionState
+}
+
+global Collisions = @record{
+   intersections: vector(Intersection),
+}
+
+global Sprite = @record{
+   sprite_sheet: Texture2D,
+   frame_index: uinteger,
+   frame_rect: Rectangle
+}
+
+global Animation = @record{
+   animations: vector(vector(uinteger)),
+   current_animation_index: uinteger,
+   current_frame_index: uinteger,
+}
+-- ] components ]
+
+-- [ storages [
+global storages: record{
+   entity: Storage(Entity),
+   player: Storage(Player),
+   cog: Storage(Cog),
+   box: Storage(Box),
+   position: Storage(Position),
+   velocity: Storage(Velocity),
+   collider: Storage(Collider),
+   collisions: Storage(Collisions),
+   sprite: Storage(Sprite),
+   animation: Storage(Animation),
+} = {
+   entity = (@Storage(Entity)).new(),
+   player = (@Storage(Player)).new(),
+   cog = (@Storage(Cog)).new(),
+   box = (@Storage(Box)).new(),
+   position = (@Storage(Position)).new(),
+   velocity = (@Storage(Velocity)).new(),
+   collider = (@Storage(Collider)).new(),
+   collisions = (@Storage(Collisions)).new(),
+   sprite = (@Storage(Sprite)).new(),
+   animation = (@Storage(Animation)).new(),
+}
+-- ] storages ]
+
+-- [ component masks [
+global component_masks: record{
+   entity: BitsetArray,    --   1
+   player: BitsetArray,    --   2
+   cog: BitsetArray,       --   4
+   box: BitsetArray,       --   8
+   position: BitsetArray,  --  16
+   velocity: BitsetArray,  --  32
+   collider: BitsetArray,  --  64
+   collisions: BitsetArray, -- 128
+   sprite: BitsetArray,    -- 256
+   animation: BitsetArray  -- 512
+} = {
+   entity = bitset_array.lshift(BITSETARRAY_OF_ONE,     0), --   1
+   player = bitset_array.lshift(BITSETARRAY_OF_ONE,     1), --   2
+   cog = bitset_array.lshift(BITSETARRAY_OF_ONE,        2), --   4
+   box = bitset_array.lshift(BITSETARRAY_OF_ONE,        3), --   8
+   position = bitset_array.lshift(BITSETARRAY_OF_ONE,   4), --  16
+   velocity = bitset_array.lshift(BITSETARRAY_OF_ONE,   5), --  32
+   collider = bitset_array.lshift(BITSETARRAY_OF_ONE,   6), --  64
+   collisions = bitset_array.lshift(BITSETARRAY_OF_ONE, 7), -- 128
+   sprite = bitset_array.lshift(BITSETARRAY_OF_ONE,     8), -- 256
+   animation = bitset_array.lshift(BITSETARRAY_OF_ONE,  9), -- 512
+}
+-- ] component masks ]
