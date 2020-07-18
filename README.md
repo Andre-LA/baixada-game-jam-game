@@ -40,5 +40,5 @@ Example:
 [nelua-install]: https://nelua.io/installing/
 [raylib-install]: https://github.com/raysan5/raylib#build-and-installation/
 
-[Raylib-nelua]: https://github.com/Andre-LA/raylib-nelua-mirror/
-[Rotor-nelua]: https://github.com/Andre-LA/raylib-nelua-mirror/
+[raylib-nelua-repo-mirror]: https://github.com/Andre-LA/raylib-nelua-mirror/
+[rotor-nelua-repo-mirror]: https://github.com/Andre-LA/raylib-nelua-mirror/
