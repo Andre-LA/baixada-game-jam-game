@@ -1,39 +1,126 @@
-require 'string'
-require 'vector'
-
-require 'config'
-
 require 'raylib'
 require 'rotor'
 
--- [ Main game records [
-global GameWindow = @record{
-   width: integer,
-   height: integer,
-   title: string
+require 'config'
+
+require 'string'
+require 'vector'
+
+-- [ Main game records  and enums[
+global EntityTag = @enum {
+   Player = 1,
+   TileMap = 2,
+   Wall = 4,
+   CogSlot = 8,
+   PuzzleWall = 16,
+   Box = 32,
+   Cog = 64,
 }
+
+global CollisionState = @enum {
+   None = 0,
+   Enter,
+   Stay
+}
+
+require 'game'
 -- ] Main game records ]
 
 -- [ Game initialization [
-local game_window: GameWindow = {
-   #[WIN_WIDTH]#,
-   #[WIN_HEIGHT]#,
-   #[WIN_TITLE]#
+global Globals: record{
+   player_input: record{
+      direction: Vector2,
+      action: boolean
+   },
+   camera: record{
+      position: Vector2,
+      camera: Camera2D
+   },
+   game_window: record{
+      width: integer,
+      height: integer,
+      title: string
+   },
+   game_systems: record{
+      colliders_sync: CollidersSync,
+      sprite_painter: SpritePainter,
+   },
+   untracked_ids: vector(GenerationalIndex),
+} = {
+   player_input = {
+      direction = { 0, 0 },
+      action = false,
+   },
+   camera = {
+      position = { #[PL_POS_X]#, #[PL_POS_Y]# },
+      camera = {
+         offset = { #[WIN_WIDTH]# / 2, #[WIN_HEIGHT]# / 2 },
+         target = { #[PL_POS_X]#, #[PL_POS_Y]# },
+         rotation = 0,
+         zoom = 1
+      }
+   },
+   game_window = {
+      #[WIN_WIDTH]# // 1,
+      #[WIN_HEIGHT]# // 1,
+      #[WIN_TITLE]#
+   },
+   untracked_ids = {},
+   game_systems = {
+      colliders_sync = CollidersSync.new(),
+      sprite_painter = SpritePainter.new(),
+   },
 }
 
-Raylib.InitWindow(game_window.width // 1, game_window.height // 1, game_window.title)
+Raylib.InitWindow(Globals.game_window.width, Globals.game_window.height, Globals.game_window.title)
 Raylib.SetTargetFPS(60)
+
+local function update_all_systems()
+   Globals.game_systems.colliders_sync.system.system_data:update(storages.entity, Globals.untracked_ids)
+   Globals.game_systems.sprite_painter.system.system_data:update(storages.entity, Globals.untracked_ids)
+end
+
+local function create_entity_test(pos: Vector2, fi: uinteger): TestEntity_1
+   local test_sprite: Sprite = {
+      sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
+      frame_index = fi,
+      frame_rect = { 0, 0, 32, 32 }
+   }
+
+   local new_test: TestEntity_1 = {}
+
+   new_test:create(
+      storages.entity,
+      storages.position, { position = pos },
+      storages.sprite, test_sprite,
+      Globals.untracked_ids
+   )
+
+   return new_test
+end
+
+local test_entity_1 = create_entity_test({20, 20}, 0)
+local test_entity_2 = create_entity_test({30, 15}, 1)
+
+update_all_systems()
+
+local test_position_opt = storages.position:get_entry(test_entity_2.position_id)
+local test_position: Position* = test_position_opt:get()
+
 -- ] Game initialization ]
 
 -- [ Game loop [
 while not Raylib.WindowShouldClose() do
    -- [ Update [
-
+   local dt = Raylib.GetFrameTime()
+   test_position.position.y = Raylib.GetMouseY()
    -- ] Update ]
 
    -- [ Draw [
    Raylib.BeginDrawing()
       Raylib.ClearBackground(RAYWHITE)
+
+      Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
    Raylib.EndDrawing()
    -- ] Draw ]
 end
