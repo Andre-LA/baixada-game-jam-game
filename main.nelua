@@ -83,7 +83,14 @@ local function update_all_systems()
    Globals.game_systems.animation.system.system_data:update(storages.entity, Globals.untracked_ids)
 end
 
-local function create_entity_test(pos: Vector2, fi: uinteger): TestEntity_1
+local function create_entity_test(pos: Vector2, fi: uinteger, cw: uinteger): TestEntity_1
+   local test_collider: Collider = {
+      local_rect = { 0, 16, cw, 16},
+      global_rect = { 0, 16, cw, 16},
+      entity_id = { -1, 0 },
+      entity_tag = EntityTag.Player
+   }
+
    local test_sprite: Sprite = {
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = fi,
@@ -106,6 +113,9 @@ local function create_entity_test(pos: Vector2, fi: uinteger): TestEntity_1
    new_test:create(
       storages.entity,
       storages.position, { position = pos },
+      storages.velocity, { direction = { 0, 0 }, speed = 1 },
+      storages.collider, test_collider,
+      storages.collisions,
       storages.sprite, test_sprite,
       storages.animations, test_animations,
       Globals.untracked_ids
@@ -114,8 +124,8 @@ local function create_entity_test(pos: Vector2, fi: uinteger): TestEntity_1
    return new_test
 end
 
-local test_entity_1 = create_entity_test({20, 20}, 0)
-local test_entity_2 = create_entity_test({30, 15}, 1)
+local test_entity_1 = create_entity_test({20, 20}, 0, 32)
+local test_entity_2 = create_entity_test({30, 15}, 1, 16)
 
 update_all_systems()
 

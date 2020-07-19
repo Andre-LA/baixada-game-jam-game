@@ -7,6 +7,8 @@ require 'vector'
 
 global TestEntity_1 = @record{
    entity_id: GenerationalIndex,
+   collider_id: GenerationalIndex,
+   collisions_id: GenerationalIndex,
    position_id: GenerationalIndex,
    sprite_id: GenerationalIndex,
    animations_id: GenerationalIndex
@@ -14,8 +16,11 @@ global TestEntity_1 = @record{
 
 function TestEntity_1:create(
    entity_storage: Storage(Entity)*,
-   position_storage: Storage(Position)*, position_vl: Position,
-   sprite_storage: Storage(Sprite)*    , sprite_vl: Sprite,
+   position_storage: Storage(Position)*    , position_vl: Position,
+   velocity_storage: Storage(Velocity)*    , velocity_vl: Velocity,
+   collider_storage: Storage(Collider)*    , collider_vl: Collider,
+   collisions_storage: Storage(Collisions)*,
+   sprite_storage: Storage(Sprite)*        , sprite_vl: Sprite,
    animations_storage: Storage(Animations)*, animations_vl: Animations,
    untracked_ids: vector(GenerationalIndex)*
 )
@@ -23,6 +28,16 @@ function TestEntity_1:create(
 
    local position_id, position = position_storage:new_entry(position_vl)
    test_entity:associate(position_id, component_masks.position)
+
+   local velocity_id, velocity = velocity_storage:new_entry(velocity_vl)
+   test_entity:associate(velocity_id, component_masks.velocity)
+
+   collider_vl.entity_id = test_entity_id
+   local collider_id, collider = collider_storage:new_entry(collider_vl)
+   test_entity:associate(collider_id, component_masks.collider)
+
+   local collisions_id, collisions = collisions_storage:new_entry({{}})
+   test_entity:associate(collisions_id, component_masks.collisions)
 
    local sprite_id, sprite = sprite_storage:new_entry(sprite_vl)
    test_entity:associate(sprite_id, component_masks.sprite)
@@ -35,6 +50,8 @@ function TestEntity_1:create(
    $self = {
       entity_id = test_entity_id,
       position_id = position_id,
+      collider_id = collider_id,
+      collisions_id = collisions_id,
       sprite_id = sprite_id,
       animations_id = animations_id,
    }
