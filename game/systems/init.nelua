@@ -109,6 +109,7 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
                      y_vec:insert(j, position.position.y)
                      draw_order:insert(j, i)
                      inserted = true
+                     break
                   end
                end
                if not inserted then
