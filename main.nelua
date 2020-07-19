@@ -43,8 +43,10 @@ global Globals: record{
    },
    game_systems: record{
       colliders_sync: CollidersSync,
-      sprite_painter: SpritePainter,
+      collision_detection: CollisionDetection,
       animation: Animation,
+      sprite_painter: SpritePainter,
+      show_collisions: ShowCollisions,
    },
    untracked_ids: vector(GenerationalIndex),
 } = {
@@ -69,8 +71,10 @@ global Globals: record{
    untracked_ids = {},
    game_systems = {
       colliders_sync = CollidersSync.new(),
+      collision_detection = CollisionDetection.new(),
+      animation = Animation.new(),
       sprite_painter = SpritePainter.new(),
-      animation = Animation.new()
+      show_collisions = ShowCollisions.new(),
    },
 }
 
@@ -79,8 +83,10 @@ Raylib.SetTargetFPS(60)
 
 local function update_all_systems()
    Globals.game_systems.colliders_sync.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.sprite_painter.system.system_data:update(storages.entity, Globals.untracked_ids)
+   Globals.game_systems.collision_detection.system.system_data:update(storages.entity, Globals.untracked_ids)
    Globals.game_systems.animation.system.system_data:update(storages.entity, Globals.untracked_ids)
+   Globals.game_systems.sprite_painter.system.system_data:update(storages.entity, Globals.untracked_ids)
+   Globals.game_systems.show_collisions.system.system_data:update(storages.entity, Globals.untracked_ids)
 end
 
 local function create_entity_test(pos: Vector2, fi: uinteger, cw: uinteger): TestEntity_1
@@ -145,6 +151,9 @@ while not Raylib.WindowShouldClose() do
 
    test_position.position.y = Raylib.GetMouseY()
 
+   Globals.game_systems.colliders_sync:run(storages.position, storages.velocity, storages.collider)
+   Globals.game_systems.collision_detection:run(storages.collider, storages.collisions)
+
    Globals.game_systems.animation:run(storages.animations, storages.sprite, dt)
    -- ] Update ]
 
@@ -153,6 +162,7 @@ while not Raylib.WindowShouldClose() do
       Raylib.ClearBackground(RAYWHITE)
 
       Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
+      Globals.game_systems.show_collisions:run(storages.collisions, storages.collider)
    Raylib.EndDrawing()
    -- ] Draw ]
 end
