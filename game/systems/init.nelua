@@ -245,6 +245,81 @@ function ShowCollisions:run(collisions_storage: Storage(Collisions)*, collider_s
    end
 end
 
+global CollisionDetection = @record{
+   system: System
+}
+
+local function is_past_collision(intersections: vector(Intersection)*, collider: Collider*): integer
+   for i = 0, < #intersections do
+      if intersections[i].collider.entity_id == collider.entity_id then
+         return i
+      end
+   end
+   return -1
+end
+
+function CollisionDetection.new(): CollisionDetection
+   local new_system: CollisionDetection = {
+      system = {
+         read = {bitset_array.copy(component_masks.collider)},
+         write = {bitset_array.copy(component_masks.collisions)},
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function CollisionDetection:run(collider_storage: Storage(Collider)*, collisions_storage: Storage(Collisions)*)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local collider_id = ids[0]
+         local collisions_id = ids[1]
+
+         local opt_collider = collider_storage:get_entry(collider_id)
+         local opt_collisions = collisions_storage:get_entry(collisions_id)
+
+         if opt_collider.filled  and opt_collisions.filled then
+            local collider = opt_collider:get()
+            local collisions = opt_collisions:get()
+
+            for j = 0, < collider_storage.len do
+               if collider_storage.generations[j].filled then
+                  local collider_j = collider_storage.entries[j]
+
+                  if collider.entity_id ~= collider_j.entity_id then
+                     local has_collision = Raylib.CheckCollisionRecs(collider.global_rect, collider_j.global_rect)
+                     local possible_past_collision = is_past_collision(collisions.intersections, collider_j)
+
+                     if has_collision then
+                        local intersection_rect = Raylib.GetCollisionRec(collider.global_rect, collider_j.global_rect)
+
+                        if possible_past_collision >= 0 then
+                           collisions.intersections[possible_past_collision].state = CollisionState.Stay
+                           collisions.intersections[possible_past_collision].rect = intersection_rect
+                        else
+                           local new_intersection: Intersection = {
+                              collider = collider_j,
+                              rect = intersection_rect,
+                              state = CollisionState.Enter
+                           }
+                           collisions.intersections:push(new_intersection)
+                        end
+                     elseif possible_past_collision >= 0 then
+                        collisions.intersections:remove(possible_past_collision)
+                     end
+                  end
+               end
+            end
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
+
 -- ] systems ]
 
 
