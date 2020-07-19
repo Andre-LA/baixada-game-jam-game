@@ -199,6 +199,52 @@ function Animation:run(animations_storage: Storage(Animations)*, sprite_storage:
       end
    end
 end
+
+global ShowCollisions = @record{
+   system: System
+}
+
+function ShowCollisions.new(): ShowCollisions
+   local new_system: ShowCollisions = {
+      system = {
+         read = {bitset_array.copy(component_masks.collisions), bitset_array.copy(component_masks.collider)},
+         write = {}
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function ShowCollisions:run(collisions_storage: Storage(Collisions)*, collider_storage: Storage(Collider)*)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local collisions_id = ids[0]
+         local collider_id = ids[1]
+
+         local opt_collisions = collisions_storage:get_entry(collisions_id)
+         local opt_collider = collider_storage:get_entry(collider_id)
+
+         if opt_collisions.filled and opt_collider.filled then
+            local collisions = opt_collisions:get()
+            local collider = opt_collider:get()
+
+            Raylib.DrawRectangleLinesEx(collider.global_rect, 1, GREEN)
+
+            for j = 0, < #collisions.intersections do
+               local intersection: Intersection* = collisions.intersections[j]
+               local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
+               Raylib.DrawRectangleLinesEx(intersection.rect, 1, rect_color)
+            end
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
+
 -- ] systems ]
 
 
