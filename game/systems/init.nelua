@@ -149,4 +149,56 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
       end
    end
 end
+
+global Animation = @record{
+   system: System
+}
+
+function Animation.new(): Animation
+   local new_system: Animation = {
+      system = {
+         read = {},
+         write = {bitset_array.copy(component_masks.animations), bitset_array.copy(component_masks.sprite)}
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function Animation:run(animations_storage: Storage(Animations)*, sprite_storage: Storage(Sprite)*, dt: number)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local animations_id = ids[0]
+         local sprite_id = ids[1]
+
+         local opt_animations = animations_storage:get_entry(animations_id)
+         local opt_sprite = sprite_storage:get_entry(sprite_id)
+
+         if opt_animations.filled and opt_sprite.filled then
+            local animations = opt_animations:get()
+            local sprite = opt_sprite:get()
+
+            if not animations.paused then
+               animations.elapsed_time = animations.elapsed_time + dt
+               local current_animation: AnimationData* = animations.animations[animations.current_animation_index]
+
+               if animations.elapsed_time > current_animation.frame_duration then
+                  animations.current_frame_index = (animations.current_frame_index + 1) % #current_animation.frame_indexes
+                  animations.elapsed_time = 0
+               end
+
+               sprite.frame_index = current_animation.frame_indexes[animations.current_frame_index]
+            end
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
 -- ] systems ]
+
+
+

@@ -8,13 +8,15 @@ require 'vector'
 global TestEntity_1 = @record{
    entity_id: GenerationalIndex,
    position_id: GenerationalIndex,
-   sprite_id: GenerationalIndex
+   sprite_id: GenerationalIndex,
+   animations_id: GenerationalIndex
 }
 
 function TestEntity_1:create(
    entity_storage: Storage(Entity)*,
    position_storage: Storage(Position)*, position_vl: Position,
    sprite_storage: Storage(Sprite)*    , sprite_vl: Sprite,
+   animations_storage: Storage(Animations)*, animations_vl: Animations,
    untracked_ids: vector(GenerationalIndex)*
 )
    local test_entity_id, test_entity = entity_storage:new_entry(Entity.new())
@@ -25,11 +27,15 @@ function TestEntity_1:create(
    local sprite_id, sprite = sprite_storage:new_entry(sprite_vl)
    test_entity:associate(sprite_id, component_masks.sprite)
 
+   local animations_id, animations = animations_storage:new_entry(animations_vl)
+   test_entity:associate(animations_id, component_masks.animations)
+
    untracked_ids:push(test_entity_id)
 
    $self = {
       entity_id = test_entity_id,
       position_id = position_id,
-      sprite_id = sprite_id
+      sprite_id = sprite_id,
+      animations_id = animations_id,
    }
 end

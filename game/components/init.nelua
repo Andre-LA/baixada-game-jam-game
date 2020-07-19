@@ -50,10 +50,17 @@ global Sprite = @record{
    frame_rect: Rectangle
 }
 
-global Animation = @record{
-   animations: vector(vector(uinteger)),
+global AnimationData = @record{
+   frame_indexes: vector(uinteger),
+   frame_duration: number
+}
+
+global Animations = @record{
+   animations: vector(AnimationData),
    current_animation_index: uinteger,
    current_frame_index: uinteger,
+   elapsed_time: number,
+   paused: boolean
 }
 -- ] components ]
 
@@ -68,7 +75,7 @@ global storages: record{
    collider: Storage(Collider),
    collisions: Storage(Collisions),
    sprite: Storage(Sprite),
-   animation: Storage(Animation),
+   animations: Storage(Animations),
 } = {
    entity = (@Storage(Entity)).new(),
    player = (@Storage(Player)).new(),
@@ -79,7 +86,7 @@ global storages: record{
    collider = (@Storage(Collider)).new(),
    collisions = (@Storage(Collisions)).new(),
    sprite = (@Storage(Sprite)).new(),
-   animation = (@Storage(Animation)).new(),
+   animations = (@Storage(Animations)).new(),
 }
 -- ] storages ]
 
@@ -94,7 +101,7 @@ global component_masks: record{
    collider: BitsetArray,  --  64
    collisions: BitsetArray, -- 128
    sprite: BitsetArray,    -- 256
-   animation: BitsetArray  -- 512
+   animations: BitsetArray  -- 512
 } = {
    entity = bitset_array.lshift(BITSETARRAY_OF_ONE,     0), --   1
    player = bitset_array.lshift(BITSETARRAY_OF_ONE,     1), --   2
@@ -105,6 +112,6 @@ global component_masks: record{
    collider = bitset_array.lshift(BITSETARRAY_OF_ONE,   6), --  64
    collisions = bitset_array.lshift(BITSETARRAY_OF_ONE, 7), -- 128
    sprite = bitset_array.lshift(BITSETARRAY_OF_ONE,     8), -- 256
-   animation = bitset_array.lshift(BITSETARRAY_OF_ONE,  9), -- 512
+   animations = bitset_array.lshift(BITSETARRAY_OF_ONE, 9), -- 512
 }
 -- ] component masks ]

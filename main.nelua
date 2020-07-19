@@ -44,6 +44,7 @@ global Globals: record{
    game_systems: record{
       colliders_sync: CollidersSync,
       sprite_painter: SpritePainter,
+      animation: Animation,
    },
    untracked_ids: vector(GenerationalIndex),
 } = {
@@ -69,6 +70,7 @@ global Globals: record{
    game_systems = {
       colliders_sync = CollidersSync.new(),
       sprite_painter = SpritePainter.new(),
+      animation = Animation.new()
    },
 }
 
@@ -78,6 +80,7 @@ Raylib.SetTargetFPS(60)
 local function update_all_systems()
    Globals.game_systems.colliders_sync.system.system_data:update(storages.entity, Globals.untracked_ids)
    Globals.game_systems.sprite_painter.system.system_data:update(storages.entity, Globals.untracked_ids)
+   Globals.game_systems.animation.system.system_data:update(storages.entity, Globals.untracked_ids)
 end
 
 local function create_entity_test(pos: Vector2, fi: uinteger): TestEntity_1
@@ -87,12 +90,24 @@ local function create_entity_test(pos: Vector2, fi: uinteger): TestEntity_1
       frame_rect = { 0, 0, 32, 32 }
    }
 
+   local test_animations: Animations = {
+      animations = {
+         {frame_indexes = {0, 1, 2}, frame_duration = 0.5},
+         {frame_indexes = {4, 9, 14, 19}, frame_duration = 0.1},
+      },
+      current_animation_index = 0,
+      current_frame_index = 0,
+      elapsed_time = 0,
+      paused = false
+   }
+
    local new_test: TestEntity_1 = {}
 
    new_test:create(
       storages.entity,
       storages.position, { position = pos },
       storages.sprite, test_sprite,
+      storages.animations, test_animations,
       Globals.untracked_ids
    )
 
@@ -107,13 +122,20 @@ update_all_systems()
 local test_position_opt = storages.position:get_entry(test_entity_2.position_id)
 local test_position: Position* = test_position_opt:get()
 
+local test_animations_opt = storages.animations:get_entry(test_entity_2.animations_id)
+local test_animations: Animations* = test_animations_opt:get()
+test_animations.current_animation_index = 1
+
 -- ] Game initialization ]
 
 -- [ Game loop [
 while not Raylib.WindowShouldClose() do
    -- [ Update [
    local dt = Raylib.GetFrameTime()
+
    test_position.position.y = Raylib.GetMouseY()
+
+   Globals.game_systems.animation:run(storages.animations, storages.sprite, dt)
    -- ] Update ]
 
    -- [ Draw [
