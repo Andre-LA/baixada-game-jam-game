@@ -30,7 +30,7 @@ Options:
 * `PL_POS_Y: n`: any number (default is 0)
 
 Example:
-`$ nelua -r -D LANG='en-US' -D WIN_WIDTH=800 main.nelua`
+`$ nelua -r -D LANG='en_US' -D WIN_WIDTH=800 main.nelua`
 
 [BGJ-website]: https://itch.io/jam/baixada-gamejam/
 [nelua-website]: https://nelua.io/
