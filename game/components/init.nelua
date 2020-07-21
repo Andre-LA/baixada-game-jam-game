@@ -34,11 +34,28 @@ global Collider = @record{
    entity_tag: EntityTag
 }
 
+local function get_center(r: Rectangle): Vector2
+   return (@Vector2){ r.x + r.width/2, r.y + r.height/2 }
+end
+
+function Collider:get_local_center():  Vector2 return get_center(self.local_rect) end
+function Collider:get_global_center(): Vector2 return get_center(self.global_rect) end
+
 global Intersection = @record{
    collider: Collider,
    rect: Rectangle,
    state: CollisionState
 }
+
+function Intersection:get_center(): Vector2 return get_center(self.rect) end
+
+function Intersection:get_direction(point: Vector2, tolerance: number): Vector2
+   local difference = point - self.collider:get_global_center()
+   return (@Vector2){
+      difference.x <= -tolerance and -1 or (difference.x >= tolerance and 1 or 0),
+      difference.y <= -tolerance and -1 or (difference.y >= tolerance and 1 or 0)
+   }
+end
 
 global Collisions = @record{
    intersections: vector(Intersection),
