@@ -23,9 +23,11 @@ With default settings:
 `$ nelua -r main.nelua`
 
 Options:
-* `WIN_WIDTH: integer`: any number, (default is 1280)
-* `WIN_HEIGHT: integer` = any number, (default is 1280)
-* `WIN_TITLE: string` = any string, either ""
+* `WIN_WIDTH: n`: any number (default is 1280)
+* `WIN_HEIGHT: n`: any number (default is 720)
+* `WIN_TITLE: n`: any string (default is "Baixada Game Jam Game")
+* `PL_POS_X: n`: any number (default is 0)
+* `PL_POS_Y: n`: any number (default is 0)
 
 Example:
 `$ nelua -r -D LANG='en-US' -D WIN_WIDTH=800 main.nelua`
