@@ -146,3 +146,58 @@ global component_masks: record{
    obstacles = bitset_array.lshift(BITSETARRAY_OF_ONE, 10), -- 1024
 }
 -- ] component masks ]
+
+-- [ association functions [
+function Player.associate(value: Player, entity: Entity*): (GenerationalIndex, Player*)
+   local id, ptr = storages.player:new_entry(value)
+   entity:associate(id, component_masks.player)
+   return id, ptr
+end
+
+function Cog.associate(value: Cog, entity: Entity*): (GenerationalIndex, Cog*)
+   local id, ptr = storages.cog:new_entry(value)
+   entity:associate(id, component_masks.cog)
+   return id, ptr
+end
+function Box.associate(value: Box, entity: Entity*): (GenerationalIndex, Box*)
+   local id, ptr = storages.box:new_entry(value)
+   entity:associate(id, component_masks.box)
+   return id, ptr
+end
+function Position.associate(value: Position, entity: Entity*): (GenerationalIndex, Position*)
+   local id, ptr = storages.position:new_entry(value)
+   entity:associate(id, component_masks.position)
+   return id, ptr
+end
+function Velocity.associate(value: Velocity, entity: Entity*): (GenerationalIndex, Velocity*)
+   local id, ptr = storages.velocity:new_entry(value)
+   entity:associate(id, component_masks.velocity)
+   return id, ptr
+end
+function Collider.associate(value: Collider, entity: Entity*): (GenerationalIndex, Collider*)
+   local id, ptr = storages.collider:new_entry(value)
+   entity:associate(id, component_masks.collider)
+   return id, ptr
+end
+function Collisions.associate(value: Collisions, entity: Entity*): (GenerationalIndex, Collisions*)
+   local id, ptr = storages.collisions:new_entry(value)
+   entity:associate(id, component_masks.collisions)
+   return id, ptr
+end
+function Sprite.associate(value: Sprite, entity: Entity*): (GenerationalIndex, Sprite*)
+   local id, ptr = storages.sprite:new_entry(value)
+   entity:associate(id, component_masks.sprite)
+   return id, ptr
+end
+function Animations.associate(value: Animations, entity: Entity*): (GenerationalIndex, Animations*)
+   local id, ptr = storages.animations:new_entry(value)
+   entity:associate(id, component_masks.animations)
+   return id, ptr
+end
+function Obstacles.associate(value: Obstacles, entity: Entity*): (GenerationalIndex, Obstacles*)
+   local id, ptr = storages.obstacles:new_entry(value)
+   entity:associate(id, component_masks.obstacles)
+   return id, ptr
+end
+
+-- ] association functions ]
