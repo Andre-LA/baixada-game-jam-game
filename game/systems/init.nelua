@@ -325,13 +325,8 @@ global PlayerController = @record{
 function PlayerController.new(): PlayerController
    local new_system: PlayerController = {
       system = {
-         read = {
-            bitset_array.copy(component_masks.player),
-            bitset_array.copy(component_masks.collisions),
-         },
-         write = {
-            bitset_array.copy(component_masks.velocity),
-         }
+         read = { bitset_array.copy(component_masks.player) },
+         write = { bitset_array.copy(component_masks.velocity) }
       }
    }
 
@@ -341,7 +336,6 @@ end
 
 function PlayerController:run(
    player_storage: Storage(Player)*,
-   collisions_storage: Storage(Collisions)*,
    velocity_storage: Storage(Velocity)*,
    player_input: PlayerInput
 )
@@ -350,35 +344,74 @@ function PlayerController:run(
 
       if #ids > 0 then
          local player_id = ids[0]
+         local velocity_id = ids[1]
+
+         local opt_player = player_storage:get_entry(player_id)
+         local opt_velocity = velocity_storage:get_entry(velocity_id)
+
+         if opt_player.filled and opt_velocity.filled then
+            local player = opt_player:get()
+            local velocity = opt_velocity:get()
+
+            velocity.direction = player_input.direction
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
+
+global ObstaclesSystem = @record{
+   system: System
+}
+
+function ObstaclesSystem.new(): ObstaclesSystem
+   local new_system: ObstaclesSystem = {
+      system = {
+         read = { bitset_array.copy(component_masks.obstacles), bitset_array.copy(component_masks.collisions) },
+         write = { bitset_array.copy(component_masks.velocity) }
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function ObstaclesSystem:run(
+   obstacles_storage: Storage(Obstacles)*,
+   collisions_storage: Storage(Collisions)*,
+   velocity_storage: Storage(Velocity)*
+)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local obstacles_id = ids[0]
          local collisions_id = ids[1]
          local velocity_id = ids[2]
 
-         local opt_player = player_storage:get_entry(player_id)
+         local opt_obstacles = obstacles_storage:get_entry(obstacles_id)
          local opt_collisions = collisions_storage:get_entry(collisions_id)
          local opt_velocity = velocity_storage:get_entry(velocity_id)
 
-         if opt_player.filled and opt_collisions.filled and opt_velocity.filled then
-            local player = opt_player:get()
+         if opt_obstacles.filled and opt_collisions.filled and opt_velocity.filled then
+            local obstacles = opt_obstacles:get()
             local collisions = opt_collisions:get()
             local velocity = opt_velocity:get()
 
             if #collisions.intersections > 0 then
                for j = 0, < #collisions.intersections do
-                  local intersection = &collisions.intersections[j]
+                  local intersection: Intersection* = collisions.intersections[j]
 
-                  -- if didn't intersected with a obstacle entity
-                  if intersection.collider.entity_tag & player.walkstop_mask == 0 then
-                     velocity.direction = player_input.direction
-                  else
+                  -- if intersected with a obstacle entity
+                  if obstacles.mask & intersection.collider.entity_tag ~= 0 then
                      local dir: Vector2 = intersection:get_direction(intersection:get_center(), 2)
-                     local dir_x_inputdir = dir * player_input.direction
+                     local dir_x_inputdir = dir * velocity.direction
 
-                     velocity.direction.x = dir_x_inputdir.x > 0 and player_input.direction.x or 0
-                     velocity.direction.y = dir_x_inputdir.y > 0 and player_input.direction.y or 0
+                     velocity.direction.x = dir_x_inputdir.x > 0 and velocity.direction.x or 0
+                     velocity.direction.y = dir_x_inputdir.y > 0 and velocity.direction.y or 0
                   end
                end
-            else
-               velocity.direction = player_input.direction
             end
          else
             self.system.system_data:mark_available(i)

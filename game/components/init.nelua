@@ -4,7 +4,7 @@ require 'rotor'
 
 -- [ components [
 global Player = @record{
-   walkstop_mask: uinteger,
+   add_something_useful_here_later: cchar,
 }
 
 global Cog = @record{
@@ -13,7 +13,6 @@ global Cog = @record{
 }
 
 global Box = @record{
-   walkstop_mask: uinteger,
    minimum_distance: number,
 }
 
@@ -78,6 +77,13 @@ global Animations = @record{
    elapsed_time: number,
    paused: boolean
 }
+
+global Obstacles = @record{
+   mask: uinteger -- mask of entitytag
+}
+
+function Obstacles:add_obstacle(e_tag: EntityTag) self.mask = self.mask | e_tag end
+function Obstacles:remove_obstacle(e_tag: EntityTag) self.mask = self.mask ~ e_tag end
 -- ] components ]
 
 -- [ storages [
@@ -92,6 +98,7 @@ global storages: record{
    collisions: Storage(Collisions),
    sprite: Storage(Sprite),
    animations: Storage(Animations),
+   obstacles: Storage(Obstacles),
 } = {
    entity = (@Storage(Entity)).new(),
    player = (@Storage(Player)).new(),
@@ -103,31 +110,34 @@ global storages: record{
    collisions = (@Storage(Collisions)).new(),
    sprite = (@Storage(Sprite)).new(),
    animations = (@Storage(Animations)).new(),
+   obstacles = (@Storage(Obstacles)).new(),
 }
 -- ] storages ]
 
 -- [ component masks [
 global component_masks: record{
-   entity: BitsetArray,    --   1
-   player: BitsetArray,    --   2
-   cog: BitsetArray,       --   4
-   box: BitsetArray,       --   8
-   position: BitsetArray,  --  16
-   velocity: BitsetArray,  --  32
-   collider: BitsetArray,  --  64
-   collisions: BitsetArray, -- 128
-   sprite: BitsetArray,    -- 256
-   animations: BitsetArray  -- 512
+   entity: BitsetArray,     --    1
+   player: BitsetArray,     --    2
+   cog: BitsetArray,        --    4
+   box: BitsetArray,        --    8
+   position: BitsetArray,   --   16
+   velocity: BitsetArray,   --   32
+   collider: BitsetArray,   --   64
+   collisions: BitsetArray, --  128
+   sprite: BitsetArray,     --  256
+   animations: BitsetArray, --  512
+   obstacles: BitsetArray,  -- 1024
 } = {
-   entity = bitset_array.lshift(BITSETARRAY_OF_ONE,     0), --   1
-   player = bitset_array.lshift(BITSETARRAY_OF_ONE,     1), --   2
-   cog = bitset_array.lshift(BITSETARRAY_OF_ONE,        2), --   4
-   box = bitset_array.lshift(BITSETARRAY_OF_ONE,        3), --   8
-   position = bitset_array.lshift(BITSETARRAY_OF_ONE,   4), --  16
-   velocity = bitset_array.lshift(BITSETARRAY_OF_ONE,   5), --  32
-   collider = bitset_array.lshift(BITSETARRAY_OF_ONE,   6), --  64
-   collisions = bitset_array.lshift(BITSETARRAY_OF_ONE, 7), -- 128
-   sprite = bitset_array.lshift(BITSETARRAY_OF_ONE,     8), -- 256
-   animations = bitset_array.lshift(BITSETARRAY_OF_ONE, 9), -- 512
+   entity = bitset_array.lshift(BITSETARRAY_OF_ONE,     0), --    1
+   player = bitset_array.lshift(BITSETARRAY_OF_ONE,     1), --    2
+   cog = bitset_array.lshift(BITSETARRAY_OF_ONE,        2), --    4
+   box = bitset_array.lshift(BITSETARRAY_OF_ONE,        3), --    8
+   position = bitset_array.lshift(BITSETARRAY_OF_ONE,   4), --   16
+   velocity = bitset_array.lshift(BITSETARRAY_OF_ONE,   5), --   32
+   collider = bitset_array.lshift(BITSETARRAY_OF_ONE,   6), --   64
+   collisions = bitset_array.lshift(BITSETARRAY_OF_ONE, 7), --  128
+   sprite = bitset_array.lshift(BITSETARRAY_OF_ONE,     8), --  256
+   animations = bitset_array.lshift(BITSETARRAY_OF_ONE, 9), --  512
+   obstacles = bitset_array.lshift(BITSETARRAY_OF_ONE, 10), -- 1024
 }
 -- ] component masks ]

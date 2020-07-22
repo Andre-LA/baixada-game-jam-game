@@ -5,11 +5,14 @@ require 'game.components'
 
 global TestEntity_1 = @record{
    entity_id: GenerationalIndex,
+   player_id: GenerationalIndex,
+   position_id: GenerationalIndex,
+   velocity_id: GenerationalIndex,
+   obstacles_id: GenerationalIndex,
    collider_id: GenerationalIndex,
    collisions_id: GenerationalIndex,
-   position_id: GenerationalIndex,
    sprite_id: GenerationalIndex,
-   animations_id: GenerationalIndex
+   animations_id: GenerationalIndex,
 }
 
 function TestEntity_1:create(
@@ -17,6 +20,7 @@ function TestEntity_1:create(
    player_storage: Storage(Player)*        , player_vl: Player,
    position_storage: Storage(Position)*    , position_vl: Position,
    velocity_storage: Storage(Velocity)*    , velocity_vl: Velocity,
+   obstacles_storage: Storage(Obstacles)*  , obstacles_vl: Obstacles,
    collider_storage: Storage(Collider)*    , collider_vl: Collider,
    collisions_storage: Storage(Collisions)*,
    sprite_storage: Storage(Sprite)*        , sprite_vl: Sprite,
@@ -33,6 +37,9 @@ function TestEntity_1:create(
 
    local velocity_id, velocity = velocity_storage:new_entry(velocity_vl)
    test_entity:associate(velocity_id, component_masks.velocity)
+
+   local obstacles_id, obstacles = obstacles_storage:new_entry(obstacles_vl)
+   test_entity:associate(obstacles_id, component_masks.obstacles)
 
    collider_vl.entity_id = test_entity_id
    local collider_id, collider = collider_storage:new_entry(collider_vl)
@@ -51,7 +58,10 @@ function TestEntity_1:create(
 
    $self = {
       entity_id = test_entity_id,
+      player_id = player_id,
       position_id = position_id,
+      velocity_id = velocity_id,
+      obstacles_id = obstacles_id,
       collider_id = collider_id,
       collisions_id = collisions_id,
       sprite_id = sprite_id,
