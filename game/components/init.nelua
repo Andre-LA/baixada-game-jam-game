@@ -1,7 +1,6 @@
+require 'vector'
 require 'raylib'
 require 'rotor'
-
-require 'vector'
 
 -- [ components [
 global Player = @record{

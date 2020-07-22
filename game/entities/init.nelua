@@ -1,9 +1,7 @@
+require 'vector'
 require 'raylib'
 require 'rotor'
-
 require 'game.components'
-
-require 'vector'
 
 global TestEntity_1 = @record{
    entity_id: GenerationalIndex,
