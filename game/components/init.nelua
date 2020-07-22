@@ -39,6 +39,11 @@ end
 function Collider:get_local_center():  Vector2 return get_center(self.local_rect) end
 function Collider:get_global_center(): Vector2 return get_center(self.global_rect) end
 
+function Collider:sync_with_position(position: Vector2)
+   self.global_rect.x = self.local_rect.x + position.x
+   self.global_rect.y = self.local_rect.y + position.y
+end
+
 global Intersection = @record{
    collider: Collider,
    rect: Rectangle,

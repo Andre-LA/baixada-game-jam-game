@@ -49,8 +49,7 @@ function CollidersSync:run(position_storage: Storage(Position)*, velocity_storag
             local velocity = opt_velocity:get()
             local collider = opt_collider:get()
 
-            collider.global_rect.x = collider.local_rect.x + position.position.x
-            collider.global_rect.y = collider.local_rect.y + position.position.y
+            collider:sync_with_position(position.position)
          else
             self.system.system_data:mark_available(i)
          end
