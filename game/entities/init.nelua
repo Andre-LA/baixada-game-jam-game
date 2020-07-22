@@ -3,7 +3,7 @@ require 'raylib'
 require 'rotor'
 require 'game.components'
 
-global TestEntity_1 = @record{
+global PlayerEntity = @record{
    entity_id: GenerationalIndex,
    player_id: GenerationalIndex,
    position_id: GenerationalIndex,
@@ -15,49 +15,34 @@ global TestEntity_1 = @record{
    animations_id: GenerationalIndex,
 }
 
-function TestEntity_1:create(
+function PlayerEntity.new(
    entity_storage: Storage(Entity)*,
-   player_storage: Storage(Player)*        , player_vl: Player,
-   position_storage: Storage(Position)*    , position_vl: Position,
-   velocity_storage: Storage(Velocity)*    , velocity_vl: Velocity,
-   obstacles_storage: Storage(Obstacles)*  , obstacles_vl: Obstacles,
-   collider_storage: Storage(Collider)*    , collider_vl: Collider,
-   collisions_storage: Storage(Collisions)*,
-   sprite_storage: Storage(Sprite)*        , sprite_vl: Sprite,
-   animations_storage: Storage(Animations)*, animations_vl: Animations,
+   player_vl: Player,
+   position_vl: Position,
+   velocity_vl: Velocity,
+   obstacles_vl: Obstacles,
+   collider_vl: Collider,
+   sprite_vl: Sprite,
+   animations_vl: Animations,
    untracked_ids: vector(GenerationalIndex)*
-)
-   local test_entity_id, test_entity = entity_storage:new_entry(Entity.new())
+): PlayerEntity
+   local entity_id, entity = entity_storage:new_entry(Entity.new())
 
-   local player_id, player = player_storage:new_entry(player_vl)
-   test_entity:associate(player_id, component_masks.player)
+   local player_id, player = Player.associate(player_vl, entity)
+   local position_id, position = Position.associate(position_vl, entity)
+   local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
+   local obstacles_id, obstacles = Obstacles.associate(obstacles_vl, entity)
 
-   local position_id, position = position_storage:new_entry(position_vl)
-   test_entity:associate(position_id, component_masks.position)
+   collider_vl.entity_id = entity_id
+   local collider_id, collider = Collider.associate(collider_vl, entity)
+   local collisions_id, collisions = Collisions.associate({{}}, entity)
+   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
+   local animations_id, animations = Animations.associate(animations_vl, entity)
 
-   local velocity_id, velocity = velocity_storage:new_entry(velocity_vl)
-   test_entity:associate(velocity_id, component_masks.velocity)
+   untracked_ids:push(entity_id)
 
-   local obstacles_id, obstacles = obstacles_storage:new_entry(obstacles_vl)
-   test_entity:associate(obstacles_id, component_masks.obstacles)
-
-   collider_vl.entity_id = test_entity_id
-   local collider_id, collider = collider_storage:new_entry(collider_vl)
-   test_entity:associate(collider_id, component_masks.collider)
-
-   local collisions_id, collisions = collisions_storage:new_entry({{}})
-   test_entity:associate(collisions_id, component_masks.collisions)
-
-   local sprite_id, sprite = sprite_storage:new_entry(sprite_vl)
-   test_entity:associate(sprite_id, component_masks.sprite)
-
-   local animations_id, animations = animations_storage:new_entry(animations_vl)
-   test_entity:associate(animations_id, component_masks.animations)
-
-   untracked_ids:push(test_entity_id)
-
-   $self = {
-      entity_id = test_entity_id,
+   return (@PlayerEntity){
+      entity_id = entity_id,
       player_id = player_id,
       position_id = position_id,
       velocity_id = velocity_id,
@@ -67,4 +52,98 @@ function TestEntity_1:create(
       sprite_id = sprite_id,
       animations_id = animations_id,
    }
+end
+
+function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracked_ids: vector(GenerationalIndex)*): PlayerEntity
+   local pl_collider: Collider = {
+      local_rect = { 0, 16, 16, 16},
+      global_rect = { 0, 16, 16, 16},
+      entity_id = { -1, 0 },
+      entity_tag = EntityTag.Player
+   }
+
+   local pl_sprite: Sprite = {
+      sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
+      frame_index = fi,
+      frame_rect = { 0, 0, 32, 32 }
+   }
+
+   local pl_animations: Animations = {
+      animations = {
+         {frame_indexes = {0, 1, 2}, frame_duration = 0.5},
+         {frame_indexes = {4, 9, 14, 19}, frame_duration = 0.1},
+      },
+      current_animation_index = 0,
+      current_frame_index = 0,
+      elapsed_time = 0,
+      paused = false
+   }
+
+   return PlayerEntity.new(
+      storages.entity,
+      --[[player]]     {},
+      --[[position]]   { position = pos },
+      --[[velocity]]   { direction = { 0, 0 }, speed = speed },
+      --[[obstacles]]  { mask = EntityTag.Wall},
+      --[[collider]]   pl_collider,
+      --[[sprite]]     pl_sprite,
+      --[[animations]] pl_animations,
+      untracked_ids
+   )
+end
+
+global WallEntity = @record{
+   entity_id: GenerationalIndex,
+   position_id: GenerationalIndex,
+   collider_id: GenerationalIndex,
+   sprite_id: GenerationalIndex,
+}
+
+function WallEntity.new(
+   entity_storage: Storage(Entity)*,
+   position_vl: Position,
+   collider_vl: Collider,
+   sprite_vl: Sprite,
+   untracked_ids: vector(GenerationalIndex)*
+): WallEntity
+   local entity_id, entity = entity_storage:new_entry(Entity.new())
+   local position_id, position = Position.associate(position_vl, entity)
+
+   collider_vl.entity_id = entity_id
+   collider_vl:sync_with_position(position_vl.position)
+   local collider_id, collider = Collider.associate(collider_vl, entity)
+
+   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
+
+   untracked_ids:push(entity_id)
+
+   return (@WallEntity){
+      entity_id = entity_id,
+      position_id = position_id,
+      collider_id = collider_id,
+      sprite_id = sprite_id,
+   }
+end
+
+function WallEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(GenerationalIndex)*): WallEntity
+   local wall_collider: Collider = {
+      local_rect = { 0, 16, 32, 16},
+      global_rect = { 0, 16, 32, 16},
+      entity_id = { -1, 0 },
+      entity_tag = EntityTag.Wall
+   }
+
+   local wall_sprite: Sprite = {
+      sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
+      frame_index = fi,
+      frame_rect = { 0, 0, 32, 32 }
+   }
+
+   return WallEntity.new(
+      storages.entity,
+      --[[position]] { position = pos },
+      --[[collider]] wall_collider,
+      --[[sprite]]   wall_sprite,
+      untracked_ids
+   )
 end

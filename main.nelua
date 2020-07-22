@@ -112,58 +112,15 @@ local function update_all_systems()
    Globals.game_systems.show_collisions.system.system_data:update(storages.entity, Globals.untracked_ids)
 end
 
-local function create_entity_test(pos: Vector2, fi: uinteger, cw: uinteger, entity_tag: EntityTag, speed: number): TestEntity_1
-   local test_collider: Collider = {
-      local_rect = { 0, 16, cw, 16},
-      global_rect = { 0, 16, cw, 16},
-      entity_id = { -1, 0 },
-      entity_tag = entity_tag
-   }
-
-   local test_sprite: Sprite = {
-      sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
-      frame_index = fi,
-      frame_rect = { 0, 0, 32, 32 }
-   }
-
-   local test_animations: Animations = {
-      animations = {
-         {frame_indexes = {0, 1, 2}, frame_duration = 0.5},
-         {frame_indexes = {4, 9, 14, 19}, frame_duration = 0.1},
-      },
-      current_animation_index = 0,
-      current_frame_index = 0,
-      elapsed_time = 0,
-      paused = false
-   }
-
-   local new_test: TestEntity_1 = {}
-
-   new_test:create(
-      storages.entity,
-      storages.player, {},
-      storages.position, { position = pos },
-      storages.velocity, { direction = { 0, 0 }, speed = speed },
-      storages.obstacles, { mask = EntityTag.Wall},
-      storages.collider, test_collider,
-      storages.collisions,
-      storages.sprite, test_sprite,
-      storages.animations, test_animations,
-      Globals.untracked_ids
-   )
-
-   return new_test
-end
-
-local test_entity_1 = create_entity_test({20, 20}, 0, 32, EntityTag.Wall, 0)
-local test_entity_2 = create_entity_test({30, 15}, 1, 16, EntityTag.Player, 1)
+local wall_entity = WallEntity.create({20, 20}, 0, Globals.untracked_ids)
+local player_entity = PlayerEntity.create({30, 15}, 1, 1, Globals.untracked_ids)
 
 update_all_systems()
 
-local test_position_opt = storages.position:get_entry(test_entity_2.position_id)
+local test_position_opt = storages.position:get_entry(player_entity.position_id)
 local test_position: Position* = test_position_opt:get()
 
-local test_animations_opt = storages.animations:get_entry(test_entity_2.animations_id)
+local test_animations_opt = storages.animations:get_entry(player_entity.animations_id)
 local test_animations: Animations* = test_animations_opt:get()
 test_animations.current_animation_index = 1
 
