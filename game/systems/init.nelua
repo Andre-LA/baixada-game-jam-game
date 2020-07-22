@@ -361,6 +361,65 @@ function PlayerController:run(
    end
 end
 
+global BoxController = @record{
+   system: System
+}
+
+function BoxController.new(): BoxController
+   local new_system: BoxController = {
+      system = {
+         read = {
+            bitset_array.copy(component_masks.box),
+            bitset_array.copy(component_masks.position),
+            bitset_array.copy(component_masks.collisions)
+         },
+         write = { bitset_array.copy(component_masks.velocity) }
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function BoxController:run(
+   box_storage: Storage(Box)*,
+   position_storage: Storage(Position)*,
+   collisions_storage: Storage(Collisions)*,
+   velocity_storage: Storage(Velocity),
+   player_input: PlayerInput,
+   player_position: Vector2
+)
+   if player_input.action then
+      for i = 0, < #self.system.system_data.components_indexes do
+         local ids = self.system.system_data.components_indexes[i]
+
+         if #ids > 0 then
+            local box_id = ids[0]
+            local position_id = ids[1]
+            local collisions_id = ids[2]
+            local velocity_id = ids[3]
+
+            local opt_box = box_storage:get_entry(box_id)
+            local opt_position = position_storage:get_entry(position_id)
+            local opt_collisions = collisions_storage:get_entry(collisions_id)
+            local opt_velocity = velocity_storage:get_entry(velocity_id)
+
+            if opt_box.filled and opt_position.filled and opt_collisions.filled and opt_velocity.filled then
+               local box = opt_box:get()
+               local position = opt_position:get()
+               local collisions = opt_collisions:get()
+               local velocity = opt_velocity:get()
+
+               local pl_distance = position.position:Distance(player_position)
+
+               velocity.direction = player_input.direction
+            end
+
+         end
+      end
+   end
+end
+
 global ObstaclesSystem = @record{
    system: System
 }
