@@ -82,7 +82,7 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
    local draw_order: vector(uinteger) = {}
    draw_order:reserve(sys_len)
 
-   local y_vec: vector(uinteger) = {}
+   local y_vec: vector(float32) = {}
    y_vec:reserve(sys_len)
 
    for i = 0, < sys_len do
