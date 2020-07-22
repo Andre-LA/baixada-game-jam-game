@@ -34,6 +34,7 @@ function PlayerEntity.new(
    local obstacles_id, obstacles = Obstacles.associate(obstacles_vl, entity)
 
    collider_vl.entity_id = entity_id
+   collider_vl:sync_with_position(position_vl.position)
    local collider_id, collider = Collider.associate(collider_vl, entity)
    local collisions_id, collisions = Collisions.associate({{}}, entity)
    local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
@@ -84,7 +85,7 @@ function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracke
       --[[player]]     {},
       --[[position]]   { position = pos },
       --[[velocity]]   { direction = { 0, 0 }, speed = speed },
-      --[[obstacles]]  { mask = EntityTag.Wall},
+      --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Box},
       --[[collider]]   pl_collider,
       --[[sprite]]     pl_sprite,
       --[[animations]] pl_animations,
@@ -144,6 +145,75 @@ function WallEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(Gen
       --[[position]] { position = pos },
       --[[collider]] wall_collider,
       --[[sprite]]   wall_sprite,
+      untracked_ids
+   )
+end
+
+global BoxEntity = @record{
+   entity_id: GenerationalIndex,
+   box_id: GenerationalIndex,
+   position_id: GenerationalIndex,
+   velocity_id: GenerationalIndex,
+   collider_id: GenerationalIndex,
+   collisions_id: GenerationalIndex,
+   sprite_id: GenerationalIndex,
+}
+
+function BoxEntity.new(
+   entity_storage: Storage(Entity)*,
+   box_vl: Box,
+   position_vl: Position,
+   velocity_vl: Velocity,
+   collider_vl: Collider,
+   sprite_vl: Sprite,
+   untracked_ids: vector(GenerationalIndex)*
+): BoxEntity
+   local entity_id, entity = entity_storage:new_entry(Entity.new())
+   local box_id, box = Box.associate(box_vl, entity)
+   local position_id, position = Position.associate(position_vl, entity)
+   local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
+
+   collider_vl.entity_id = entity_id
+   collider_vl:sync_with_position(position_vl.position)
+   local collider_id, collider = Collider.associate(collider_vl, entity)
+
+   local collisions_id, collisions = Collisions.associate({{}}, entity)
+   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
+
+   untracked_ids:push(entity_id)
+
+   return (@BoxEntity){
+      entity_id = entity_id,
+      box_id = box_id,
+      position_id = position_id,
+      velocity_id = velocity_id,
+      collider_id = collider_id,
+      collisions_id = collisions_id,
+      sprite_id = sprite_id,
+   }
+end
+
+function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(GenerationalIndex)*): BoxEntity
+   local box_collider: Collider = {
+      local_rect = { 0, 16, 32, 16},
+      global_rect = { 0, 16, 32, 16},
+      entity_id = { -1, 0 },
+      entity_tag = EntityTag.Box
+   }
+
+   local box_sprite: Sprite = {
+      sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
+      frame_index = 5,
+      frame_rect = { 0, 0, 32, 32 }
+   }
+
+   return BoxEntity.new(
+      storages.entity,
+      --[[box]]        {},
+      --[[position]]   { position = pos },
+      --[[velocity]]   { direction = { 0, 0 }, speed = speed },
+      --[[collider]]   box_collider,
+      --[[sprite]]     box_sprite,
       untracked_ids
    )
 end

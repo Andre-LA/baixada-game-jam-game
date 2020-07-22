@@ -13,7 +13,7 @@ global Cog = @record{
 }
 
 global Box = @record{
-   minimum_distance: number,
+   add_something_useful_here_later: cchar,
 }
 
 global Position = @record{
@@ -51,6 +51,8 @@ global Intersection = @record{
 }
 
 function Intersection:get_center(): Vector2 return get_center(self.rect) end
+
+function Intersection:contains_tag(mask: uinteger): boolean return mask & self.collider.entity_tag ~= 0 end
 
 function Intersection:get_direction(point: Vector2, tolerance: number): Vector2
    local difference = point - self.collider:get_global_center()
