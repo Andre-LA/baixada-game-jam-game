@@ -41,6 +41,7 @@ global Globals: record{
    },
    game_systems: record{
       player_controller: PlayerController,
+      velocity_system: VelocitySystem,
       colliders_sync: CollidersSync,
       collision_detection: CollisionDetection,
       animation: Animation,
@@ -70,6 +71,7 @@ global Globals: record{
    untracked_ids = {},
    game_systems = {
       player_controller = PlayerController.new(),
+      velocity_system = VelocitySystem.new(),
       colliders_sync = CollidersSync.new(),
       collision_detection = CollisionDetection.new(),
       animation = Animation.new(),
@@ -96,6 +98,7 @@ Raylib.SetTargetFPS(60)
 
 local function update_all_systems()
    Globals.game_systems.player_controller.system.system_data:update(storages.entity, Globals.untracked_ids)
+   Globals.game_systems.velocity_system.system.system_data:update(storages.entity, Globals.untracked_ids)
    Globals.game_systems.colliders_sync.system.system_data:update(storages.entity, Globals.untracked_ids)
    Globals.game_systems.collision_detection.system.system_data:update(storages.entity, Globals.untracked_ids)
    Globals.game_systems.animation.system.system_data:update(storages.entity, Globals.untracked_ids)
@@ -103,7 +106,7 @@ local function update_all_systems()
    Globals.game_systems.show_collisions.system.system_data:update(storages.entity, Globals.untracked_ids)
 end
 
-local function create_entity_test(pos: Vector2, fi: uinteger, cw: uinteger, entity_tag: EntityTag): TestEntity_1
+local function create_entity_test(pos: Vector2, fi: uinteger, cw: uinteger, entity_tag: EntityTag, speed: number): TestEntity_1
    local test_collider: Collider = {
       local_rect = { 0, 16, cw, 16},
       global_rect = { 0, 16, cw, 16},
@@ -134,7 +137,7 @@ local function create_entity_test(pos: Vector2, fi: uinteger, cw: uinteger, enti
       storages.entity,
       storages.player, { walkstop_mask = EntityTag.Wall},
       storages.position, { position = pos },
-      storages.velocity, { direction = { 0, 0 }, speed = 1 },
+      storages.velocity, { direction = { 0, 0 }, speed = speed },
       storages.collider, test_collider,
       storages.collisions,
       storages.sprite, test_sprite,
@@ -145,8 +148,8 @@ local function create_entity_test(pos: Vector2, fi: uinteger, cw: uinteger, enti
    return new_test
 end
 
-local test_entity_1 = create_entity_test({20, 20}, 0, 32, EntityTag.Wall)
-local test_entity_2 = create_entity_test({30, 15}, 1, 16, EntityTag.Player)
+local test_entity_1 = create_entity_test({20, 20}, 0, 32, EntityTag.Wall, 0)
+local test_entity_2 = create_entity_test({30, 15}, 1, 16, EntityTag.Player, 1)
 
 update_all_systems()
 
@@ -166,10 +169,9 @@ while not Raylib.WindowShouldClose() do
 
    update_player_input_values()
 
-   test_position.position.y = Raylib.GetMouseY()
-   test_position.position.x = Raylib.GetMouseX()
-
    Globals.game_systems.player_controller:run(storages.player, storages.collisions, storages.velocity, Globals.player_input)
+
+   Globals.game_systems.velocity_system:run(storages.velocity, storages.position)
 
    Globals.game_systems.colliders_sync:run(storages.position, storages.velocity, storages.collider)
    Globals.game_systems.collision_detection:run(storages.collider, storages.collisions)

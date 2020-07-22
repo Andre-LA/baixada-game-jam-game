@@ -386,7 +386,44 @@ function PlayerController:run(
       end
    end
 end
+
+global VelocitySystem = @record{
+   system: System
+}
+
+function VelocitySystem.new(): VelocitySystem
+   local new_system: VelocitySystem = {
+      system = {
+         read = { bitset_array.copy(component_masks.velocity) },
+         write = { bitset_array.copy(component_masks.position) }
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function VelocitySystem:run(velocity_storage: Storage(Velocity)*, position_storage: Storage(Position)*)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local velocity_id = ids[0]
+         local position_id = ids[1]
+
+         local opt_velocity = velocity_storage:get_entry(velocity_id)
+         local opt_position = position_storage:get_entry(position_id)
+
+         if opt_velocity.filled and opt_position.filled then
+            local velocity = opt_velocity:get()
+            local position = opt_position:get()
+
+            position.position.x = position.position.x + velocity.direction.x * velocity.speed
+            position.position.y = position.position.y + velocity.direction.y * velocity.speed
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
 -- ] systems ]
-
-
-
