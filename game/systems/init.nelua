@@ -3,7 +3,7 @@ require 'raylib'
 require 'rotor'
 require 'game.components'
 
-local System = @record{
+global System = @record{
    read: vector(BitsetArray),
    write: vector(BitsetArray),
    system_data: SystemData
@@ -472,8 +472,13 @@ function ObstaclesSystem:run(
                   local dir: Vector2 = intersection:get_direction(intersection:get_center(), 2)
                   local dir_x_inputdir = dir * velocity.direction
 
-                  velocity.direction.x = dir_x_inputdir.x > 0 and velocity.direction.x or 0
-                  velocity.direction.y = dir_x_inputdir.y > 0 and velocity.direction.y or 0
+
+                  if dir_x_inputdir.x < 0 and intersection.rect.width / intersection.rect.height < 1 then
+                     velocity.direction.x = 0
+                  end
+                  if dir_x_inputdir.y < 0 and intersection.rect.height / intersection.rect.width < 1 then
+                     velocity.direction.y = 0
+                  end
                end
             end
          else
@@ -530,8 +535,15 @@ global GearController = @record{
 function GearController.new(): GearController
    local new_system: GearController = {
       system = {
-         read = { bitset_array.copy(component_masks.gear), bitset_array.copy(component_masks.collisions) },
-         write = { bitset_array.copy(component_masks.velocity), bitset_array.copy(component_masks.position) }
+         read = {
+            bitset_array.copy(component_masks.gear),
+            bitset_array.copy(component_masks.collisions)
+         },
+         write = {
+            bitset_array.copy(component_masks.velocity),
+            bitset_array.copy(component_masks.position),
+            bitset_array.copy(component_masks.animations)
+         }
       }
    }
 
@@ -544,8 +556,9 @@ function GearController:run(
    collisions_storage: Storage(Collisions)*,
    velocity_storage: Storage(Velocity)*,
    position_storage: Storage(Position)*,
+   animations_storage: Storage(Animations)*,
    player_input: PlayerInput,
-   engaged_slots: vector(uinteger)*
+   engaged_slots: vector(boolean)*
 )
    for i = 0, < #self.system.system_data.components_indexes do
       local ids = self.system.system_data.components_indexes[i]
@@ -555,28 +568,38 @@ function GearController:run(
          local collisions_id = ids[1]
          local velocity_id = ids[2]
          local position_id = ids[3]
+         local animations_id = ids[4]
 
          local opt_gear = gear_storage:get_entry(gear_id)
          local opt_collisions = collisions_storage:get_entry(collisions_id)
          local opt_velocity = velocity_storage:get_entry(velocity_id)
          local opt_position = position_storage:get_entry(position_id)
+         local opt_animations = animations_storage:get_entry(animations_id)
 
          if opt_gear.filled and
             opt_collisions.filled and
             opt_velocity.filled and
-            opt_position.filled
+            opt_position.filled and
+            opt_animations.filled
          then
             local gear = opt_gear:get()
             local collisions = opt_collisions:get()
             local velocity = opt_velocity:get()
             local position = opt_position:get()
+            local animations = opt_animations:get()
 
             if not gear.engaged then
                for j = 0, < #collisions.intersections do
                   local intersection: Intersection* = collisions.intersections[j]
 
                   if intersection:contains_tag(EntityTag.Player) and player_input.action then
-                     velocity.direction = -intersection:get_direction(intersection:get_center(), 2)
+                     local dir = intersection:get_direction(intersection:get_center(), 2)
+                     if dir.x > dir.y then
+                        dir.y = 0
+                     else
+                        dir.x = 0
+                     end
+                     velocity.direction = dir
                   elseif intersection:contains_tag(EntityTag.GearSlot) then
                      gear.engaged = true
                      break
@@ -591,6 +614,13 @@ function GearController:run(
                      break
                   end
                end
+            end
+
+            local in_movement = #velocity.direction > 0.15
+            animations.paused = in_movement
+
+            if in_movement then
+               animations.current_animation_index = velocity.direction.x > velocity.direction.y and 0 or 1
             end
          else
             self.system.system_data:mark_available(i)
@@ -685,6 +715,7 @@ function BridgeSystem:run(
             local collider = opt_collider:get()
 
             if engaged_slots[bridge.slot_idx] then
+               print'BRIDGE OPENED'
                collider.entity_tag = EntityTag.OpenBridge
             end
          else

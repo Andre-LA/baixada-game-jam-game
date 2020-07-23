@@ -42,13 +42,21 @@ global Globals: record{
       title: string
    },
    game_systems: record{
-      player_controller: PlayerController,
-      box_controller: BoxController,
-      obstacles_system: ObstaclesSystem,
-      velocity_system: VelocitySystem,
       colliders_sync: CollidersSync,
       collision_detection: CollisionDetection,
+
+      player_controller: PlayerController,
+      box_controller: BoxController,
+      gear_controller: GearController,
+
+      engage_system: EngageSystem,
+      bridge_system: BridgeSystem,
+
+      obstacles_system: ObstaclesSystem,
+      velocity_system: VelocitySystem,
+
       animation: Animation,
+
       sprite_painter: SpritePainter,
       show_collisions: ShowCollisions,
    },
@@ -58,7 +66,7 @@ global Globals: record{
       direction = { 0, 0 },
       action = false,
    },
-   engaged_slots = {},
+   engaged_slots = { false, false },
    camera = {
       position = { #[PL_POS_X]#, #[PL_POS_Y]# },
       camera = {
@@ -75,17 +83,26 @@ global Globals: record{
    },
    untracked_ids = {},
    game_systems = {
-      player_controller = PlayerController.new(),
-      box_controller = BoxController.new(),
-      obstacles_system = ObstaclesSystem.new(),
-      velocity_system = VelocitySystem.new(),
       colliders_sync = CollidersSync.new(),
       collision_detection = CollisionDetection.new(),
+
+      player_controller = PlayerController.new(),
+      box_controller = BoxController.new(),
+      gear_controller = GearController.new(),
+
+      engage_system = EngageSystem.new(),
+      bridge_system = BridgeSystem.new(),
+
+      obstacles_system = ObstaclesSystem.new(),
+      velocity_system = VelocitySystem.new(),
+
       animation = Animation.new(),
+
       sprite_painter = SpritePainter.new(),
       show_collisions = ShowCollisions.new(),
    },
 }
+-- ] Main game records ]
 
 local function update_player_input_values()
    local right_is_down = Raylib.IsKeyDown(KeyboardKey.KEY_D) or Raylib.IsKeyDown(KeyboardKey.KEY_RIGHT) or Raylib.IsKeyDown(KeyboardKey.KEY_L)
@@ -100,27 +117,41 @@ local function update_player_input_values()
    Globals.player_input.action = action_is_down
 end
 
--- ] Main game records ]
-
 -- [ Game initialization [
 Raylib.InitWindow(Globals.game_window.width, Globals.game_window.height, Globals.game_window.title)
 Raylib.SetTargetFPS(60)
 
+local function update_system(system: System*)
+   system.system_data:update(storages.entity, Globals.untracked_ids)
+end
+
 local function update_all_systems()
-   Globals.game_systems.player_controller.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.box_controller.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.obstacles_system.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.velocity_system.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.colliders_sync.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.collision_detection.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.animation.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.sprite_painter.system.system_data:update(storages.entity, Globals.untracked_ids)
-   Globals.game_systems.show_collisions.system.system_data:update(storages.entity, Globals.untracked_ids)
+   update_system(Globals.game_systems.colliders_sync.system)
+   update_system(Globals.game_systems.collision_detection.system)
+
+   update_system(Globals.game_systems.player_controller.system)
+   update_system(Globals.game_systems.box_controller.system)
+   update_system(Globals.game_systems.gear_controller.system)
+
+   update_system(Globals.game_systems.engage_system.system)
+   update_system(Globals.game_systems.bridge_system.system)
+
+   update_system(Globals.game_systems.obstacles_system.system)
+   update_system(Globals.game_systems.velocity_system.system)
+
+   update_system(Globals.game_systems.animation.system)
+
+   update_system(Globals.game_systems.sprite_painter.system)
+   update_system(Globals.game_systems.show_collisions.system)
 end
 
 local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, 1, 1, Globals.untracked_ids)
-local wall_entity = WallEntity.create({ 60, 60 }, 0, Globals.untracked_ids)
+local wall_entity = WallEntity.create({ 60, 60 }, 1, Globals.untracked_ids)
 local box_entity = BoxEntity.create({ 120, 120 }, 1, Globals.untracked_ids)
+
+local gear_entity_1 = GearEntity.create({ 120, 60 }, Globals.untracked_ids)
+local gear_slot_entity_1 = GearSlotEntity.create({ 220, 120 }, 0, Globals.untracked_ids)
+local bridge_entity_1 = BridgeEntity.create({ 60, 120 }, 0, Globals.untracked_ids)
 
 update_all_systems()
 
@@ -140,14 +171,18 @@ while not Raylib.WindowShouldClose() do
 
    update_player_input_values()
 
+   Globals.game_systems.colliders_sync:run(storages.position, storages.velocity, storages.collider)
+   Globals.game_systems.collision_detection:run(storages.collider, storages.collisions)
+
    Globals.game_systems.player_controller:run(storages.player, storages.velocity, Globals.player_input)
    Globals.game_systems.box_controller:run(storages.box, storages.position, storages.collisions, storages.velocity, Globals.player_input, player_position.position)
+   Globals.game_systems.gear_controller:run(storages.gear, storages.collisions, storages.velocity, storages.position, storages.animations, Globals.player_input, Globals.engaged_slots)
+
+   Globals.game_systems.engage_system:run(storages.collisions, storages.gear_slot, Globals.engaged_slots)
+   Globals.game_systems.bridge_system:run(storages.bridge, storages.collider, Globals.engaged_slots)
 
    Globals.game_systems.obstacles_system:run(storages.obstacles, storages.collisions, storages.velocity)
    Globals.game_systems.velocity_system:run(storages.velocity, storages.position)
-
-   Globals.game_systems.colliders_sync:run(storages.position, storages.velocity, storages.collider)
-   Globals.game_systems.collision_detection:run(storages.collider, storages.collisions)
 
    Globals.game_systems.animation:run(storages.animations, storages.sprite, dt)
    -- ] Update ]

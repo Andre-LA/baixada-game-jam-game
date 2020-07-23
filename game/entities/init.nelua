@@ -85,7 +85,7 @@ function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracke
       --[[player]]     {},
       --[[position]]   { position = pos },
       --[[velocity]]   { direction = { 0, 0 }, speed = speed },
-      --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Box},
+      --[[obstacles]]  { EntityTag.Wall | EntityTag.Box | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]]   pl_collider,
       --[[sprite]]     pl_sprite,
       --[[animations]] pl_animations,
@@ -223,9 +223,11 @@ global GearEntity = @record{
    gear_id: GenerationalIndex,
    position_id: GenerationalIndex,
    velocity_id: GenerationalIndex,
+   obstacles_id: GenerationalIndex,
    collider_id: GenerationalIndex,
    collisions_id: GenerationalIndex,
    sprite_id: GenerationalIndex,
+   animations_id: GenerationalIndex,
 }
 
 function GearEntity.new(
@@ -233,14 +235,17 @@ function GearEntity.new(
    gear_vl: Gear,
    position_vl: Position,
    velocity_vl: Velocity,
+   obstacles_vl: Obstacles,
    collider_vl: Collider,
    sprite_vl: Sprite,
+   animations_vl: Animations,
    untracked_ids: vector(GenerationalIndex)*
 ): GearEntity
    local entity_id, entity = entity_storage:new_entry(Entity.new())
    local gear_id, gear = Gear.associate(gear_vl, entity)
    local position_id, position = Position.associate(position_vl, entity)
    local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
+   local obstacles_id, obstacles = Obstacles.associate(obstacles_vl, entity)
 
    collider_vl.entity_id = entity_id
    collider_vl:sync_with_position(position_vl.position)
@@ -248,6 +253,7 @@ function GearEntity.new(
 
    local collisions_id, collisions = Collisions.associate({{}}, entity)
    local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
+   local animations_id, animations = Animations.associate(animations_vl, entity)
 
    untracked_ids:push(entity_id)
 
@@ -256,9 +262,11 @@ function GearEntity.new(
       gear_id = gear_id,
       position_id = position_id,
       velocity_id = velocity_id,
+      obstacles_id = obstacles_id,
       collider_id = collider_id,
       collisions_id = collisions_id,
       sprite_id = sprite_id,
+      animations_id = animations_id,
    }
 end
 
@@ -272,17 +280,30 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
 
    local gear_sprite: Sprite = {
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
-      frame_index = 5,
+      frame_index = 4,
       frame_rect = { 0, 0, 32, 32 }
+   }
+
+   local gear_animations: Animations = {
+      animations = {
+         --[[horizontal]] { frame_indexes = {4, 9, 14, 19}, frame_duration = 0.1 },
+         --[[vertical  ]] { frame_indexes = {3, 8, 13, 18}, frame_duration = 0.1 }
+      },
+      current_animation_index = 0,
+      current_frame_index = 0,
+      elapsed_time = 0,
+      paused = true
    }
 
    return GearEntity.new(
       storages.entity,
-      --[[gear]]      { engaged = false },
-      --[[position]] { position = pos },
-      --[[velocity]] { direction = { 0, 0 }, speed = 2 },
-      --[[collider]] gear_collider,
-      --[[sprite]]   gear_sprite,
+      --[[gear]]       { engaged = false },
+      --[[position]]   { position = pos },
+      --[[velocity]]   { direction = { 0, 0 }, speed = 2 },
+      --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Box | EntityTag.Player | EntityTag.GearSlot | EntityTag.ClosedBridge },
+      --[[collider]]   gear_collider,
+      --[[sprite]]     gear_sprite,
+      --[[animations]] gear_animations,
       untracked_ids
    )
 end
@@ -338,7 +359,7 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
 
    local gear_slot_sprite: Sprite = {
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
-      frame_index = 5,
+      frame_index = 15,
       frame_rect = { 0, 0, 32, 32 }
    }
 
@@ -394,7 +415,7 @@ function BridgeEntity.new(
    }
 end
 
-function BridgeEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): BridgeEntity
+function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: vector(GenerationalIndex)*): BridgeEntity
    local bridge_collider: Collider = {
       local_rect = { 0, 0, 32, 32},
       global_rect = { 0, 0, 32, 32},
@@ -404,13 +425,13 @@ function BridgeEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
 
    local bridge_sprite: Sprite = {
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
-      frame_index = 5,
+      frame_index = 17,
       frame_rect = { 0, 0, 32, 32 }
    }
 
    return BridgeEntity.new(
       storages.entity,
-      --[[bridge]]   {},
+      --[[bridge]]   { slot_idx = slot_idx },
       --[[position]] { position = pos },
       --[[velocity]] { direction = { 0, 0 }, speed = 2 },
       --[[collider]] bridge_collider,
