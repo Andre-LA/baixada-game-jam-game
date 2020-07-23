@@ -12,7 +12,8 @@ global EntityTag = @enum {
    GearSlot = 8,
    Box = 16,
    Gear = 32,
-   Bridge = 64,
+   ClosedBridge = 64,
+   OpenBridge = 128,
 }
 
 global CollisionState = @enum {
@@ -30,7 +31,7 @@ require 'game'
 
 global Globals: record{
    player_input: PlayerInput,
-   engaged_slots: vector(uinteger),
+   engaged_slots: vector(boolean),
    camera: record{
       position: Vector2,
       camera: Camera2D

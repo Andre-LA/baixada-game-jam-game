@@ -522,4 +522,175 @@ function VelocitySystem:run(velocity_storage: Storage(Velocity)*, position_stora
       end
    end
 end
+
+global GearController = @record{
+   system: System
+}
+
+function GearController.new(): GearController
+   local new_system: GearController = {
+      system = {
+         read = { bitset_array.copy(component_masks.gear), bitset_array.copy(component_masks.collisions) },
+         write = { bitset_array.copy(component_masks.velocity), bitset_array.copy(component_masks.position) }
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function GearController:run(
+   gear_storage: Storage(Gear)*,
+   collisions_storage: Storage(Collisions)*,
+   velocity_storage: Storage(Velocity)*,
+   position_storage: Storage(Position)*,
+   player_input: PlayerInput,
+   engaged_slots: vector(uinteger)*
+)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local gear_id = ids[0]
+         local collisions_id = ids[1]
+         local velocity_id = ids[2]
+         local position_id = ids[3]
+
+         local opt_gear = gear_storage:get_entry(gear_id)
+         local opt_collisions = collisions_storage:get_entry(collisions_id)
+         local opt_velocity = velocity_storage:get_entry(velocity_id)
+         local opt_position = position_storage:get_entry(position_id)
+
+         if opt_gear.filled and
+            opt_collisions.filled and
+            opt_velocity.filled and
+            opt_position.filled
+         then
+            local gear = opt_gear:get()
+            local collisions = opt_collisions:get()
+            local velocity = opt_velocity:get()
+            local position = opt_position:get()
+
+            if not gear.engaged then
+               for j = 0, < #collisions.intersections do
+                  local intersection: Intersection* = collisions.intersections[j]
+
+                  if intersection:contains_tag(EntityTag.Player) and player_input.action then
+                     velocity.direction = -intersection:get_direction(intersection:get_center(), 2)
+                  elseif intersection:contains_tag(EntityTag.GearSlot) then
+                     gear.engaged = true
+                     break
+                  end
+               end
+            else
+               for j = 0, < #collisions.intersections do
+                  local intersection: Intersection* = collisions.intersections[j]
+
+                  if intersection:contains_tag(EntityTag.GearSlot) then
+                     position.position = intersection:get_center()
+                     break
+                  end
+               end
+            end
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
+
+global EngageSystem = @record{
+   system: System
+}
+
+function EngageSystem.new(): EngageSystem
+   local new_system: EngageSystem = {
+      system = {
+         read = { bitset_array.copy(component_masks.collisions) },
+         write = { bitset_array.copy(component_masks.gear_slot) }
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function EngageSystem:run(
+   collisions_storage: Storage(Collisions)*,
+   gear_slot_storage: Storage(GearSlot)*,
+   engaged_slots: vector(boolean)*
+)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local collisions_id = ids[0]
+         local gear_slot_id = ids[1]
+
+         local opt_collisions = collisions_storage:get_entry(collisions_id)
+         local opt_gear_slot = gear_slot_storage:get_entry(gear_slot_id)
+
+         if opt_collisions.filled and opt_gear_slot.filled then
+            local collisions = opt_collisions:get()
+            local gear_slot = opt_gear_slot:get()
+
+            for j = 0, < #collisions.intersections do
+               local intersection: Intersection* = collisions.intersections[j]
+
+               if intersection:contains_tag(EntityTag.Gear) then
+                  engaged_slots[gear_slot.slot_idx] = true
+                  break
+               end
+            end
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
+
+global BridgeSystem = @record{
+   system: System
+}
+
+function BridgeSystem.new(): BridgeSystem
+   local new_system: BridgeSystem = {
+      system = {
+         read = { bitset_array.copy(component_masks.bridge) },
+         write = { bitset_array.copy(component_masks.collider) }
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function BridgeSystem:run(
+   bridge_storage: Storage(Bridge)*,
+   collider_storage: Storage(Collider)*,
+   engaged_slots: vector(boolean)*
+)
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local bridge_id = ids[0]
+         local collider_id = ids[1]
+
+         local opt_bridge = bridge_storage:get_entry(bridge_id)
+         local opt_collider = collider_storage:get_entry(collider_id)
+
+         if opt_bridge.filled and opt_collider.filled then
+            local bridge = opt_bridge:get()
+            local collider = opt_collider:get()
+
+            if engaged_slots[bridge.slot_idx] then
+               collider.entity_tag = EntityTag.OpenBridge
+            end
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
 -- ] systems ]

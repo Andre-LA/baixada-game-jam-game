@@ -8,8 +8,7 @@ global Player = @record{
 }
 
 global Gear = @record{
-   direction: Vector2,
-   engaged: boolean,
+   engaged: boolean
 }
 
 global GearSlot = @record{
