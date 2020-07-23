@@ -9,10 +9,10 @@ global EntityTag = @enum {
    Player = 1,
    TileMap = 2,
    Wall = 4,
-   CogSlot = 8,
-   PuzzleWall = 16,
-   Box = 32,
-   Cog = 64,
+   GearSlot = 8,
+   Box = 16,
+   Gear = 32,
+   Bridge = 64,
 }
 
 global CollisionState = @enum {

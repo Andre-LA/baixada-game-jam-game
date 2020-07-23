@@ -7,7 +7,7 @@ global Player = @record{
    add_something_useful_here_later: cchar,
 }
 
-global Cog = @record{
+global Gear = @record{
    direction: Vector2,
    engaged: boolean,
 }
@@ -97,7 +97,7 @@ function Obstacles:remove_obstacle(e_tag: EntityTag) self.mask = self.mask ~ e_t
 global storages: record{
    entity: Storage(Entity),
    player: Storage(Player),
-   cog: Storage(Cog),
+   gear: Storage(Gear),
    box: Storage(Box),
    position: Storage(Position),
    velocity: Storage(Velocity),
@@ -109,7 +109,7 @@ global storages: record{
 } = {
    entity = (@Storage(Entity)).new(),
    player = (@Storage(Player)).new(),
-   cog = (@Storage(Cog)).new(),
+   gear = (@Storage(Gear)).new(),
    box = (@Storage(Box)).new(),
    position = (@Storage(Position)).new(),
    velocity = (@Storage(Velocity)).new(),
@@ -125,7 +125,7 @@ global storages: record{
 global component_masks: record{
    entity: BitsetArray,     --    1
    player: BitsetArray,     --    2
-   cog: BitsetArray,        --    4
+   gear: BitsetArray,       --    4
    box: BitsetArray,        --    8
    position: BitsetArray,   --   16
    velocity: BitsetArray,   --   32
@@ -137,7 +137,7 @@ global component_masks: record{
 } = {
    entity = bitset_array.lshift(BITSETARRAY_OF_ONE,     0), --    1
    player = bitset_array.lshift(BITSETARRAY_OF_ONE,     1), --    2
-   cog = bitset_array.lshift(BITSETARRAY_OF_ONE,        2), --    4
+   gear = bitset_array.lshift(BITSETARRAY_OF_ONE,       2), --    4
    box = bitset_array.lshift(BITSETARRAY_OF_ONE,        3), --    8
    position = bitset_array.lshift(BITSETARRAY_OF_ONE,   4), --   16
    velocity = bitset_array.lshift(BITSETARRAY_OF_ONE,   5), --   32
@@ -156,9 +156,9 @@ function Player.associate(value: Player, entity: Entity*): (GenerationalIndex, P
    return id, ptr
 end
 
-function Cog.associate(value: Cog, entity: Entity*): (GenerationalIndex, Cog*)
-   local id, ptr = storages.cog:new_entry(value)
-   entity:associate(id, component_masks.cog)
+function Gear.associate(value: Gear, entity: Entity*): (GenerationalIndex, Gear*)
+   local id, ptr = storages.gear:new_entry(value)
+   entity:associate(id, component_masks.gear)
    return id, ptr
 end
 function Box.associate(value: Box, entity: Entity*): (GenerationalIndex, Box*)
