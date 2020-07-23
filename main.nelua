@@ -30,6 +30,7 @@ require 'game'
 
 global Globals: record{
    player_input: PlayerInput,
+   engaged_slots: vector(uinteger),
    camera: record{
       position: Vector2,
       camera: Camera2D
@@ -56,6 +57,7 @@ global Globals: record{
       direction = { 0, 0 },
       action = false,
    },
+   engaged_slots = {},
    camera = {
       position = { #[PL_POS_X]#, #[PL_POS_Y]# },
       camera = {
