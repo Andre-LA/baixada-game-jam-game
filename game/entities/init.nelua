@@ -169,6 +169,7 @@ global BoxEntity = @record{
    box_id: GenerationalIndex,
    position_id: GenerationalIndex,
    velocity_id: GenerationalIndex,
+   obstacles_id: GenerationalIndex,
    collider_id: GenerationalIndex,
    collisions_id: GenerationalIndex,
    sprite_id: GenerationalIndex,
@@ -179,6 +180,7 @@ function BoxEntity.new(
    box_vl: Box,
    position_vl: Position,
    velocity_vl: Velocity,
+   obstacles_vl: Obstacles,
    collider_vl: Collider,
    sprite_vl: Sprite,
    untracked_ids: vector(GenerationalIndex)*
@@ -187,6 +189,7 @@ function BoxEntity.new(
    local box_id, box = Box.associate(box_vl, entity)
    local position_id, position = Position.associate(position_vl, entity)
    local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
+   local obstacles_id, obstacles = Obstacles.associate(obstacles_vl, entity)
 
    collider_vl.entity_id = entity_id
    collider_vl:sync_with_position(position_vl.position)
@@ -202,6 +205,7 @@ function BoxEntity.new(
       box_id = box_id,
       position_id = position_id,
       velocity_id = velocity_id,
+      obstacles_id = obstacles_id,
       collider_id = collider_id,
       collisions_id = collisions_id,
       sprite_id = sprite_id,
@@ -217,8 +221,8 @@ function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(Gen
    }
 
    local box_sprite: Sprite = {
-      sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
-      frame_index = 5,
+      sprite_sheet = Raylib.LoadTexture("resources/WIP-tileset.png"),
+      frame_index = 4,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
       visible = true,
@@ -229,6 +233,7 @@ function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(Gen
       --[[box]]      {},
       --[[position]] { position = pos },
       --[[velocity]] { direction = { 0, 0 }, speed = speed },
+      --[[obstacles]] { mask = EntityTag.Wall | EntityTag.Player | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]] box_collider,
       --[[sprite]]   box_sprite,
       untracked_ids
