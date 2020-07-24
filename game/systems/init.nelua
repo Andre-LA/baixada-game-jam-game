@@ -1,3 +1,4 @@
+require 'math'
 require 'vector'
 require 'raylib'
 require 'rotor'
@@ -219,7 +220,6 @@ function ShowCollisions:run(collisions_storage: Storage(Collisions)*)
 
       if #ids > 0 then
          local collisions_id = ids[0]
-
          local opt_collisions = collisions_storage:get_entry(collisions_id)
 
          if opt_collisions.filled then
@@ -663,7 +663,7 @@ function GearController:run(
 
                   if intersection:contains_tag(EntityTag.Player) and player_input.action then
                      local dir = intersection:get_direction(intersection:get_center(), 2)
-                     if dir.x > dir.y then
+                     if math.abs(dir.x) > math.abs(dir.y) then
                         dir.y = 0
                      else
                         dir.x = 0
@@ -680,7 +680,7 @@ function GearController:run(
 
                   if intersection:contains_tag(EntityTag.GearSlot) then
                      position.position.x = intersection.collider.global_rect.x
-                     position.position.y = intersection.collider.global_rect.y+1
+                     position.position.y = intersection.collider.global_rect.y+33
                      break
                   end
                end
@@ -691,7 +691,7 @@ function GearController:run(
             animations.paused = not in_movement
 
             if in_movement then
-               animations.current_animation_index = velocity.direction.x > velocity.direction.y and 0 or 1
+               animations.current_animation_index = math.abs(velocity.direction.x) > math.abs(velocity.direction.y) and 0 or 1
             end
          else
             self.system.system_data:mark_available(i)
