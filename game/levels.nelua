@@ -13,7 +13,7 @@ local none: Tile = { {0,0,0,0}, 0, 0, TileKind.None }
 ## end
 
 ## for i = 1, 3 do
-   local #|'F'..i|#: Tile <const> = { {0,0,0,0}, 0, -32, TileKind.#|'Floor'..i|# }
+   local #|'FL'..i|#: Tile <const> = { {0,0,0,0}, 0, -32, TileKind.#|'Floor'..i|# }
 ## end
 
 global function create_level_1(
@@ -23,8 +23,8 @@ global function create_level_1(
       { WT4, WT3, WT9 },
       { WTL, WTC, WTR },
       { WBL, WBC, WBR },
-      {  F2,  F2,  F2 },
-      {  F3,  F3,  F3 }
+      { FL2, FL2, FL2 },
+      { FL3, FL3, FL3 },
    }
    create_tiles(
       origin, -- origin
