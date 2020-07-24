@@ -271,6 +271,46 @@ function ShowColliders:run(collider_storage: Storage(Collider)*)
    end
 end
 
+global ShowPositions = @record{
+   system: System
+}
+
+function ShowPositions.new(): ShowPositions
+   local new_system: ShowPositions = {
+      system = {
+         read = {bitset_array.copy(component_masks.position)},
+         write = {}
+      }
+   }
+
+   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+   return new_system
+end
+
+function ShowPositions:run(position_storage: Storage(Position)*)
+   local H_start: Vector2 = { -5, 0 }
+   local H_end  : Vector2 = {  5, 0 }
+   local V_start: Vector2 = { 0, -5 }
+   local V_end  : Vector2 = { 0,  5 }
+
+   for i = 0, < #self.system.system_data.components_indexes do
+      local ids = self.system.system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local position_id = ids[0]
+         local opt_position = position_storage:get_entry(position_id)
+
+         if opt_position.filled then
+            local position = opt_position:get()
+            Raylib.DrawLineV(position.position + H_start, position.position + H_end, RED)
+            Raylib.DrawLineV(position.position + V_start, position.position + V_end, RED)
+         else
+            self.system.system_data:mark_available(i)
+         end
+      end
+   end
+end
+
 global CollisionDetection = @record{
    system: System
 }
