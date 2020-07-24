@@ -67,7 +67,8 @@ function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracke
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -32 }
+      offset = { 0, -32 },
+      visible = true,
    }
 
    local pl_animations: Animations = {
@@ -144,7 +145,8 @@ function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mu
       sprite_sheet = Raylib.LoadTexture("resources/WIP-tileset.png"),
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -32 * offset_mul }
+      offset = { 0, -32 * offset_mul },
+      visible = true,
    }
 
    return WallEntity.new(
@@ -212,7 +214,8 @@ function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(Gen
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 5,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -32 }
+      offset = { 0, -32 },
+      visible = true,
    }
 
    return BoxEntity.new(
@@ -290,7 +293,8 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 4,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -33 }
+      offset = { 0, -33 },
+      visible = true,
    }
 
    local gear_animations: Animations = {
@@ -370,7 +374,8 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 15,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -32 }
+      offset = { 0, -32 },
+      visible = true,
    }
 
    return GearSlotEntity.new(
@@ -437,7 +442,8 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 17,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, 0 }
+      offset = { 0, 0 },
+      visible = false,
    }
 
    return BridgeEntity.new(

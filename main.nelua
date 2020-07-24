@@ -198,7 +198,7 @@ while not Raylib.WindowShouldClose() do
    Globals.game_systems.gear_controller:run(storages.gear, storages.collisions, storages.velocity, storages.position, storages.animations, Globals.player_input, Globals.engaged_slots)
 
    Globals.game_systems.engage_system:run(storages.collisions, storages.gear_slot, Globals.engaged_slots)
-   Globals.game_systems.bridge_system:run(storages.bridge, storages.collider, Globals.engaged_slots)
+   Globals.game_systems.bridge_system:run(storages.bridge, storages.collider, storages.sprite, Globals.engaged_slots)
 
    Globals.game_systems.obstacles_system:run(storages.obstacles, storages.collisions, storages.velocity)
    Globals.game_systems.velocity_system:run(storages.velocity, storages.position)

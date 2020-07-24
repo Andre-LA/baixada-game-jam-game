@@ -77,7 +77,8 @@ global Sprite = @record{
    sprite_sheet: Texture2D,
    frame_index: uinteger,
    frame_rect: Rectangle,
-   offset: Vector2
+   offset: Vector2,
+   visible: boolean
 }
 
 global AnimationData = @record{

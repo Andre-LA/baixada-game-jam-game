@@ -94,7 +94,6 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
          local opt_position = position_storage:get_entry(position_id)
 
          if opt_sprite.filled and opt_position.filled then
-            local sprite = opt_sprite:get()
             local position = opt_position:get()
 
             if  #draw_order == 0 then
@@ -133,15 +132,17 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
 
          if opt_sprite.filled and opt_position.filled then
             local sprite = opt_sprite:get()
-            local position = opt_position:get()
+            if sprite.visible then
+               local position = opt_position:get()
 
-            local img_unit_w: integer = sprite.sprite_sheet.width // sprite.frame_rect.width
-            local img_unit_h: integer = sprite.sprite_sheet.height // sprite.frame_rect.height
+               local img_unit_w: integer = sprite.sprite_sheet.width // sprite.frame_rect.width
+               local img_unit_h: integer = sprite.sprite_sheet.height // sprite.frame_rect.height
 
-            sprite.frame_rect.x = (sprite.frame_index % img_unit_w) * sprite.frame_rect.width
-            sprite.frame_rect.y = (sprite.frame_index // img_unit_w) * sprite.frame_rect.height
+               sprite.frame_rect.x = (sprite.frame_index % img_unit_w) * sprite.frame_rect.width
+               sprite.frame_rect.y = (sprite.frame_index // img_unit_w) * sprite.frame_rect.height
 
-            Raylib.DrawTextureRec(sprite.sprite_sheet, sprite.frame_rect, position.position + sprite.offset, WHITE)
+               Raylib.DrawTextureRec(sprite.sprite_sheet, sprite.frame_rect, position.position + sprite.offset, WHITE)
+            end
          else
             self.system.system_data:mark_available(i)
          end
@@ -758,7 +759,7 @@ function BridgeSystem.new(): BridgeSystem
    local new_system: BridgeSystem = {
       system = {
          read = { bitset_array.copy(component_masks.bridge) },
-         write = { bitset_array.copy(component_masks.collider) }
+         write = { bitset_array.copy(component_masks.collider), bitset_array.copy(component_masks.sprite) }
       }
    }
 
@@ -769,6 +770,7 @@ end
 function BridgeSystem:run(
    bridge_storage: Storage(Bridge)*,
    collider_storage: Storage(Collider)*,
+   sprite_storage: Storage(Sprite)*,
    engaged_slots: vector(boolean)*
 )
    for i = 0, < #self.system.system_data.components_indexes do
@@ -777,16 +779,20 @@ function BridgeSystem:run(
       if #ids > 0 then
          local bridge_id = ids[0]
          local collider_id = ids[1]
+         local sprite_id = ids[2]
 
          local opt_bridge = bridge_storage:get_entry(bridge_id)
          local opt_collider = collider_storage:get_entry(collider_id)
+         local opt_sprite = sprite_storage:get_entry(sprite_id)
 
-         if opt_bridge.filled and opt_collider.filled then
+         if opt_bridge.filled and opt_collider.filled and opt_sprite.filled then
             local bridge = opt_bridge:get()
             local collider = opt_collider:get()
+            local sprite = opt_sprite:get()
 
             if engaged_slots[bridge.slot_idx] then
                collider.entity_tag = EntityTag.OpenBridge
+               sprite.visible = true
             end
          else
             self.system.system_data:mark_available(i)
