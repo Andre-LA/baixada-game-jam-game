@@ -663,6 +663,7 @@ function GearController:run(
                   local intersection: Intersection* = collisions.intersections[j]
 
                   if intersection:contains_tag(EntityTag.Player) and player_input.action then
+                     --local dir = player_input.direction
                      local dir = intersection:get_direction(intersection:get_center(), 2)
                      if math.abs(dir.x) > math.abs(dir.y) then
                         dir.y = 0
