@@ -140,7 +140,7 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
             sprite.frame_rect.x = (sprite.frame_index % img_unit_w) * sprite.frame_rect.width
             sprite.frame_rect.y = (sprite.frame_index // img_unit_w) * sprite.frame_rect.height
 
-            Raylib.DrawTextureRec(sprite.sprite_sheet, sprite.frame_rect, position.position, WHITE)
+            Raylib.DrawTextureRec(sprite.sprite_sheet, sprite.frame_rect, position.position + sprite.offset, WHITE)
          else
             self.system.system_data:mark_available(i)
          end

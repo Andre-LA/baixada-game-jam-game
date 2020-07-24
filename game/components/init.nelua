@@ -76,7 +76,8 @@ global Collisions = @record{
 global Sprite = @record{
    sprite_sheet: Texture2D,
    frame_index: uinteger,
-   frame_rect: Rectangle
+   frame_rect: Rectangle,
+   offset: Vector2
 }
 
 global AnimationData = @record{
