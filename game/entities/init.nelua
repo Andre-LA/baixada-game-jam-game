@@ -57,8 +57,8 @@ end
 
 function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracked_ids: vector(GenerationalIndex)*): PlayerEntity
    local pl_collider: Collider = {
-      local_rect = { 0, 16, 16, 16},
-      global_rect = { 0, 16, 16, 16},
+      local_rect = { 8, 16 - 32, 16, 16},
+      global_rect = { 8, 16 - 32, 16, 16},
       entity_id = { -1, 0 },
       entity_tag = EntityTag.Player
    }
@@ -67,7 +67,7 @@ function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracke
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, 0 }
+      offset = { 0, -32 }
    }
 
    local pl_animations: Animations = {
@@ -127,19 +127,24 @@ function WallEntity.new(
    }
 end
 
-function WallEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(GenerationalIndex)*): WallEntity
+function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mul: integer, untracked_ids: vector(GenerationalIndex)*): WallEntity
+   local _col: Rectangle = {
+      col.x, col.y - 32 * offset_mul,
+      col.width, col.height
+   }
+
    local wall_collider: Collider = {
-      local_rect = { 0, 16, 32, 16},
-      global_rect = { 0, 16, 32, 16},
+      local_rect = _col,
+      global_rect = _col,
       entity_id = { -1, 0 },
       entity_tag = EntityTag.Wall
    }
 
    local wall_sprite: Sprite = {
-      sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
+      sprite_sheet = Raylib.LoadTexture("resources/WIP-tileset.png"),
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -32 }
+      offset = { 0, -32 * offset_mul }
    }
 
    return WallEntity.new(
@@ -197,8 +202,8 @@ end
 
 function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(GenerationalIndex)*): BoxEntity
    local box_collider: Collider = {
-      local_rect = { 0, 16, 32, 16},
-      global_rect = { 0, 16, 32, 16},
+      local_rect = { 0, 16 - 32, 32, 16},
+      global_rect = { 0, 16 - 32, 32, 16},
       entity_id = { -1, 0 },
       entity_tag = EntityTag.Box
    }
@@ -207,7 +212,7 @@ function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(Gen
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 5,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, 0 }
+      offset = { 0, -32 }
    }
 
    return BoxEntity.new(
@@ -275,8 +280,8 @@ end
 
 function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): GearEntity
    local gear_collider: Collider = {
-      local_rect = { 0, 0, 32, 32},
-      global_rect = { 0, 0, 32, 32},
+      local_rect = { 0, -32, 32, 32},
+      global_rect = { 0, -32, 32, 32},
       entity_id = { -1, 0 },
       entity_tag = EntityTag.Gear
    }
@@ -285,7 +290,7 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 4,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -1 }
+      offset = { 0, -33 }
    }
 
    local gear_animations: Animations = {
@@ -355,8 +360,8 @@ end
 
 function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: vector(GenerationalIndex)*): GearSlotEntity
    local gear_slot_collider: Collider = {
-      local_rect = { 0, 0, 32, 32},
-      global_rect = { 0, 0, 32, 32},
+      local_rect = { 0, -32, 32, 32},
+      global_rect = { 0, -23, 32, 32},
       entity_id = { -1, 0 },
       entity_tag = EntityTag.GearSlot
    }
@@ -365,7 +370,7 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 15,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, 0 }
+      offset = { 0, -32 }
    }
 
    return GearSlotEntity.new(
@@ -432,7 +437,7 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
       frame_index = 17,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, 32 }
+      offset = { 0, 0 }
    }
 
    return BridgeEntity.new(
