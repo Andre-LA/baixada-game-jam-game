@@ -58,7 +58,10 @@ global Globals: record{
       animation: Animation,
 
       sprite_painter: SpritePainter,
+
+      show_colliders: ShowColliders,
       show_collisions: ShowCollisions,
+      show_positions: ShowPositions,
    },
    untracked_ids: vector(GenerationalIndex),
 } = {
@@ -99,7 +102,10 @@ global Globals: record{
       animation = Animation.new(),
 
       sprite_painter = SpritePainter.new(),
+
+      show_colliders = ShowColliders.new(),
       show_collisions = ShowCollisions.new(),
+      show_positions = ShowPositions.new(),
    },
 }
 -- ] Main game records ]
@@ -142,7 +148,10 @@ local function update_all_systems()
    update_system(Globals.game_systems.animation.system)
 
    update_system(Globals.game_systems.sprite_painter.system)
+
+   update_system(Globals.game_systems.show_colliders.system)
    update_system(Globals.game_systems.show_collisions.system)
+   update_system(Globals.game_systems.show_positions.system)
 end
 
 local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, 1, 1, Globals.untracked_ids)
@@ -192,7 +201,10 @@ while not Raylib.WindowShouldClose() do
       Raylib.ClearBackground(RAYWHITE)
 
       Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
-      Globals.game_systems.show_collisions:run(storages.collisions, storages.collider)
+
+      Globals.game_systems.show_colliders:run(storages.collider)
+      Globals.game_systems.show_collisions:run(storages.collisions)
+      Globals.game_systems.show_positions:run(storages.position)
    Raylib.EndDrawing()
    -- ] Draw ]
 end
