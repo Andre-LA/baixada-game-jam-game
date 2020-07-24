@@ -610,14 +610,16 @@ function GearController:run(
                   local intersection: Intersection* = collisions.intersections[j]
 
                   if intersection:contains_tag(EntityTag.GearSlot) then
-                     position.position = intersection:get_center()
+                     position.position.x = intersection.collider.global_rect.x
+                     position.position.y = intersection.collider.global_rect.y+1
                      break
                   end
                end
             end
 
+
             local in_movement = #velocity.direction > 0.15
-            animations.paused = in_movement
+            animations.paused = not in_movement
 
             if in_movement then
                animations.current_animation_index = velocity.direction.x > velocity.direction.y and 0 or 1
@@ -715,7 +717,6 @@ function BridgeSystem:run(
             local collider = opt_collider:get()
 
             if engaged_slots[bridge.slot_idx] then
-               print'BRIDGE OPENED'
                collider.entity_tag = EntityTag.OpenBridge
             end
          else
