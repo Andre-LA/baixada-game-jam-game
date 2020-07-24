@@ -5,7 +5,7 @@ global TileKind = @enum{
    None = -1,
 
    WallTL =  0, WallTC =  1, WallTR =  2, -- TL, TC, TR: top-left; top-center; top-right
-   WallML =  5, WallMC =  6, WallMR =  7, -- ML, MC, MR: middle-left; middle-center; middle-right
+--[[WallML =  5, WallMC =  6, WallMR =  7, -- ML, MC, MR: middle-left; middle-center; middle-right]]
    WallBL = 10, WallBC = 11, WallBR = 12, -- BL, BC, BR: bottom-left; bottom-center; bottom-right
 
    WallTop1 = 15, WallTop2 = 16, WallTop3 = 17, WallTop4 = 18,
@@ -18,7 +18,7 @@ global TileKind = @enum{
 
 local function is_wall(kind: TileKind): boolean
    return kind == TileKind.WallTL or kind == TileKind.WallTC or kind == TileKind.WallTR or
-          kind == TileKind.WallML or kind == TileKind.WallMC or kind == TileKind.WallMR or
+          --kind == TileKind.WallML or kind == TileKind.WallMC or kind == TileKind.WallMR or
           kind == TileKind.WallBL or kind == TileKind.WallBC or kind == TileKind.WallBR or
           kind == TileKind.WallTop1 or kind == TileKind.WallTop2 or kind == TileKind.WallTop3 or
           kind == TileKind.WallTop4 or kind == TileKind.WallTop5 or kind == TileKind.WallTop6 or
