@@ -1,0 +1,78 @@
+require 'vector'
+require 'game.entities'
+
+global TileKind = @enum{
+   None = -1,
+
+   WallTL =  0, WallTC =  1, WallTR =  2, -- TL, TC, TR: top-left; top-center; top-right
+   WallML =  5, WallMC =  6, WallMR =  7, -- ML, MC, MR: middle-left; middle-center; middle-right
+   WallBL = 10, WallBC = 11, WallBR = 12, -- BL, BC, BR: bottom-left; bottom-center; bottom-right
+
+   WallTop1 = 15, WallTop2 = 16, WallTop3 = 17, WallTop4 = 18,
+   WallTop5 = 20, WallTop6 = 21, WallTop7 = 22, WallTop8 = 23, WallTop9 = 24,
+
+   Floor1 = 3, Floor2 = 8, Floor3 = 13,
+
+   Bridge = 4,
+}
+
+local function is_wall(kind: TileKind): boolean
+   return kind == TileKind.WallTL or kind == TileKind.WallTC or kind == TileKind.WallTR or
+          kind == TileKind.WallML or kind == TileKind.WallMC or kind == TileKind.WallMR or
+          kind == TileKind.WallBL or kind == TileKind.WallBC or kind == TileKind.WallBR or
+          kind == TileKind.WallTop1 or kind == TileKind.WallTop2 or kind == TileKind.WallTop3 or
+          kind == TileKind.WallTop4 or kind == TileKind.WallTop5 or kind == TileKind.WallTop6 or
+          kind == TileKind.WallTop7 or kind == TileKind.WallTop8 or kind == TileKind.WallTop9
+end
+
+local function is_floor(kind: TileKind): boolean
+   return kind == TileKind.Floor1 or kind == TileKind.Floor2 or kind == TileKind.Floor3
+end
+
+global Tile = @record{
+   collider_rect: Rectangle,
+   offset_mul: integer,
+   offset_y: float32,
+   kind: TileKind
+}
+
+local function create_wall(
+   origin: Vector2*,
+   i: integer,
+   j: integer,
+   tile: Tile*,
+   untracked_ids: vector(GenerationalIndex)*
+)
+   local offset_pos: Vector2 = {0, tile.offset_y}
+
+   local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 32 }
+   local frame_index: uinteger = tile.kind
+   local collider_rect: Rectangle = {
+      tile.collider_rect.x, tile.collider_rect.y,
+      tile.collider_rect.width, tile.collider_rect.height
+   }
+   WallEntity.create(position + offset_pos, frame_index, collider_rect, tile.offset_mul, untracked_ids)
+end
+
+global function create_tiles(
+   origin: Vector2,
+   tilemap: vector(vector(Tile))*,
+   untracked_ids: vector(GenerationalIndex)*
+)
+   for i = 0, < #tilemap do
+      local tile_line = tilemap[i]
+
+      for j = 0, < #tile_line do
+         local tile: Tile* = tile_line[j]
+         if tile.kind == TileKind.Bridge then
+
+         else
+            if is_wall(tile.kind) then
+               create_wall(origin, i, j, tile, untracked_ids)
+            elseif is_floor(tile.kind) then
+               create_wall(origin, i, j, tile, untracked_ids)
+            end
+         end
+      end
+   end
+end

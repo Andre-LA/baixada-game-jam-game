@@ -128,7 +128,13 @@ function WallEntity.new(
    }
 end
 
-function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mul: integer, untracked_ids: vector(GenerationalIndex)*): WallEntity
+function WallEntity.create(
+   pos: Vector2,
+   fi: uinteger,
+   col: Rectangle,
+   offset_mul: integer,
+   untracked_ids: vector(GenerationalIndex)*
+): WallEntity
    local _col: Rectangle = {
       col.x, col.y - 32 * offset_mul,
       col.width, col.height

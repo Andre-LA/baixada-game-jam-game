@@ -1,0 +1,59 @@
+require 'vector'
+require 'game.tilemap_creator'
+
+local none: Tile = { {0,0,0,0}, 0, 0, TileKind.None }
+
+local function walltop(n: uinteger): Tile
+   local result: Tile = { {0,0,0,0}, 2, 32, TileKind.WallTop1 }
+
+   switch n
+   case 1 then result.kind = TileKind.WallTop1
+   case 2 then result.kind = TileKind.WallTop2
+   case 3 then result.kind = TileKind.WallTop3
+   case 4 then result.kind = TileKind.WallTop4
+   case 5 then result.kind = TileKind.WallTop5
+   case 6 then result.kind = TileKind.WallTop6
+   case 7 then result.kind = TileKind.WallTop7
+   case 8 then result.kind = TileKind.WallTop8
+   case 9 then result.kind = TileKind.WallTop9
+   end
+
+   return result
+end
+
+local function wallB(d: stringview): Tile
+   local result: Tile = { {0,0,32,32}, 1, 0, TileKind.WallBC }
+
+   if d == 'L' then result.kind = TileKind.WallBL
+   elseif d == 'C' then result.kind = TileKind.WallBC
+   elseif d == 'R' then result.kind = TileKind.WallBR end
+
+   return result
+end
+
+local function floor(n: uinteger): Tile
+   local result: Tile = { {0,0,0,0}, 0, -32, TileKind.Floor1}
+
+   if n == 1 then result.kind = TileKind.Floor1
+   elseif n == 2 then result.kind = TileKind.Floor2
+   elseif n == 3 then result.kind = TileKind.Floor3 end
+
+   return result
+end
+
+global function create_level_1(
+   origin: Vector2
+)
+   local tilemap: vector(vector(Tile)) = {
+      { walltop(4), walltop(3), walltop(9) },
+      { {{0,24,32,8}, 1, 0, TileKind.WallTL}, { {0,24,32,8}, 1, 0, TileKind.WallTC}, { {0,24,32,8}, 1, 0, TileKind.WallTR}},
+      { wallB'L', wallB'C', wallB'R' },
+      { floor(2), floor(2), floor(2) },
+      { floor(3), floor(3), floor(3) }
+   }
+   create_tiles(
+      origin, -- origin
+      tilemap,
+      Globals.untracked_ids
+   )
+end
