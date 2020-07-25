@@ -176,7 +176,6 @@ local box_entity = BoxEntity.create({ 180, 200 }, 1, Globals.untracked_ids)
 
 local gear_entity_1 = GearEntity.create({ 160, 60 }, Globals.untracked_ids)
 local gear_slot_entity_1 = GearSlotEntity.create({ 260, 120 }, 0, Globals.untracked_ids)
-local bridge_entity_1 = BridgeEntity.create({ 60, 160 }, 0, Globals.untracked_ids)
 
 update_all_systems()
 
