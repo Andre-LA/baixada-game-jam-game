@@ -32,10 +32,7 @@ require 'game'
 global Globals: record{
    player_input: PlayerInput,
    engaged_slots: vector(boolean),
-   camera: record{
-      position: Vector2,
-      camera: Camera2D
-   },
+   camera: Camera2D,
    game_window: record{
       width: integer,
       height: integer,
@@ -71,13 +68,10 @@ global Globals: record{
    },
    engaged_slots = { false, false },
    camera = {
-      position = { #[PL_POS_X]#, #[PL_POS_Y]# },
-      camera = {
-         offset = { #[WIN_WIDTH]# / 2, #[WIN_HEIGHT]# / 2 },
-         target = { #[PL_POS_X]#, #[PL_POS_Y]# },
-         rotation = 0,
-         zoom = 1
-      }
+      offset = { #[WIN_WIDTH]# / 2, #[WIN_HEIGHT]# / 2 },
+      target = { #[PL_POS_X]#, #[PL_POS_Y]# },
+      rotation = 0,
+      zoom = 1
    },
    game_window = {
       #[WIN_WIDTH]# // 1,
@@ -192,17 +186,21 @@ while not Raylib.WindowShouldClose() do
    Globals.game_systems.velocity_system:run(storages.velocity, storages.position)
 
    Globals.game_systems.animation:run(storages.animations, storages.sprite, dt)
+
+   Globals.camera.target = player_position.position
    -- ] Update ]
 
    -- [ Draw [
    Raylib.BeginDrawing()
       Raylib.ClearBackground(RAYWHITE)
 
-      Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
+      Raylib.BeginMode2D(Globals.camera)
+         Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
 
-      Globals.game_systems.show_colliders:run(storages.collider)
-      Globals.game_systems.show_collisions:run(storages.collisions)
-      Globals.game_systems.show_positions:run(storages.position)
+         Globals.game_systems.show_colliders:run(storages.collider)
+         Globals.game_systems.show_collisions:run(storages.collisions)
+         Globals.game_systems.show_positions:run(storages.position)
+      Raylib.EndMode2D()
    Raylib.EndDrawing()
    -- ] Draw ]
 end
