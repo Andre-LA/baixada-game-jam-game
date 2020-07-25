@@ -35,7 +35,7 @@ local  BOX: Tile <const> = { {0,0,0,0 }, 0, -32, TileKind.Box  }
    local #|'GRS'..i|#: Tile <const> = { WABC.collider_rect, WABC.offset_mul, 0, TileKind.#|'GearSlot'..i|# }
 ## end
 
-global function create_level_1(
+global function create_level(
    origin: Vector2
 )
    local tilemap: vector(vector(Tile)) = {
