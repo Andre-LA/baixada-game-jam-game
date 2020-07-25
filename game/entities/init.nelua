@@ -55,7 +55,7 @@ function PlayerEntity.new(
    }
 end
 
-function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracked_ids: vector(GenerationalIndex)*): PlayerEntity
+function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): PlayerEntity
    local pl_collider: Collider = {
       local_rect = { 8, 16 - 32, 16, 16},
       global_rect = { 8, 16 - 32, 16, 16},
@@ -65,7 +65,7 @@ function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracke
 
    local pl_sprite: Sprite = {
       sprite_sheet = Raylib.LoadTexture("resources/prototype-tileset.png"),
-      frame_index = fi,
+      frame_index = 1,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
       visible = true,
@@ -86,7 +86,7 @@ function PlayerEntity.create(pos: Vector2, fi: uinteger, speed: number, untracke
       storages.entity,
       --[[player]]     {},
       --[[position]]   { position = pos },
-      --[[velocity]]   { direction = { 0, 0 }, speed = speed },
+      --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
       --[[obstacles]]  { EntityTag.Wall | EntityTag.Box | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]]   pl_collider,
       --[[sprite]]     pl_sprite,

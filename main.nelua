@@ -157,7 +157,7 @@ local function update_all_systems()
    update_system(Globals.game_systems.show_positions.system)
 end
 
-local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, 1, 1, Globals.untracked_ids)
+local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, Globals.untracked_ids)
 create_level_1({ 32*8, 32*3 })
 
 update_all_systems()

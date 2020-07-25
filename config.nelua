@@ -8,4 +8,5 @@ WIN_TITLE = WIN_TITLE or (DEFAULT_LANG == 'en-US' and 'Baixada Game Jam Game' or
 
 PL_POS_X = PL_POS_X or 32
 PL_POS_Y = PL_POS_Y or 32
+PL_VEL = PL_VEL or 1
 ]]
