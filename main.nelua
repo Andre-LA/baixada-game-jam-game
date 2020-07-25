@@ -1,4 +1,5 @@
 require 'raylib'
+require 'allocators.gc'
 require 'vector'
 require 'string'
 require 'rotor'
@@ -121,8 +122,13 @@ local function update_player_input_values()
 end
 
 -- [ Game initialization [
+## if PLATFORM_WEB then
+   gc:pause() -- conservative GCs cannot run automatically with emscripten
+## else
+   Raylib.SetTargetFPS(60)
+## end
+
 Raylib.InitWindow(Globals.game_window.width, Globals.game_window.height, Globals.game_window.title)
-Raylib.SetTargetFPS(60)
 
 local function update_system(system: System*)
    system.system_data:update(storages.entity, Globals.untracked_ids)
@@ -166,7 +172,7 @@ player_animations.current_animation_index = 1
 -- ] Game initialization ]
 
 -- [ Game loop [
-while not Raylib.WindowShouldClose() do
+local function update_draw_frame()
    -- [ Update [
    local dt = Raylib.GetFrameTime()
 
@@ -203,7 +209,20 @@ while not Raylib.WindowShouldClose() do
       Raylib.EndMode2D()
    Raylib.EndDrawing()
    -- ] Draw ]
+
+   ## if PLATFORM_WEB then
+      gc:run() -- safe to collect garbage here
+   ## end
 end
+
+## if PLATFORM_WEB then
+   emscripten_set_main_loop(update_draw_frame, 0, 1)
+## else
+   while not Raylib.WindowShouldClose() do
+      update_draw_frame()
+   end
+##end
+
 -- ] Game loop ]
 
 -- [ Game De-initialization [

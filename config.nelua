@@ -9,4 +9,20 @@ WIN_TITLE = WIN_TITLE or (DEFAULT_LANG == 'en-US' and 'Baixada Game Jam Game' or
 PL_POS_X = PL_POS_X or 32
 PL_POS_Y = PL_POS_Y or 32
 PL_VEL = PL_VEL or 1
+
+-- web, from Edubart's 2048 game: https://github.com/edubart/nelua-game2048/blob/56d0609097ae9353fe71f2a2f306dcdf2b4b2e4c/config.nelua#L1
+local compiler = require 'nelua.ccompiler'
+if compiler.get_cc_info().is_emscripten then
+   PLATFORM_WEB = true
+   primtypes.integer = primtypes.int32
+   primtypes.uinteger = primtypes.uint32
+   primtypes.number = primtypes.float32
+   cflags '-Oz -fno-plt -flto --llvm-lto 1 --closure 1'
+   cflags '-DGRAPHICS_API_OPENGL_ES2'
+   cflags '-s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s TOTAL_MEMORY=16777216'
+end
 ]]
+
+## if PLATFORM_WEB then
+global function emscripten_set_main_loop(func: function(), fps: cint, simulate_infinite_loop: cint) <cimport,cinclude'<emscripten.h>',nodecl> end
+## end
