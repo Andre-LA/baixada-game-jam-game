@@ -138,9 +138,9 @@ local function update_all_systems()
    update_system(Globals.game_systems.colliders_sync.system)
    update_system(Globals.game_systems.collision_detection.system)
 
-   update_system(Globals.game_systems.player_controller.system)
    update_system(Globals.game_systems.box_controller.system)
    update_system(Globals.game_systems.gear_controller.system)
+   update_system(Globals.game_systems.player_controller.system)
 
    update_system(Globals.game_systems.engage_system.system)
    update_system(Globals.game_systems.bridge_system.system)
@@ -158,24 +158,12 @@ local function update_all_systems()
 end
 
 local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, 1, 1, Globals.untracked_ids)
-create_level_1({ 400, 400 })
+create_level_1({ 200, 64 })
 
---[[
-local wall_entity_1 = WallEntity.create({ 48+00, 48+32 }, 18, { 0,  0,  0,  0 }, 2, Globals.untracked_ids)
-local wall_entity_2 = WallEntity.create({ 48+32, 48+32 }, 17, { 0,  0,  0,  0 }, 2, Globals.untracked_ids)
-local wall_entity_3 = WallEntity.create({ 48+64, 48+32 }, 24, { 0,  0,  0,  0 }, 2, Globals.untracked_ids)
-local wall_entity_4 = WallEntity.create({ 48+00, 48+32 },  0, { 0, 24, 32,  8 }, 1, Globals.untracked_ids)
-local wall_entity_5 = WallEntity.create({ 48+32, 48+32 },  1, { 0, 24, 32,  8 }, 1, Globals.untracked_ids)
-local wall_entity_6 = WallEntity.create({ 48+64, 48+32 },  2, { 0, 24, 32,  8 }, 1, Globals.untracked_ids)
-local wall_entity_7 = WallEntity.create({ 48+00, 48+64 }, 10, { 0,  0, 32, 32 }, 1, Globals.untracked_ids)
-local wall_entity_8 = WallEntity.create({ 48+32, 48+64 }, 11, { 0,  0, 32, 32 }, 1, Globals.untracked_ids)
-local wall_entity_9 = WallEntity.create({ 48+64, 48+64 }, 12, { 0,  0, 32, 32 }, 1, Globals.untracked_ids)
-]]
+local box_entity = BoxEntity.create({ 40, 120}, 1, Globals.untracked_ids)
 
-local box_entity = BoxEntity.create({ 180, 200 }, 1, Globals.untracked_ids)
-
-local gear_entity_1 = GearEntity.create({ 160, 60 }, Globals.untracked_ids)
-local gear_slot_entity_1 = GearSlotEntity.create({ 260, 120 }, 0, Globals.untracked_ids)
+local gear_entity_1 = GearEntity.create({ 80, 60 }, Globals.untracked_ids)
+local gear_slot_entity_1 = GearSlotEntity.create({ 120, 120 }, 0, Globals.untracked_ids)
 
 update_all_systems()
 

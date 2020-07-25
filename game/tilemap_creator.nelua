@@ -21,6 +21,7 @@ global TileKind = @enum{
 local function is_bridge(kind: TileKind): boolean
    return kind == TileKind.Bridge1
 end
+
 local function is_wall(kind: TileKind): boolean
    return kind == TileKind.WallTL or kind == TileKind.WallTC or kind == TileKind.WallTR or
           --kind == TileKind.WallML or kind == TileKind.WallMC or kind == TileKind.WallMR or
@@ -62,14 +63,9 @@ local function create_wall(
    untracked_ids: vector(GenerationalIndex)*
 )
    local offset_pos: Vector2 = {0, tile.offset_y}
-
    local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 32 }
-   local frame_index: uinteger = tile.kind
-   local collider_rect: Rectangle = {
-      tile.collider_rect.x, tile.collider_rect.y,
-      tile.collider_rect.width, tile.collider_rect.height
-   }
-   WallEntity.create(position + offset_pos, frame_index, collider_rect, tile.offset_mul, untracked_ids)
+
+   WallEntity.create(position + offset_pos, tile.kind, tile.collider_rect, tile.offset_mul, untracked_ids)
 end
 
 global function create_tiles(

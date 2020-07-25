@@ -27,8 +27,8 @@ Options:
 * `WIN_WIDTH: number`: any number (default is 1280)
 * `WIN_HEIGHT: number`: any number (default is 720)
 * `WIN_TITLE: string`: any string (default is the "Baixada Game Jam Game" text translated to the selected language on DEFAULT_LANG)
-* `PL_POS_X: number`: any number (default is 0)
-* `PL_POS_Y: number`: any number (default is 0)
+* `PL_POS_X: number`: any number (default is 32)
+* `PL_POS_Y: number`: any number (default is 32)
 
 Example:
 `$ nelua -r "-D DEFAULT_LANG='pt-BR'" -D WIN_WIDTH=800 main.nelua`
