@@ -14,13 +14,31 @@ global TileKind = @enum{
 
    Floor1 = 3, Floor2 = 8, Floor3 = 13,
 
+   Gear = 9,
+   Box = 4,
+
    -- values = 100 + puzzle number
    Bridge1 = 100,
    Bridge2 = 101,
+
+   -- values = 200 + puzzle number
+   GearSlot1 = 200,
+   GearSlot2 = 201,
+}
+
+global Tile = @record{
+   collider_rect: Rectangle,
+   offset_mul: integer,
+   offset_y: float32,
+   kind: TileKind
 }
 
 local function is_bridge(kind: TileKind): boolean
-   return kind >= TileKind.Bridge1 or kind == TileKind.Bridge2
+   return kind >= TileKind.Bridge1 and kind <= TileKind.Bridge2
+end
+
+local function is_gear_slot(kind: TileKind): boolean
+   return kind >= TileKind.GearSlot1 and kind <= TileKind.GearSlot2
 end
 
 local function is_wall(kind: TileKind): boolean
@@ -36,13 +54,6 @@ local function is_floor(kind: TileKind): boolean
    return kind == TileKind.Floor1 or kind == TileKind.Floor2 or kind == TileKind.Floor3
 end
 
-global Tile = @record{
-   collider_rect: Rectangle,
-   offset_mul: integer,
-   offset_y: float32,
-   kind: TileKind
-}
-
 local function create_bridge(
    origin: Vector2*,
    i: integer,
@@ -50,9 +61,7 @@ local function create_bridge(
    tile: Tile*,
    untracked_ids: vector(GenerationalIndex)*
 )
-   local offset_pos: Vector2 = {0, tile.offset_y}
    local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 64}
-
    BridgeEntity.create(position, tile.kind - 100, untracked_ids)
 end
 
@@ -69,6 +78,48 @@ local function create_wall(
    WallEntity.create(position + offset_pos, tile.kind, tile.collider_rect, tile.offset_mul, untracked_ids)
 end
 
+local function create_gear_slot(
+   origin: Vector2,
+   i: integer,
+   j: integer,
+   tile: Tile,
+   untracked_ids: vector(GenerationalIndex)*
+)
+   local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 31}
+   GearSlotEntity.create(position, tile.kind - 200, untracked_ids)
+
+   tile.kind = TileKind.Floor2
+   create_wall(origin, i, j, tile, untracked_ids) -- a wall bottom center
+end
+
+local function create_gear(
+   origin: Vector2*,
+   i: integer,
+   j: integer,
+   tile: Tile,
+   untracked_ids: vector(GenerationalIndex)*
+)
+   local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 32 }
+   GearEntity.create(position, untracked_ids)
+
+   tile.kind = TileKind.Floor2
+   create_wall(origin, i, j, tile, untracked_ids) -- a floor
+end
+
+local function create_box(
+   origin: Vector2*,
+   i: integer,
+   j: integer,
+   tile: Tile,
+   untracked_ids: vector(GenerationalIndex)*
+)
+   local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 32 }
+   BoxEntity.create(position, untracked_ids)
+
+   tile.kind = TileKind.Floor2
+   create_wall(origin, i, j, tile, untracked_ids) -- a floor
+end
+
 global function create_tiles(
    origin: Vector2,
    tilemap: vector(vector(Tile))*,
@@ -81,12 +132,16 @@ global function create_tiles(
          local tile: Tile* = tile_line[j]
          if is_bridge(tile.kind) then
             create_bridge(origin, i, j, tile, untracked_ids)
-         else
-            if is_wall(tile.kind) then
-               create_wall(origin, i, j, tile, untracked_ids)
-            elseif is_floor(tile.kind) then
-               create_wall(origin, i, j, tile, untracked_ids)
-            end
+         elseif tile.kind == TileKind.Gear then
+            create_gear(origin, i, j, tile, untracked_ids)
+         elseif tile.kind == TileKind.Box then
+            create_box(origin, i, j, tile, untracked_ids)
+         elseif is_gear_slot(tile.kind) then
+            create_gear_slot(origin, i, j, tile, untracked_ids)
+         elseif is_wall(tile.kind) then
+            create_wall(origin, i, j, tile, untracked_ids)
+         elseif is_floor(tile.kind) then
+            create_wall(origin, i, j, tile, untracked_ids)
          end
       end
    end

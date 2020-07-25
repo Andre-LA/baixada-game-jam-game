@@ -212,7 +212,7 @@ function BoxEntity.new(
    }
 end
 
-function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(GenerationalIndex)*): BoxEntity
+function BoxEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): BoxEntity
    local box_collider: Collider = {
       local_rect = { 0, 16 - 32, 32, 16},
       global_rect = { 0, 16 - 32, 32, 16},
@@ -232,7 +232,7 @@ function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(Gen
       storages.entity,
       --[[box]]      {},
       --[[position]] { position = pos },
-      --[[velocity]] { direction = { 0, 0 }, speed = speed },
+      --[[velocity]] { direction = { 0, 0 }, speed = 1 },
       --[[obstacles]] { mask = EntityTag.Wall | EntityTag.Player | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]] box_collider,
       --[[sprite]]   box_sprite,
