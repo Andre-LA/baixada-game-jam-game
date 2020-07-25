@@ -394,7 +394,7 @@ global PlayerController = @record{
 function PlayerController.new(): PlayerController
    local new_system: PlayerController = {
       system = {
-         read = { bitset_array.copy(component_masks.player) },
+         read = { bitset_array.copy(component_masks.player), bitset_array.copy(component_masks.position) },
          write = { bitset_array.copy(component_masks.velocity) }
       }
    }
@@ -405,6 +405,7 @@ end
 
 function PlayerController:run(
    player_storage: Storage(Player)*,
+   position_storage: Storage(Position)*,
    velocity_storage: Storage(Velocity)*,
    player_input: PlayerInput
 )
@@ -414,13 +415,21 @@ function PlayerController:run(
       if #ids > 0 then
          local player_id = ids[0]
          local velocity_id = ids[1]
+         local position_id = ids[2]
 
          local opt_player = player_storage:get_entry(player_id)
          local opt_velocity = velocity_storage:get_entry(velocity_id)
+         local opt_position = position_storage:get_entry(position_id)
 
-         if opt_player.filled and opt_velocity.filled then
+         if opt_player.filled and opt_velocity.filled and opt_position.filled then
             local player = opt_player:get()
             local velocity = opt_velocity:get()
+            local position = opt_position:get()
+
+            if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
+               position.position = player.start_position
+               velocity.direction = { 0, 0 }
+            end
 
             velocity.direction = player_input.direction
          else
@@ -477,6 +486,11 @@ function BoxController:run(
             local position = opt_position:get()
             local collisions = opt_collisions:get()
             local velocity = opt_velocity:get()
+
+            if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
+               position.position = box.start_position
+               velocity.direction = { 0, 0 }
+            end
 
             if player_input.action and #collisions.intersections > 0 then
                for j = 0, < #collisions.intersections do
@@ -657,6 +671,11 @@ function GearController:run(
             local velocity = opt_velocity:get()
             local position = opt_position:get()
             local animations = opt_animations:get()
+
+            if Raylib.IsKeyDown(KeyboardKey.KEY_R) and not gear.engaged then
+               position.position = gear.start_position
+               velocity.direction = { 0, 0 }
+            end
 
             if not gear.engaged then
                for j = 0, < #collisions.intersections do

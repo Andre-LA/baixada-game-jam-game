@@ -181,7 +181,7 @@ local function update_draw_frame()
    Globals.game_systems.colliders_sync:run(storages.position, storages.velocity, storages.collider)
    Globals.game_systems.collision_detection:run(storages.collider, storages.collisions)
 
-   Globals.game_systems.player_controller:run(storages.player, storages.velocity, Globals.player_input)
+   Globals.game_systems.player_controller:run(storages.player, storages.position, storages.velocity, Globals.player_input)
    Globals.game_systems.box_controller:run(storages.box, storages.position, storages.collisions, storages.velocity, Globals.player_input, player_position.position)
    Globals.game_systems.gear_controller:run(storages.gear, storages.collisions, storages.velocity, storages.position, storages.animations, Globals.player_input, Globals.engaged_slots)
 

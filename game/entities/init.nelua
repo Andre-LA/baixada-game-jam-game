@@ -51,6 +51,8 @@ function PlayerEntity.new(
 ): PlayerEntity
    local entity_id, entity = entity_storage:new_entry(Entity.new())
 
+   player_vl.start_position = position_vl.position
+
    local player_id, player = Player.associate(player_vl, entity)
    local position_id, position = Position.associate(position_vl, entity)
    local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
@@ -209,6 +211,9 @@ function BoxEntity.new(
    untracked_ids: vector(GenerationalIndex)*
 ): BoxEntity
    local entity_id, entity = entity_storage:new_entry(Entity.new())
+
+   box_vl.start_position = position_vl.position
+
    local box_id, box = Box.associate(box_vl, entity)
    local position_id, position = Position.associate(position_vl, entity)
    local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
@@ -287,6 +292,9 @@ function GearEntity.new(
    untracked_ids: vector(GenerationalIndex)*
 ): GearEntity
    local entity_id, entity = entity_storage:new_entry(Entity.new())
+
+   gear_vl.start_position = position_vl.position
+
    local gear_id, gear = Gear.associate(gear_vl, entity)
    local position_id, position = Position.associate(position_vl, entity)
    local velocity_id, velocity = Velocity.associate(velocity_vl, entity)

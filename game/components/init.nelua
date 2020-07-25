@@ -4,11 +4,12 @@ require 'rotor'
 
 -- [ components [
 global Player = @record{
-   add_something_useful_here_later: cchar,
+   start_position: Vector2,
 }
 
 global Gear = @record{
-   engaged: boolean
+   engaged: boolean,
+   start_position: Vector2,
 }
 
 global GearSlot = @record{
@@ -20,7 +21,7 @@ global Bridge = @record{
 }
 
 global Box = @record{
-   add_something_useful_here_later: cchar,
+   start_position: Vector2,
 }
 
 global Position = @record{
