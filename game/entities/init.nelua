@@ -233,7 +233,7 @@ function BoxEntity.create(pos: Vector2, speed: number, untracked_ids: vector(Gen
       --[[box]]      {},
       --[[position]] { position = pos },
       --[[velocity]] { direction = { 0, 0 }, speed = speed },
-      --[[obstacles]] { mask = EntityTag.Wall | EntityTag.Player | EntityTag.GearSlot | EntityTag.ClosedBridge },
+      --[[obstacles]] { mask = EntityTag.Wall | EntityTag.Player | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]] box_collider,
       --[[sprite]]   box_sprite,
       untracked_ids
