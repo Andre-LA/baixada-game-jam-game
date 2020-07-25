@@ -158,12 +158,15 @@ local function update_all_systems()
 end
 
 local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, 1, 1, Globals.untracked_ids)
-create_level_1({ 200, 64 })
+create_level_1({ 32*8, 32*3 })
 
-local box_entity = BoxEntity.create({ 40, 120}, 1, Globals.untracked_ids)
+local box_entity = BoxEntity.create({ 32*20, 32*6 }, 1, Globals.untracked_ids)
 
-local gear_entity_1 = GearEntity.create({ 80, 60 }, Globals.untracked_ids)
-local gear_slot_entity_1 = GearSlotEntity.create({ 120, 120 }, 0, Globals.untracked_ids)
+local gear_entity_1 = GearEntity.create({ 32*19, 32*18 }, Globals.untracked_ids)
+local gear_slot_entity_1 = GearSlotEntity.create({ 32*19, 32*16 }, 0, Globals.untracked_ids)
+
+local gear_entity_2 = GearEntity.create({ 32*25, 32*9 }, Globals.untracked_ids)
+local gear_slot_entity_2 = GearSlotEntity.create({ 32*20, 32*4 }, 1, Globals.untracked_ids)
 
 update_all_systems()
 
