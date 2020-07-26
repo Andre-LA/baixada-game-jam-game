@@ -6,6 +6,10 @@ Game made for [Baixada Game Jam][BGJ-website], written in [Nelua][nelua-website]
 * [André Luiz Alvares][andre_la-github]: programmer
 * [Leonardo Santos][leonardo-github]: pixel artist
 
+## Special Thanks!
+
+* [Eduardo Bart][edubart-github]: Helped us with the web building
+
 ## Dependencies
 
 * [Nelua][nelua-install]
@@ -16,6 +20,11 @@ This project also uses these bundled libraries:
 * [Rotor-nelua][rotor-nelua-repo-mirror]
 
 (note: this project uses a modified version of Rotor)
+
+## Play the Game!
+
+[JAM version on itch.io][itch-io-page]
+[post-JAM version on github][github-page]
 
 ## Build and run
 
@@ -36,11 +45,14 @@ Example:
 `$ nelua -r "-D DEFAULT_LANG='pt-BR'" -D WIN_WIDTH=800 main.nelua`
 
 [BGJ-website]: https://itch.io/jam/baixada-gamejam/
+[itch-io-page]: https://andre-la.itch.io/castle-escape/
+[github-page]: https://github.com/Andre-LA/baixada-game-jam-game/
 [nelua-website]: https://nelua.io/
 [raylib-website]: https://www.raylib.com/
 
 [andre_la-github]: https://github.com/Andre-LA/
 [leonardo-github]: https://github.com/LeonardoApSantos/
+[edubart-github]: https://github.com/edubart/
 
 [nelua-install]: https://nelua.io/installing/
 [raylib-install]: https://github.com/raysan5/raylib#build-and-installation/
