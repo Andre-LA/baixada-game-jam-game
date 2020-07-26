@@ -192,7 +192,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
     }
   
    }
-   loadPackage({"files": [{"filename": "/resources/prototype-tileset.png", "start": 0, "end": 2563, "audio": 0}, {"filename": "/resources/WIP-tileset.png", "start": 2563, "end": 21930, "audio": 0}, {"filename": "/resources/wallTileset_GameJamBaixada.png", "start": 21930, "end": 29553, "audio": 0}], "remote_package_size": 29553, "package_uuid": "0e8e9ee7-c759-4dd8-baa7-f17380070390"});
+   loadPackage({"files": [{"filename": "/resources/prototype-tileset.png", "start": 0, "end": 2563, "audio": 0}, {"filename": "/resources/WIP-tileset.png", "start": 2563, "end": 21930, "audio": 0}, {"filename": "/resources/wallTileset_GameJamBaixada.png", "start": 21930, "end": 29553, "audio": 0}], "remote_package_size": 29553, "package_uuid": "90390bea-4ad3-4d22-b41e-de82952400a3"});
   
   })();
   
@@ -1475,11 +1475,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 5282624,
+    STACK_BASE = 5282704,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 39744,
-    DYNAMIC_BASE = 5282624,
-    DYNAMICTOP_PTR = 39584;
+    STACK_MAX = 39824,
+    DYNAMIC_BASE = 5282704,
+    DYNAMICTOP_PTR = 39664;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -2046,7 +2046,7 @@ var ASM_CONSTS = {
 
 
 
-// STATICTOP = STATIC_BASE + 38720;
+// STATICTOP = STATIC_BASE + 38800;
 /* global initializers */  __ATINIT__.push({ func: function() { ___wasm_call_ctors() } });
 
 
@@ -5710,7 +5710,7 @@ var ASM_CONSTS = {
     }
 
   function _emscripten_get_sbrk_ptr() {
-      return 39584;
+      return 39664;
     }
 
   
