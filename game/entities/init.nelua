@@ -90,8 +90,8 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
    }
 
    local pl_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
-      frame_index = 1,
+      sprite_sheet = load_texture("resources/spritesheetPricess.png"),
+      frame_index = 0,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
       visible = true,
@@ -99,8 +99,10 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
 
    local pl_animations: Animations = {
       animations = {
-         {frame_indexes = {0, 1, 2}, frame_duration = 0.5},
-         {frame_indexes = {4, 9, 14, 19}, frame_duration = 0.1},
+         {frame_indexes = { 0,  1,  2,  3,  4}, frame_duration = 0.2},
+         {frame_indexes = {10, 11, 12, 13, 14}, frame_duration = 0.2},
+         {frame_indexes = {20, 21, 22, 23, 24}, frame_duration = 0.2},
+         {frame_indexes = {30, 31, 32, 33, 34}, frame_duration = 0.2},
       },
       current_animation_index = 0,
       current_frame_index = 0,
@@ -334,7 +336,7 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
 
    local gear_sprite: Sprite = {
       sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
-      frame_index = 4,
+      frame_index = 16,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -33 },
       visible = true,
@@ -342,9 +344,9 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
 
    local gear_animations: Animations = {
       animations = {
-         --[[horizontal]] { frame_indexes = { 10, 11, 12}, frame_duration = 0.1 },
-         --[[vertical  ]] { frame_indexes = { 18, 28, 38}, frame_duration = 0.1 },
-         --[[engaged   ]] { frame_indexes = { 27 }, frame_duration = 0.1 }
+         --[[horizontal]] { frame_indexes = { 16, 16, 16 }, frame_duration = 0.1 },
+         --[[vertical  ]] { frame_indexes = { 18, 28, 38 }, frame_duration = 0.1 },
+         --[[engaged   ]] { frame_indexes = { 27, 27, 27 }, frame_duration = 0.1 }
       },
       current_animation_index = 0,
       current_frame_index = 0,

@@ -10,6 +10,10 @@ require 'rotor'
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
+local TXT_TEXT_PT_BR: string <const> = "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
+local TXT_TEXT_EN_US: string <const> = "After so much effort, the princess\ncan finally escape this \nterrible prison!"
+local txt_text: string = #[DEFAULT_LANG]# == 'en-US' and TXT_TEXT_EN_US or TXT_TEXT_PT_BR
+
 -- [ Main game records  and enums[
 global EntityTag = @enum {
    Player = 1,
@@ -175,7 +179,9 @@ player_animations.current_animation_index = 1
 -- ] Game initialization ]
 
 -- [ Game loop [
-local function update_draw_frame()
+local function update_draw_frame() -- 15 90
+   local game_finalized = player_position.position.y < 400
+
    -- [ Update [
    local dt = Raylib.GetFrameTime()
 
@@ -198,10 +204,8 @@ local function update_draw_frame()
 
    Globals.camera.target = player_position.position
 
-   if Raylib.IsKeyDown(KeyboardKey.KEY_N) then
-      Globals.camera.zoom = Globals.camera.zoom + 0.05
-   elseif Raylib.IsKeyDown(KeyboardKey.KEY_M) then
-      Globals.camera.zoom = Globals.camera.zoom - 0.05
+   if Raylib.IsKeyPressed(KeyboardKey.KEY_T) then
+      txt_text = txt_text == TXT_TEXT_EN_US and TXT_TEXT_PT_BR or TXT_TEXT_EN_US
    end
 
    -- ] Update ]
@@ -211,11 +215,16 @@ local function update_draw_frame()
       Raylib.ClearBackground(BACKGROUND_COLOR)
 
       Raylib.BeginMode2D(Globals.camera)
+
+         Raylib.DrawText(txt_text, 32*26, 32*22, 20, RAYWHITE)
+
          Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
 
-         Globals.game_systems.show_colliders:run(storages.collider)
-         Globals.game_systems.show_collisions:run(storages.collisions)
-         Globals.game_systems.show_positions:run(storages.position)
+         ## if SHOW_DEV_INFO then
+            Globals.game_systems.show_colliders:run(storages.collider)
+            Globals.game_systems.show_collisions:run(storages.collisions)
+            Globals.game_systems.show_positions:run(storages.position)
+         ## end
 
       Raylib.EndMode2D()
    Raylib.EndDrawing()

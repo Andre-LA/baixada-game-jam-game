@@ -24,12 +24,13 @@ With default settings:
 
 Options:
 * `DEFAULT_LANG: string`: either "en-US" or "pt-BR" (default is "en-US")
-* `WIN_WIDTH: number`: any number (default is 1280)
-* `WIN_HEIGHT: number`: any number (default is 720)
+* `WIN_WIDTH: number`: any number (default is 800)
+* `WIN_HEIGHT: number`: any number (default is 600)
 * `WIN_TITLE: string`: any string (default is the "Castle Escape" text translated to the selected language on DEFAULT_LANG)
-* `PL_POS_X: number`: any number (default is 32)
-* `PL_POS_Y: number`: any number (default is 32)
-* `PL_VEL: number`: any number (default is 1)
+* `PL_POS_X: number`: any number (default is 896)
+* `PL_POS_Y: number`: any number (default is 3296)
+* `PL_VEL: number`: any number (default is 2)
+* `SHOW_DEV_INFO`: just define it to use
 
 Example:
 `$ nelua -r "-D DEFAULT_LANG='pt-BR'" -D WIN_WIDTH=800 main.nelua`
