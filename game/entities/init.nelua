@@ -1,3 +1,4 @@
+require 'math'
 require 'vector'
 require 'raylib'
 require 'rotor'
@@ -89,7 +90,7 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
    }
 
    local pl_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/prototype-tileset.png"),
+      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
       frame_index = 1,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
@@ -173,7 +174,7 @@ function WallEntity.create(
    }
 
    local wall_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/WIP-tileset.png"),
+      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 * offset_mul },
@@ -240,7 +241,7 @@ function BoxEntity.new(
    }
 end
 
-function BoxEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): BoxEntity
+function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(GenerationalIndex)*): BoxEntity
    local box_collider: Collider = {
       local_rect = { 0, 12 - 32, 32, 20},
       global_rect = { 0, 12 - 32, 32, 20},
@@ -249,8 +250,8 @@ function BoxEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)
    }
 
    local box_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/WIP-tileset.png"),
-      frame_index = 4,
+      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
       visible = true,
@@ -332,7 +333,7 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
    }
 
    local gear_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/prototype-tileset.png"),
+      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
       frame_index = 4,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -33 },
@@ -341,8 +342,9 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
 
    local gear_animations: Animations = {
       animations = {
-         --[[horizontal]] { frame_indexes = {4, 9, 14, 19}, frame_duration = 0.1 },
-         --[[vertical  ]] { frame_indexes = {3, 8, 13, 18}, frame_duration = 0.1 }
+         --[[horizontal]] { frame_indexes = { 10, 11, 12}, frame_duration = 0.1 },
+         --[[vertical  ]] { frame_indexes = { 18, 28, 38}, frame_duration = 0.1 },
+         --[[engaged   ]] { frame_indexes = { 27 }, frame_duration = 0.1 }
       },
       current_animation_index = 0,
       current_frame_index = 0,
@@ -413,8 +415,8 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
    }
 
    local gear_slot_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/prototype-tileset.png"),
-      frame_index = 15,
+      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      frame_index = 26,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
       visible = true,
@@ -481,8 +483,8 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
    }
 
    local bridge_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/prototype-tileset.png"),
-      frame_index = 17,
+      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      frame_index = 9 + math.random(0 , 1) * 10, -- random: 9 or 19
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, 0 },
       visible = false,
