@@ -23,7 +23,7 @@ This project also uses these bundled libraries:
 
 ## Play the Game!
 
-[JAM version on itch.io][itch-io-page]
+[JAM version on itch.io][itch-io-page]  
 [post-JAM version on github][github-page]
 
 ## Build and run
@@ -46,7 +46,7 @@ Example:
 
 [BGJ-website]: https://itch.io/jam/baixada-gamejam/
 [itch-io-page]: https://andre-la.itch.io/castle-escape/
-[github-page]: https://andre-la.github.io/baixada-game-jam-game/index.html/
+[github-page]: https://andre-la.github.io/baixada-game-jam-game/index.html
 [nelua-website]: https://nelua.io/
 [raylib-website]: https://www.raylib.com/
 
