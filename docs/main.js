@@ -192,7 +192,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
     }
   
    }
-   loadPackage({"files": [{"filename": "/resources/prototype-tileset.png", "start": 0, "end": 2563, "audio": 0}, {"filename": "/resources/WIP-tileset.png", "start": 2563, "end": 21930, "audio": 0}, {"filename": "/resources/wallTileset_GameJamBaixada.png", "start": 21930, "end": 29553, "audio": 0}], "remote_package_size": 29553, "package_uuid": "90390bea-4ad3-4d22-b41e-de82952400a3"});
+   loadPackage({"files": [{"filename": "/resources/prototype-tileset.png", "start": 0, "end": 2563, "audio": 0}, {"filename": "/resources/WIP-tileset.png", "start": 2563, "end": 21930, "audio": 0}, {"filename": "/resources/wallTileset_GameJamBaixada.png", "start": 21930, "end": 29553, "audio": 0}], "remote_package_size": 29553, "package_uuid": "08d5bbc5-b6f0-4709-8aab-f0735de37981"});
   
   })();
   
