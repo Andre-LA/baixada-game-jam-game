@@ -26,7 +26,7 @@ Options:
 * `DEFAULT_LANG: string`: either "en-US" or "pt-BR" (default is "en-US")
 * `WIN_WIDTH: number`: any number (default is 1280)
 * `WIN_HEIGHT: number`: any number (default is 720)
-* `WIN_TITLE: string`: any string (default is the "Baixada Game Jam Game" text translated to the selected language on DEFAULT_LANG)
+* `WIN_TITLE: string`: any string (default is the "Castle Escape" text translated to the selected language on DEFAULT_LANG)
 * `PL_POS_X: number`: any number (default is 32)
 * `PL_POS_Y: number`: any number (default is 32)
 * `PL_VEL: number`: any number (default is 1)

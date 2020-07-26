@@ -4,7 +4,7 @@ DEFAULT_LANG = DEFAULT_LANG or 'pt-BR'
 
 WIN_WIDTH = WIN_WIDTH or 1280
 WIN_HEIGHT = WIN_HEIGHT or 720
-WIN_TITLE = WIN_TITLE or (DEFAULT_LANG == 'en-US' and 'Baixada Game Jam Game' or 'Jogo da Baixada Game Jam')
+WIN_TITLE = WIN_TITLE or (DEFAULT_LANG == 'en-US' and 'Castle Escape' or 'Fuga do Castelo')
 
 PL_POS_X = PL_POS_X or 32
 PL_POS_Y = PL_POS_Y or 32
