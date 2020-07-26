@@ -46,7 +46,7 @@ Example:
 
 [BGJ-website]: https://itch.io/jam/baixada-gamejam/
 [itch-io-page]: https://andre-la.itch.io/castle-escape/
-[github-page]: https://github.com/Andre-LA/baixada-game-jam-game/
+[github-page]: https://andre-la.github.io/baixada-game-jam-game/index.html/
 [nelua-website]: https://nelua.io/
 [raylib-website]: https://www.raylib.com/
 
