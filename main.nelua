@@ -67,7 +67,7 @@ global Globals: record{
       direction = { 0, 0 },
       action = false,
    },
-   engaged_slots = { false, false },
+   engaged_slots = { false, false, false },
    camera = {
       offset = { #[WIN_WIDTH]# / 2, #[WIN_HEIGHT]# / 2 },
       target = { #[PL_POS_X]#, #[PL_POS_Y]# },

@@ -20,10 +20,12 @@ global TileKind = @enum{
    -- values = 100 + puzzle number
    Bridge1 = 100,
    Bridge2 = 101,
+   Bridge3 = 102,
 
    -- values = 200 + puzzle number
    GearSlot1 = 200,
    GearSlot2 = 201,
+   GearSlot3 = 202,
 }
 
 global Tile = @record{
@@ -34,11 +36,11 @@ global Tile = @record{
 }
 
 local function is_bridge(kind: TileKind): boolean
-   return kind >= TileKind.Bridge1 and kind <= TileKind.Bridge2
+   return kind >= TileKind.Bridge1 and kind < 200
 end
 
 local function is_gear_slot(kind: TileKind): boolean
-   return kind >= TileKind.GearSlot1 and kind <= TileKind.GearSlot2
+   return kind >= TileKind.GearSlot1 and kind < 300
 end
 
 local function is_wall(kind: TileKind): boolean
