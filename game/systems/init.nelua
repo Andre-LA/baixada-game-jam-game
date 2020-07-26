@@ -556,7 +556,6 @@ function ObstaclesSystem:run(
                   local dir: Vector2 = intersection:get_direction(intersection:get_center(), 2)
                   local dir_x_inputdir = dir * velocity.direction
 
-
                   if dir_x_inputdir.x < 0 and intersection.rect.width / intersection.rect.height < 1 then
                      velocity.direction.x = 0
                   end
@@ -681,14 +680,20 @@ function GearController:run(
                for j = 0, < #collisions.intersections do
                   local intersection: Intersection* = collisions.intersections[j]
 
-                  if intersection:contains_tag(EntityTag.Player) and player_input.action then
-                     --local dir = player_input.direction
-                     local dir = intersection:get_direction(intersection:get_center(), 2)
-                     if math.abs(dir.x) > math.abs(dir.y) then
+                  if intersection:contains_tag(EntityTag.Player) and player_input.action and #player_input.direction > 0.01 then
+                     local dir = player_input.direction
+
+                     local is_horizontal = intersection.rect.width / intersection.rect.height < 1
+                     local is_vertical = intersection.rect.height / intersection.rect.width < 1
+
+                     if is_horizontal then
+                        dir.x = dir.x > 0 and 1 or -1
                         dir.y = 0
-                     else
+                     elseif is_vertical then
                         dir.x = 0
+                        dir.y = dir.y > 0 and 1 or -1
                      end
+
                      velocity.direction = dir
                   elseif intersection:contains_tag(EntityTag.GearSlot) then
                      gear.engaged = true
@@ -707,12 +712,16 @@ function GearController:run(
                end
             end
 
+            if not gear.engaged then
+               local in_movement = #velocity.direction > 0.15
+               animations.paused = not in_movement
 
-            local in_movement = #velocity.direction > 0.15
-            animations.paused = not in_movement
-
-            if in_movement then
-               animations.current_animation_index = math.abs(velocity.direction.x) > math.abs(velocity.direction.y) and 0 or 1
+               if in_movement then
+                  animations.current_animation_index = math.abs(velocity.direction.x) > math.abs(velocity.direction.y) and 0 or 1
+               end
+            else
+               animations.current_animation_index = 2
+               animations.current_frame_index = 0
             end
          else
             self.system.system_data:mark_available(i)
