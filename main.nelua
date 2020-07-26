@@ -1,9 +1,12 @@
+require 'config'
 require 'raylib'
 require 'allocators.gc'
+## if PLATFORM_WEB then
+   gc:pause() -- conservative GCs cannot run automatically with emscripten
+## end
 require 'vector'
 require 'string'
 require 'rotor'
-require 'config'
 
 -- [ Main game records  and enums[
 global EntityTag = @enum {
@@ -122,9 +125,7 @@ local function update_player_input_values()
 end
 
 -- [ Game initialization [
-## if PLATFORM_WEB then
-   gc:pause() -- conservative GCs cannot run automatically with emscripten
-## else
+## if not PLATFORM_WEB then
    Raylib.SetTargetFPS(60)
 ## end
 
