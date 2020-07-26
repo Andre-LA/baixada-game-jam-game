@@ -8,6 +8,8 @@ require 'vector'
 require 'string'
 require 'rotor'
 
+local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
+
 -- [ Main game records  and enums[
 global EntityTag = @enum {
    Player = 1,
@@ -206,7 +208,7 @@ local function update_draw_frame()
 
    -- [ Draw [
    Raylib.BeginDrawing()
-      Raylib.ClearBackground(RAYWHITE)
+      Raylib.ClearBackground(BACKGROUND_COLOR)
 
       Raylib.BeginMode2D(Globals.camera)
          Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
@@ -214,13 +216,6 @@ local function update_draw_frame()
          Globals.game_systems.show_colliders:run(storages.collider)
          Globals.game_systems.show_collisions:run(storages.collisions)
          Globals.game_systems.show_positions:run(storages.position)
-
-
-         --for i = -32, 32 do
-            --for j = -32, 32 do
-               --Raylib.DrawRectangleLines(32*i, 32*j, 32, 32, BLACK)
-            --end
-         --end
 
       Raylib.EndMode2D()
    Raylib.EndDrawing()
