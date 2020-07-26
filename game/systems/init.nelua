@@ -394,7 +394,7 @@ global PlayerController = @record{
 function PlayerController.new(): PlayerController
    local new_system: PlayerController = {
       system = {
-         read = { bitset_array.copy(component_masks.player), bitset_array.copy(component_masks.position) },
+         read = { bitset_array.copy(component_masks.player), --[[bitset_array.copy(component_masks.position)]] },
          write = { bitset_array.copy(component_masks.velocity) }
       }
    }
@@ -405,7 +405,7 @@ end
 
 function PlayerController:run(
    player_storage: Storage(Player)*,
-   position_storage: Storage(Position)*,
+   --position_storage: Storage(Position)*,
    velocity_storage: Storage(Velocity)*,
    player_input: PlayerInput
 )
@@ -415,21 +415,21 @@ function PlayerController:run(
       if #ids > 0 then
          local player_id = ids[0]
          local velocity_id = ids[1]
-         local position_id = ids[2]
+         --local position_id = ids[2]
 
          local opt_player = player_storage:get_entry(player_id)
          local opt_velocity = velocity_storage:get_entry(velocity_id)
-         local opt_position = position_storage:get_entry(position_id)
+         --local opt_position = position_storage:get_entry(position_id)
 
-         if opt_player.filled and opt_velocity.filled and opt_position.filled then
+         if opt_player.filled and opt_velocity.filled --[[and opt_position.filled]] then
             local player = opt_player:get()
             local velocity = opt_velocity:get()
-            local position = opt_position:get()
+            --local position = opt_position:get()
 
-            if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
-               position.position = player.start_position
-               velocity.direction = { 0, 0 }
-            end
+            --if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
+               --position.position = player.start_position
+               --velocity.direction = { 0, 0 }
+            --end
 
             velocity.direction = player_input.direction
          else

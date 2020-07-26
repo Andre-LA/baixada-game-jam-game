@@ -181,7 +181,7 @@ local function update_draw_frame()
    Globals.game_systems.colliders_sync:run(storages.position, storages.velocity, storages.collider)
    Globals.game_systems.collision_detection:run(storages.collider, storages.collisions)
 
-   Globals.game_systems.player_controller:run(storages.player, storages.position, storages.velocity, Globals.player_input)
+   Globals.game_systems.player_controller:run(storages.player, --[[storages.position, ]] storages.velocity, Globals.player_input)
    Globals.game_systems.box_controller:run(storages.box, storages.position, storages.collisions, storages.velocity, Globals.player_input, player_position.position)
    Globals.game_systems.gear_controller:run(storages.gear, storages.collisions, storages.velocity, storages.position, storages.animations, Globals.player_input, Globals.engaged_slots)
 
@@ -194,6 +194,13 @@ local function update_draw_frame()
    Globals.game_systems.animation:run(storages.animations, storages.sprite, dt)
 
    Globals.camera.target = player_position.position
+
+   if Raylib.IsKeyDown(KeyboardKey.KEY_N) then
+      Globals.camera.zoom = Globals.camera.zoom + 0.05
+   elseif Raylib.IsKeyDown(KeyboardKey.KEY_M) then
+      Globals.camera.zoom = Globals.camera.zoom - 0.05
+   end
+
    -- ] Update ]
 
    -- [ Draw [
@@ -206,6 +213,14 @@ local function update_draw_frame()
          Globals.game_systems.show_colliders:run(storages.collider)
          Globals.game_systems.show_collisions:run(storages.collisions)
          Globals.game_systems.show_positions:run(storages.position)
+
+
+         --for i = -32, 32 do
+            --for j = -32, 32 do
+               --Raylib.DrawRectangleLines(32*i, 32*j, 32, 32, BLACK)
+            --end
+         --end
+
       Raylib.EndMode2D()
    Raylib.EndDrawing()
    -- ] Draw ]

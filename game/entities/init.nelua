@@ -51,7 +51,7 @@ function PlayerEntity.new(
 ): PlayerEntity
    local entity_id, entity = entity_storage:new_entry(Entity.new())
 
-   player_vl.start_position = position_vl.position
+   --player_vl.start_position = position_vl.position
 
    local player_id, player = Player.associate(player_vl, entity)
    local position_id, position = Position.associate(position_vl, entity)
@@ -242,8 +242,8 @@ end
 
 function BoxEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): BoxEntity
    local box_collider: Collider = {
-      local_rect = { 0, 16 - 32, 32, 16},
-      global_rect = { 0, 16 - 32, 32, 16},
+      local_rect = { 0, 12 - 32, 32, 20},
+      global_rect = { 0, 12 - 32, 32, 20},
       entity_id = { -1, 0 },
       entity_tag = EntityTag.Box
    }
@@ -260,7 +260,7 @@ function BoxEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)
       storages.entity,
       --[[box]]      {},
       --[[position]] { position = pos },
-      --[[velocity]] { direction = { 0, 0 }, speed = 1 },
+      --[[velocity]] { direction = { 0, 0 }, speed = #[PL_VEL]# },
       --[[obstacles]] { mask = EntityTag.Wall | EntityTag.Player | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]] box_collider,
       --[[sprite]]   box_sprite,

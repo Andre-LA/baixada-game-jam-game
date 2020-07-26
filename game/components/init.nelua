@@ -4,7 +4,7 @@ require 'rotor'
 
 -- [ components [
 global Player = @record{
-   start_position: Vector2,
+   necessary_field: cchar,
 }
 
 global Gear = @record{
