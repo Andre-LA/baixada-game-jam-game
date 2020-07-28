@@ -90,7 +90,7 @@ local function create_gear_slot(
    local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 31}
    GearSlotEntity.create(position, tile.kind - 200, untracked_ids)
 
-   tile.kind = TileKind.Floor2
+   tile.kind = TileKind.WallBC
    create_wall(origin, i, j, tile, untracked_ids) -- a wall bottom center
 end
 
