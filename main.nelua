@@ -7,6 +7,7 @@ require 'allocators.gc'
 require 'vector'
 require 'string'
 require 'rotor'
+require 'game.resources'
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
@@ -136,6 +137,7 @@ end
 ## end
 
 Raylib.InitWindow(Globals.game_window.width, Globals.game_window.height, Globals.game_window.title)
+resources:load()
 
 local function update_system(system: System*)
    system.system_data:update(storages.entity, Globals.untracked_ids)
@@ -246,5 +248,6 @@ end
 -- ] Game loop ]
 
 -- [ Game De-initialization [
+resources:unload()
 Raylib.CloseWindow()
 -- ] Game De-initialization ]

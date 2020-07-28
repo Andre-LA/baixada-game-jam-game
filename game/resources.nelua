@@ -1,0 +1,16 @@
+global Resources = @record{
+   princess_spritesheet: Texture2D,
+   tileset: Texture2D,
+}
+
+function Resources:load()
+   self.princess_spritesheet = Raylib.LoadTexture("resources/spritesheetPricess.png")
+   self.tileset = Raylib.LoadTexture("resources/wallTileset_GameJamBaixada.png")
+end
+
+function Resources:unload()
+   Raylib.UnloadTexture(self.princess_spritesheet)
+   Raylib.UnloadTexture(self.tileset)
+end
+
+global resources: Resources = {}

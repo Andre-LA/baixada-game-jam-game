@@ -3,29 +3,7 @@ require 'vector'
 require 'raylib'
 require 'rotor'
 require 'game.components'
-
-local GameTexture = @record{
-   name: string,
-   texture: Texture2D
-}
-
-local textures: vector(GameTexture) = {}
-
-local function load_texture(name: string): Texture2D
-   for i = 0, < #textures do
-      if textures[i].name == name then
-         return textures[i].texture
-      end
-   end
-
-   local gt: GameTexture = {
-      name = name,
-      texture = Raylib.LoadTexture(name)
-   }
-
-   textures:push(gt)
-   return gt.texture
-end
+require 'game.resources'
 
 global PlayerEntity = @record{
    entity_id: GenerationalIndex,
@@ -90,7 +68,7 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
    }
 
    local pl_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/spritesheetPricess.png"),
+      sprite_sheet = resources.princess_spritesheet,
       frame_index = 0,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
@@ -180,7 +158,7 @@ function WallEntity.create(
    }
 
    local wall_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      sprite_sheet = resources.tileset,
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 * offset_mul },
@@ -256,7 +234,7 @@ function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(Gene
    }
 
    local box_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      sprite_sheet = resources.tileset,
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
@@ -339,7 +317,7 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
    }
 
    local gear_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      sprite_sheet = resources.tileset,
       frame_index = 16,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -33 },
@@ -421,7 +399,7 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
    }
 
    local gear_slot_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      sprite_sheet = resources.tileset,
       frame_index = 26,
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, -32 },
@@ -489,7 +467,7 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
    }
 
    local bridge_sprite: Sprite = {
-      sprite_sheet = load_texture("resources/wallTileset_GameJamBaixada.png"),
+      sprite_sheet = resources.tileset,
       frame_index = 9 + math.random(0 , 1) * 10, -- random: 9 or 19
       frame_rect = { 0, 0, 32, 32 },
       offset = { 0, 0 },
