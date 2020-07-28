@@ -4,7 +4,7 @@ global Resources = @record{
 }
 
 function Resources:load()
-   self.princess_spritesheet = Raylib.LoadTexture("resources/spritesheetPricess.png")
+   self.princess_spritesheet = Raylib.LoadTexture("resources/spritesheetPrincess.png")
    self.tileset = Raylib.LoadTexture("resources/wallTileset_GameJamBaixada.png")
 end
 

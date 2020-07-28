@@ -395,7 +395,7 @@ function PlayerController.new(): PlayerController
    local new_system: PlayerController = {
       system = {
          read = { bitset_array.copy(component_masks.player) },
-         write = { bitset_array.copy(component_masks.velocity) }
+         write = { bitset_array.copy(component_masks.velocity), bitset_array.copy(component_masks.animations) }
       }
    }
 
@@ -406,6 +406,7 @@ end
 function PlayerController:run(
    player_storage: Storage(Player)*,
    velocity_storage: Storage(Velocity)*,
+   animations_storage: Storage(Animations)*,
    player_input: PlayerInput
 )
    for i = 0, < #self.system.system_data.components_indexes do
@@ -414,15 +415,34 @@ function PlayerController:run(
       if #ids > 0 then
          local player_id = ids[0]
          local velocity_id = ids[1]
+         local animations_id = ids[2]
 
          local opt_player = player_storage:get_entry(player_id)
          local opt_velocity = velocity_storage:get_entry(velocity_id)
+         local opt_animations = animations_storage:get_entry(animations_id)
 
-         if opt_player.filled and opt_velocity.filled then
+         if opt_player.filled and opt_velocity.filled and opt_animations.filled then
             local player = opt_player:get()
             local velocity = opt_velocity:get()
+            local animations = opt_animations:get()
 
             velocity.direction = player_input.direction
+
+            if #player_input.direction < 0.1 then
+               animations:change_animation(0)
+            elseif math.abs(player_input.direction.x) > math.abs(player_input.direction.y) then -- horizontal movement
+               if player_input.action then -- L/R push
+                  animations:change_animation(player_input.direction.x < 0 and 8 or 7)
+               else -- L/R walk
+                  animations:change_animation(player_input.direction.x < 0 and 4 or 3)
+               end
+            else -- vertical movement
+               if player_input.action then -- U/D push
+                  animations:change_animation(player_input.direction.y < 0 and 6 or 5)
+               else -- U/D walk
+                  animations:change_animation(player_input.direction.y < 0 and 2 or 1)
+               end
+            end
          else
             self.system.system_data:mark_available(i)
          end
