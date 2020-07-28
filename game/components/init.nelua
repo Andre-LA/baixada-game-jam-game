@@ -95,6 +95,14 @@ global Animations = @record{
    paused: boolean
 }
 
+function Animations:change_animation(animation_idx: uinteger)
+   if not self.paused and self.current_animation_index ~= animation_idx then
+      self.current_animation_index = animation_idx
+      self.current_frame_index = 0
+      self.elapsed_time = 0
+   end
+end
+
 global Obstacles = @record{
    mask: uinteger -- mask of entitytag
 }

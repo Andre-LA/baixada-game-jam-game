@@ -708,11 +708,11 @@ function GearController:run(
                animations.paused = not in_movement
 
                if in_movement then
-                  animations.current_animation_index = math.abs(velocity.direction.x) > math.abs(velocity.direction.y) and 0 or 1
+                  local new_anim_idx = math.abs(velocity.direction.x) > math.abs(velocity.direction.y) and 0 or 1
+                  animations:change_animation(new_anim_idx)
                end
             else
-               animations.current_animation_index = 2
-               animations.current_frame_index = 0
+               animations:change_animation(2)
             end
          else
             self.system.system_data:mark_available(i)
