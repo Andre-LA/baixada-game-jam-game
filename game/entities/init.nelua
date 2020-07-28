@@ -99,10 +99,14 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
 
    local pl_animations: Animations = {
       animations = {
-         {frame_indexes = { 0,  1,  2,  3,  4}, frame_duration = 0.2},
-         {frame_indexes = {10, 11, 12, 13, 14}, frame_duration = 0.2},
-         {frame_indexes = {20, 21, 22, 23, 24}, frame_duration = 0.2},
-         {frame_indexes = {30, 31, 32, 33, 34}, frame_duration = 0.2},
+         --[[idle  ]] { frame_indexes = {  0,  1,  2,  3 }, frame_duration = 0.2 },
+         --[[L-walk]] { frame_indexes = {  8,  9, 10, 11, 12, 13 }, frame_duration = 0.2 },
+         --[[D-push]] { frame_indexes = { 16, 17, 18, 19, 20, 21 }, frame_duration = 0.2 },
+         --[[R-push]] { frame_indexes = { 24, 25, 26, 27, 28, 29 }, frame_duration = 0.2 },
+         --[[U-push]] { frame_indexes = { 32, 32, 33, 34, 35, 36 }, frame_duration = 0.2 },
+         --[[R-walk]] { frame_indexes = { 40, 41, 42, 43, 44 }, frame_duration = 0.2 },
+         --[[D-walk]] { frame_indexes = { 48, 49, 50, 51, 52, 53 }, frame_duration = 0.2 },
+         --[[U-walk]] { frame_indexes = { 56, 57, 58, 59, 60, 61 }, frame_duration = 0.2 },
       },
       current_animation_index = 0,
       current_frame_index = 0,
