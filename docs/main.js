@@ -192,7 +192,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
     }
   
    }
-   loadPackage({"files": [{"filename": "/resources/spritesheetPricess.png", "start": 0, "end": 9130, "audio": 0}, {"filename": "/resources/wallTileset_GameJamBaixada.png", "start": 9130, "end": 16753, "audio": 0}], "remote_package_size": 16753, "package_uuid": "0e5c8751-9c38-4e73-b03d-a76b4852b8e5"});
+   loadPackage({"files": [{"filename": "/resources/spritesheetPrincess.png", "start": 0, "end": 9085, "audio": 0}, {"filename": "/resources/wallTileset_GameJamBaixada.png", "start": 9085, "end": 16708, "audio": 0}], "remote_package_size": 16708, "package_uuid": "b2f7c4bf-3a10-40b5-80e4-325d1276bd3d"});
   
   })();
   
@@ -1475,11 +1475,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 5283040,
+    STACK_BASE = 5283184,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 40160,
-    DYNAMIC_BASE = 5283040,
-    DYNAMICTOP_PTR = 40000;
+    STACK_MAX = 40304,
+    DYNAMIC_BASE = 5283184,
+    DYNAMICTOP_PTR = 40144;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -2046,7 +2046,7 @@ var ASM_CONSTS = {
 
 
 
-// STATICTOP = STATIC_BASE + 39136;
+// STATICTOP = STATIC_BASE + 39280;
 /* global initializers */  __ATINIT__.push({ func: function() { ___wasm_call_ctors() } });
 
 
@@ -5710,7 +5710,7 @@ var ASM_CONSTS = {
     }
 
   function _emscripten_get_sbrk_ptr() {
-      return 40000;
+      return 40144;
     }
 
   
