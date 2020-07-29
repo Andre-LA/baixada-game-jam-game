@@ -104,7 +104,7 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
    end
 end
 
-## local make_system = generalize(function(T, ...)
+## local make_system = generalize(function(T, use_before, use_run, use_after, ...)
    ##[[
       staticassert(traits.is_type(T), "invalid type %s", T)
 
@@ -191,32 +191,38 @@ end
    end
 
    function systemT:run()
-      for i = 0, < #self.system.system_data.components_indexes do
-         local ids = self.system.system_data.components_indexes[i]
+      local runner: #|T.nickname|# = {}
+      ## if use_before then
+         runner:before_all(self.system.system_data)
+      ## end
 
-         if #ids > 0 then
-            ## for i, name in ipairs(component_names) do
-               ## local name_id = name..'_id'
-               local #|name_id|# = ids[#[i-1]#]
-               self.opts.#|name|# = storages.#|name|#:get_entry(#|name_id|#)
-            ## end
+      ## if use_run then
+         for i = 0, < #self.system.system_data.components_indexes do
+            local ids = self.system.system_data.components_indexes[i]
 
-            if self:verify() then
-               ## for _, name in ipairs(component_names) do
-                  local #|name|# = self.opts.#|name|#:get()
+            if #ids > 0 then
+               ## for i, name in ipairs(component_names) do
+                  ## local name_id = name..'_id'
+                  local #|name_id|# = ids[#[i-1]#]
+                  self.opts.#|name|# = storages.#|name|#:get_entry(#|name_id|#)
                ## end
 
-               local runner: #|T.nickname|# = {}
-               ## for _, name in ipairs(component_names) do
-                  runner.#|name|# = #|name|#
-               ## end
+               if self:verify() then
+                  ## for _, name in ipairs(component_names) do
+                     runner.#|name|# = self.opts.#|name|#:get()
+                  ## end
 
-               runner:run()
-            else
-               self.system.system_data:mark_available(i)
+                  runner:run(self.system.system_data)
+               else
+                  self.system.system_data:mark_available(i)
+               end
             end
          end
-      end
+      ## end
+
+      ## if use_before then
+      runner:after_all(self.system.system_data)
+      ## end
    end
 
    ## return systemT
@@ -230,12 +236,13 @@ global CollidersSyncRunner = @record{
    collider: Collider*
 }
 
-function CollidersSyncRunner:run()
+function CollidersSyncRunner:run(system_data: SystemData*)
    self.collider:sync_with_position(self.position.position)
 end
 
 global CollidersSyncSystem = @MakeSystem(
    CollidersSyncRunner,
+   false, true, false,
    2,
    'position', Position,
    'velocity', Velocity,
@@ -248,7 +255,7 @@ global AnimationRunner = @record{
    sprite: Sprite*,
 }
 
-function AnimationRunner:run()
+function AnimationRunner:run(system_data: SystemData*)
    if not self.animations.paused then
       self.animations.elapsed_time = self.animations.elapsed_time + Globals.dt
       local current_animation: AnimationData* = self.animations.animations[self.animations.current_animation_index]
@@ -263,7 +270,9 @@ function AnimationRunner:run()
 end
 
 global AnimationSystem = @MakeSystem(
-   AnimationRunner, 0,
+   AnimationRunner,
+   false, true, false,
+   0,
    2,
    'animations', Animations,
    'sprite', Sprite
@@ -273,7 +282,7 @@ global ShowCollisionsRunner = @record{
    collisions: Collisions*,
 }
 
-function ShowCollisionsRunner:run()
+function ShowCollisionsRunner:run(system_data: SystemData*)
    for j = 0, < #self.collisions.intersections do
       local intersection: Intersection* = self.collisions.intersections[j]
       local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
@@ -283,6 +292,7 @@ end
 
 global ShowCollisionsSystem = @MakeSystem(
    ShowCollisionsRunner,
+   false, true, false,
    1,
    'collisions', Collisions,
    0
@@ -292,12 +302,13 @@ global ShowCollidersRunner = @record{
    collider: Collider*,
 }
 
-function ShowCollidersRunner:run()
+function ShowCollidersRunner:run(system_data: SystemData*)
    Raylib.DrawRectangleLinesEx(self.collider.global_rect, 1, GREEN)
 end
 
 global ShowCollidersSystem = @MakeSystem(
    ShowCollidersRunner,
+   false, true, false,
    1, 'collider', Collider,
    0
 )
@@ -306,7 +317,7 @@ global ShowPositionsRunner = @record{
    position: Position*,
 }
 
-function ShowPositionsRunner:run()
+function ShowPositionsRunner:run(system_data: SystemData*)
    local H_start: Vector2 = { -5, 0 }
    local H_end  : Vector2 = {  5, 0 }
    local V_start: Vector2 = { 0, -5 }
@@ -318,6 +329,7 @@ end
 
 global ShowPositionsSystem = @MakeSystem(
    ShowPositionsRunner,
+   false, true, false,
    1,
    'position', Position,
    0
@@ -337,7 +349,7 @@ local function is_past_collision(intersections: vector(Intersection)*, collider:
    return -1
 end
 
-function CollisionDetectionRunner:run()
+function CollisionDetectionRunner:run(system_data: SystemData*)
    for j = 0, < storages.collider.len do
       if storages.collider.generations[j].filled then
          local collider_j = storages.collider.entries[j]
@@ -370,6 +382,7 @@ end
 
 global CollisionDetectionSystem = @MakeSystem(
    CollisionDetectionRunner,
+   false, true, false,
    1,
    'collider', Collider,
    1,
@@ -382,7 +395,7 @@ global PlayerControllerRunner = @record{
    animations: Animations*,
 }
 
-function PlayerControllerRunner:run()
+function PlayerControllerRunner:run(system_data: SystemData*)
    self.velocity.direction = Globals.player_input.direction
 
    if #Globals.player_input.direction < 0.1 then
@@ -404,6 +417,7 @@ end
 
 global PlayerControllerSystem = @MakeSystem(
    PlayerControllerRunner,
+   false, true, false,
    1,
    'player', Player,
    2,
@@ -418,7 +432,7 @@ global BoxControllerRunner = @record{
    velocity: Velocity*,
 }
 
-function BoxControllerRunner:run()
+function BoxControllerRunner:run(system_data: SystemData*)
    if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
       self.position.position = self.box.start_position
       self.velocity.direction = { 0, 0 }
@@ -441,6 +455,7 @@ end
 
 global BoxControllerSystem = @MakeSystem(
    BoxControllerRunner,
+   false, true, false,
    3,
    'box', Box,
    'position', Position,
@@ -455,7 +470,7 @@ global ObstaclesRunner = @record{
    velocity: Velocity*,
 }
 
-function ObstaclesRunner:run()
+function ObstaclesRunner:run(system_data: SystemData*)
    for j = 0, < #self.collisions.intersections do
       local intersection: Intersection* = self.collisions.intersections[j]
 
@@ -476,6 +491,7 @@ end
 
 global ObstaclesSystem = @MakeSystem(
    ObstaclesRunner,
+   false, true, false,
    2,
    'obstacles', Obstacles,
    'collisions', Collisions,
@@ -488,13 +504,14 @@ global VelocityRunner = @record{
    position: Position*,
 }
 
-function VelocityRunner:run()
+function VelocityRunner:run(system_data: SystemData*)
    self.position.position.x = self.position.position.x + self.velocity.direction.x * self.velocity.speed
    self.position.position.y = self.position.position.y + self.velocity.direction.y * self.velocity.speed
 end
 
 global VelocitySystem = @MakeSystem(
    VelocityRunner,
+   false, true, false,
    1,
    'velocity',  Velocity,
    1,
@@ -509,7 +526,7 @@ global GearControllerRunner = @record{
    animations: Animations*,
 }
 
-function GearControllerRunner:run()
+function GearControllerRunner:run(system_data: SystemData*)
    if Raylib.IsKeyDown(KeyboardKey.KEY_R) and not self.gear.engaged then
       self.position.position = self.gear.start_position
       self.velocity.direction = { 0, 0 }
@@ -566,6 +583,7 @@ end
 
 global GearControllerSystem = @MakeSystem(
    GearControllerRunner,
+   false, true, false,
    2,
    'gear', Gear,
    'collisions', Collisions,
@@ -580,7 +598,7 @@ global EngageRunner = @record{
    gear_slot: GearSlot*,
 }
 
-function EngageRunner:run()
+function EngageRunner:run(system_data: SystemData*)
    for j = 0, < #self.collisions.intersections do
       local intersection: Intersection* = self.collisions.intersections[j]
 
@@ -593,6 +611,7 @@ end
 
 global EngageSystem = @MakeSystem(
    EngageRunner,
+   false, true, false,
    1,
    'collisions', Collisions,
    1,
@@ -605,7 +624,7 @@ global BridgeRunner = @record{
    sprite: Sprite*,
 }
 
-function BridgeRunner:run()
+function BridgeRunner:run(system_data: SystemData*)
    if Globals.engaged_slots[self.bridge.slot_idx] then
       self.collider.entity_tag = EntityTag.OpenBridge
       self.sprite.visible = true
@@ -614,6 +633,7 @@ end
 
 global BridgeSystem = @MakeSystem(
    BridgeRunner,
+   false, true, false,
    1,
    'bridge', Bridge,
    2,
