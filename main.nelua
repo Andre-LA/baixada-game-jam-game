@@ -9,6 +9,7 @@ require 'string'
 require 'rotor'
 require 'game.resources'
 
+
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
 local TXT_TEXT_PT_BR: string <const> = "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
@@ -38,9 +39,8 @@ global PlayerInput = @record{
    action: boolean
 }
 
-require 'game'
-
 global Globals: record{
+   dt: float32,
    player_input: PlayerInput,
    engaged_slots: vector(boolean),
    camera: Camera2D,
@@ -49,30 +49,9 @@ global Globals: record{
       height: integer,
       title: string
    },
-   game_systems: record{
-      colliders_sync: CollidersSync,
-      collision_detection: CollisionDetection,
-
-      player_controller: PlayerController,
-      box_controller: BoxController,
-      gear_controller: GearController,
-
-      engage_system: EngageSystem,
-      bridge_system: BridgeSystem,
-
-      obstacles_system: ObstaclesSystem,
-      velocity_system: VelocitySystem,
-
-      animation: Animation,
-
-      sprite_painter: SpritePainter,
-
-      show_colliders: ShowColliders,
-      show_collisions: ShowCollisions,
-      show_positions: ShowPositions,
-   },
    untracked_ids: vector(GenerationalIndex),
 } = {
+   dt = 0,
    player_input = {
       direction = { 0, 0 },
       action = false,
@@ -90,28 +69,52 @@ global Globals: record{
       #[WIN_TITLE]#
    },
    untracked_ids = {},
-   game_systems = {
-      colliders_sync = CollidersSync.new(),
-      collision_detection = CollisionDetection.new(),
+}
 
-      player_controller = PlayerController.new(),
-      box_controller = BoxController.new(),
-      gear_controller = GearController.new(),
+require 'game'
 
-      engage_system = EngageSystem.new(),
-      bridge_system = BridgeSystem.new(),
+global Game_Systems: record{
+   colliders_sync: CollidersSyncSystem,
+   collision_detection: CollisionDetectionSystem,
 
-      obstacles_system = ObstaclesSystem.new(),
-      velocity_system = VelocitySystem.new(),
+   player_controller: PlayerControllerSystem,
+   box_controller: BoxControllerSystem,
+   gear_controller: GearControllerSystem,
 
-      animation = Animation.new(),
+   engage_system: EngageSystem,
+   bridge_system: BridgeSystem,
 
-      sprite_painter = SpritePainter.new(),
+   obstacles_system: ObstaclesSystem,
+   velocity_system: VelocitySystem,
 
-      show_colliders = ShowColliders.new(),
-      show_collisions = ShowCollisions.new(),
-      show_positions = ShowPositions.new(),
-   },
+   animation: AnimationSystem,
+
+   sprite_painter: SpritePainter,
+
+   show_colliders: ShowCollidersSystem,
+   show_collisions: ShowCollisionsSystem,
+   show_positions: ShowPositionsSystem,
+} = {
+   colliders_sync = CollidersSyncSystem.new(),
+   collision_detection = CollisionDetectionSystem.new(),
+
+   player_controller = PlayerControllerSystem.new(),
+   box_controller = BoxControllerSystem.new(),
+   gear_controller = GearControllerSystem.new(),
+
+   engage_system = EngageSystem.new(),
+   bridge_system = BridgeSystem.new(),
+
+   obstacles_system = ObstaclesSystem.new(),
+   velocity_system = VelocitySystem.new(),
+
+   animation = AnimationSystem.new(),
+
+   sprite_painter = SpritePainter.new(),
+
+   show_colliders = ShowCollidersSystem.new(),
+   show_collisions = ShowCollisionsSystem.new(),
+   show_positions = ShowPositionsSystem.new(),
 }
 
 require 'game.tilemap_creator'
@@ -144,26 +147,26 @@ local function update_system(system: System*)
 end
 
 local function update_all_systems()
-   update_system(Globals.game_systems.colliders_sync.system)
-   update_system(Globals.game_systems.collision_detection.system)
+   update_system(Game_Systems.colliders_sync.system)
+   update_system(Game_Systems.collision_detection.system)
 
-   update_system(Globals.game_systems.box_controller.system)
-   update_system(Globals.game_systems.gear_controller.system)
-   update_system(Globals.game_systems.player_controller.system)
+   update_system(Game_Systems.box_controller.system)
+   update_system(Game_Systems.gear_controller.system)
+   update_system(Game_Systems.player_controller.system)
 
-   update_system(Globals.game_systems.engage_system.system)
-   update_system(Globals.game_systems.bridge_system.system)
+   update_system(Game_Systems.engage_system.system)
+   update_system(Game_Systems.bridge_system.system)
 
-   update_system(Globals.game_systems.obstacles_system.system)
-   update_system(Globals.game_systems.velocity_system.system)
+   update_system(Game_Systems.obstacles_system.system)
+   update_system(Game_Systems.velocity_system.system)
 
-   update_system(Globals.game_systems.animation.system)
+   update_system(Game_Systems.animation.system)
 
-   update_system(Globals.game_systems.sprite_painter.system)
+   update_system(Game_Systems.sprite_painter.system)
 
-   update_system(Globals.game_systems.show_colliders.system)
-   update_system(Globals.game_systems.show_collisions.system)
-   update_system(Globals.game_systems.show_positions.system)
+   update_system(Game_Systems.show_colliders.system)
+   update_system(Game_Systems.show_collisions.system)
+   update_system(Game_Systems.show_positions.system)
 end
 
 local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, Globals.untracked_ids)
@@ -172,7 +175,7 @@ create_level({ 32*8, 32*3 })
 update_all_systems()
 
 local player_position_opt = storages.position:get_entry(player_entity.position_id)
-local player_position: Position* = player_position_opt:get()
+global player_position: Position* = player_position_opt:get()
 
 local player_animations_opt = storages.animations:get_entry(player_entity.animations_id)
 local player_animations: Animations* = player_animations_opt:get()
@@ -185,24 +188,24 @@ local function update_draw_frame() -- 15 90
    local game_finalized = player_position.position.y < 400
 
    -- [ Update [
-   local dt = Raylib.GetFrameTime()
+   Globals.dt = Raylib.GetFrameTime()
 
    update_player_input_values()
 
-   Globals.game_systems.colliders_sync:run(storages.position, storages.velocity, storages.collider)
-   Globals.game_systems.collision_detection:run(storages.collider, storages.collisions)
+   Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
+   Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
 
-   Globals.game_systems.player_controller:run(storages.player, storages.velocity, storages.animations, Globals.player_input)
-   Globals.game_systems.box_controller:run(storages.box, storages.position, storages.collisions, storages.velocity, Globals.player_input, player_position.position)
-   Globals.game_systems.gear_controller:run(storages.gear, storages.collisions, storages.velocity, storages.position, storages.animations, Globals.player_input, Globals.engaged_slots)
+   Game_Systems.player_controller:run({&storages.player, &storages.velocity, &storages.animations})
+   Game_Systems.box_controller:run({&storages.box, &storages.position, &storages.collisions, &storages.velocity})
+   Game_Systems.gear_controller:run({&storages.gear, &storages.collisions, &storages.velocity, &storages.position, &storages.animations})
 
-   Globals.game_systems.engage_system:run(storages.collisions, storages.gear_slot, Globals.engaged_slots)
-   Globals.game_systems.bridge_system:run(storages.bridge, storages.collider, storages.sprite, Globals.engaged_slots)
+   Game_Systems.engage_system:run({&storages.collisions, &storages.gear_slot})
+   Game_Systems.bridge_system:run({&storages.bridge, &storages.collider, &storages.sprite})
 
-   Globals.game_systems.obstacles_system:run(storages.obstacles, storages.collisions, storages.velocity)
-   Globals.game_systems.velocity_system:run(storages.velocity, storages.position)
+   Game_Systems.obstacles_system:run({&storages.obstacles, &storages.collisions, &storages.velocity})
+   Game_Systems.velocity_system:run({&storages.velocity, &storages.position})
 
-   Globals.game_systems.animation:run(storages.animations, storages.sprite, dt)
+   Game_Systems.animation:run({&storages.animations, &storages.sprite})
 
    Globals.camera.target = player_position.position
 
@@ -219,12 +222,12 @@ local function update_draw_frame() -- 15 90
       Raylib.BeginMode2D(Globals.camera)
          Raylib.DrawText(txt_text, 32*26, 32*22, 20, RAYWHITE)
 
-         Globals.game_systems.sprite_painter:run(storages.sprite, storages.position)
+         Game_Systems.sprite_painter:run(storages.sprite, storages.position)
 
          ## if SHOW_DEV_INFO then
-            Globals.game_systems.show_colliders:run(storages.collider)
-            Globals.game_systems.show_collisions:run(storages.collisions)
-            Globals.game_systems.show_positions:run(storages.position)
+            Game_Systems.show_colliders:run({&storages.collider})
+            Game_Systems.show_collisions:run({&storages.collisions})
+            Game_Systems.show_positions:run({&storages.position})
          ## end
 
       Raylib.EndMode2D()

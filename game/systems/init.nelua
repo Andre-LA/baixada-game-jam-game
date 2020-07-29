@@ -11,53 +11,6 @@ global System = @record{
 }
 
 -- [ systems [
-global CollidersSync = @record{
-   system: System
-}
-
-function CollidersSync.new(): CollidersSync
-   local new_system: CollidersSync = {
-      system = {
-         read = {
-            bitset_array.copy(component_masks.position),
-            bitset_array.copy(component_masks.velocity)
-         },
-         write = {
-            bitset_array.copy(component_masks.collider),
-         },
-      }
-   }
-
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function CollidersSync:run(position_storage: Storage(Position)*, velocity_storage: Storage(Velocity)*, collider_storage: Storage(Collider)*)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local position_id = ids[0]
-         local velocity_id = ids[1]
-         local collider_id = ids[2]
-
-         local opt_position = position_storage:get_entry(position_id)
-         local opt_velocity = velocity_storage:get_entry(velocity_id)
-         local opt_collider = collider_storage:get_entry(collider_id)
-
-         if opt_position.filled and opt_velocity.filled and opt_collider.filled then
-            local position = opt_position:get()
-            local velocity = opt_velocity:get()
-            local collider = opt_collider:get()
-
-            collider:sync_with_position(position.position)
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
-   end
-end
-
 global SpritePainter = @record{
    system: System
 }
@@ -150,170 +103,260 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
    end
 end
 
-global Animation = @record{
-   system: System
-}
+## local make_system = generalize(function(T, run_type, opt_T_coll, stor_T_coll, ...)
+   ##[[
+      local function union(a,b)
+         local t={}
+         for i=1,#a do t[#t+1]=a[i] end
+         for i=1,#b do t[#t+1]=b[i] end
+         return t
+      end
 
-function Animation.new(): Animation
-   local new_system: Animation = {
-      system = {
-         read = {},
-         write = {bitset_array.copy(component_masks.animations), bitset_array.copy(component_masks.sprite)}
-      }
+      local args = {...}
+      local qtd_read = args[1]
+      local w_argpos = 2 + qtd_read*2
+      local qtd_write = args[w_argpos]
+
+      local read_names = {}
+      local read_types = {}
+      for i = 2, 1 + qtd_read do
+         table.insert(read_names, args[i])
+      end
+
+      for i = 2 + qtd_read, qtd_read * 2 + 1 do
+         table.insert(read_types, args[i])
+      end
+
+      local write_names = {}
+      local write_types = {}
+
+      for i = w_argpos + 1, w_argpos + qtd_write do
+         table.insert(write_names, args[i])
+      end
+
+      for i = w_argpos + qtd_write + 1, #args do
+         table.insert(write_types, args[i])
+      end
+
+      staticassert(traits.is_type(T), "invalid type %s", T)
+      staticassert(#read_names == #read_types, "quantity of read names and read types doesn't match")
+      staticassert(#write_names == #write_types, "quantity of write names and write types doesn't match")
+
+      local component_names = union(read_names, write_names)
+      local component_types = union(read_types, write_types)
+   ]]
+
+   local T = @#[T]#
+   local optCollectionT = @#[opt_T_coll]#
+
+   -- TODO: generate collections on make_system
+   --local optCollectionT = @record{}
+
+   --## for i = 1, #component_names do
+      --## local comp_name, comp_type = component_names[i], component_types[i]
+      --## print(type(comp_name), comp_name)
+      --## print(type(comp_type), comp_type)
+
+      --local optTi: type = @#|comp_type|#
+
+      --## print(type(optTi), optTi)
+
+      --## optCollectionT.value:add_field(comp_name, optTi)
+   --## end
+
+   local storagesCollectionT = @#[stor_T_coll]#
+
+   local systemT <nickname #[string.format('system(%s)', T)]#> = @record{
+      system: System,
+      opts: optCollectionT
    }
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
+   function systemT.new(): systemT
+      local new_system: systemT = {}
 
-function Animation:run(animations_storage: Storage(Animations)*, sprite_storage: Storage(Sprite)*, dt: number)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
+      ## for _, v in ipairs(read_names) do
+         new_system.system.read:push(bitset_array.copy(component_masks.#|v|#))
+      ## end
 
-      if #ids > 0 then
-         local animations_id = ids[0]
-         local sprite_id = ids[1]
+      ## for _, v in ipairs(write_names) do
+         new_system.system.write:push(bitset_array.copy(component_masks.#|v|#))
+      ## end
 
-         local opt_animations = animations_storage:get_entry(animations_id)
-         local opt_sprite = sprite_storage:get_entry(sprite_id)
+      new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+      return new_system
+   end
 
-         if opt_animations.filled and opt_sprite.filled then
-            local animations = opt_animations:get()
-            local sprite = opt_sprite:get()
+   function systemT:verify(): boolean
+      local values: boolean[#[ #component_names]#] = {}
 
-            if not animations.paused then
-               animations.elapsed_time = animations.elapsed_time + dt
-               local current_animation: AnimationData* = animations.animations[animations.current_animation_index]
+      ## for i, v in ipairs(component_names) do
+         values[#[i-1]#] = self.opts.#|v|#.filled
+      ## end
 
-               if animations.elapsed_time > current_animation.frame_duration then
-                  animations.current_frame_index = (animations.current_frame_index + 1) % #current_animation.frame_indexes
-                  animations.elapsed_time = 0
-               end
+      local result: boolean = true
 
-               sprite.frame_index = current_animation.frame_indexes[animations.current_frame_index]
+      for i = 0, < #[#component_names]# do
+         result = result and values[i]
+      end
+
+      return result
+   end
+
+   function systemT:run(storages_collection: storagesCollectionT)
+      for i = 0, < #self.system.system_data.components_indexes do
+         local ids = self.system.system_data.components_indexes[i]
+
+         if #ids > 0 then
+            ## for i, v in ipairs(component_names) do
+               local #|v..'_id'|# = ids[#[i-1]#]
+               self.opts.#|v|# = storages_collection.#|v|#:get_entry(#|v..'_id'|#)
+            ## end
+
+            if self:verify() then
+               ## for _, v in ipairs(component_names) do
+                  local #|v|# = self.opts.#|v|#:get()
+               ## end
+
+               local runner: #|run_type|# = {}
+               ## for _, v in ipairs(component_names) do
+                  runner.#|v|# = #|v|#
+               ## end
+
+               runner:run()
+            else
+               self.system.system_data:mark_available(i)
             end
-         else
-            self.system.system_data:mark_available(i)
          end
       end
    end
-end
 
-global ShowCollisions = @record{
-   system: System
+   ## return systemT
+## end)
+
+local MakeSystem = #[make_system]#
+
+global CollidersSyncRunner = @record{
+   position: Position*,
+   velocity: Velocity*,
+   collider: Collider*
 }
 
-function ShowCollisions.new(): ShowCollisions
-   local new_system: ShowCollisions = {
-      system = {
-         read = {bitset_array.copy(component_masks.collisions)},
-         write = {}
-      }
-   }
-
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
+function CollidersSyncRunner:run()
+   self.collider:sync_with_position(self.position.position)
 end
 
-function ShowCollisions:run(collisions_storage: Storage(Collisions)*)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
+local CollidersSyncRunnerOptCollection = @record{
+   position: optional(Position*),
+   velocity: optional(Velocity*),
+   collider: optional(Collider*)
+}
 
-      if #ids > 0 then
-         local collisions_id = ids[0]
-         local opt_collisions = collisions_storage:get_entry(collisions_id)
+local CollidersSyncRunnerStoragesCollection = @record{
+   position: Storage(Position)*,
+   velocity: Storage(Velocity)*,
+   collider: Storage(Collider)*
+}
 
-         if opt_collisions.filled then
-            local collisions = opt_collisions:get()
+global CollidersSyncSystem = @MakeSystem(CollidersSyncRunner, 'CollidersSyncRunner', CollidersSyncRunnerOptCollection, CollidersSyncRunnerStoragesCollection, 2, 'position', 'velocity', 'Position', 'Velocity', 1, 'collider', 'Collider')
 
-            for j = 0, < #collisions.intersections do
-               local intersection: Intersection* = collisions.intersections[j]
-               local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
-               Raylib.DrawRectangleLinesEx(intersection.rect, 1, rect_color)
-            end
-         else
-            self.system.system_data:mark_available(i)
-         end
+global AnimationRunner = @record{
+   animations: Animations*,
+   sprite: Sprite*,
+}
+
+function AnimationRunner:run()
+   if not self.animations.paused then
+      self.animations.elapsed_time = self.animations.elapsed_time + Globals.dt
+      local current_animation: AnimationData* = self.animations.animations[self.animations.current_animation_index]
+
+      if self.animations.elapsed_time > current_animation.frame_duration then
+         self.animations.current_frame_index = (self.animations.current_frame_index + 1) % #current_animation.frame_indexes
+         self.animations.elapsed_time = 0
       end
+
+      self.sprite.frame_index = current_animation.frame_indexes[self.animations.current_frame_index]
    end
 end
 
-global ShowColliders = @record{
-   system: System
+local AnimationRunnerOptCollection = @record{
+   animations: optional(Animations*),
+   sprite: optional(Sprite*),
 }
 
-function ShowColliders.new(): ShowColliders
-   local new_system: ShowColliders = {
-      system = {
-         read = {bitset_array.copy(component_masks.collider)},
-         write = {}
-      }
-   }
+local AnimationRunnerStoragesCollection = @record{
+   animations: Storage(Animations)*,
+   sprite: Storage(Sprite)*,
+}
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
+global AnimationSystem = @MakeSystem(AnimationRunner, 'AnimationRunner', AnimationRunnerOptCollection, AnimationRunnerStoragesCollection, 0, 2, 'animations', 'sprite', 'Animations', 'Sprite')
 
-function ShowColliders:run(collider_storage: Storage(Collider)*)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
+global ShowCollisionsRunner = @record{
+   collisions: Collisions*,
+}
 
-      if #ids > 0 then
-         local collider_id = ids[0]
-         local opt_collider = collider_storage:get_entry(collider_id)
-
-         if opt_collider.filled then
-            local collider = opt_collider:get()
-            Raylib.DrawRectangleLinesEx(collider.global_rect, 1, GREEN)
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
+function ShowCollisionsRunner:run()
+   for j = 0, < #self.collisions.intersections do
+      local intersection: Intersection* = self.collisions.intersections[j]
+      local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
+      Raylib.DrawRectangleLinesEx(intersection.rect, 1, rect_color)
    end
 end
 
-global ShowPositions = @record{
-   system: System
+local ShowCollisionsRunnerOptCollection = @record{
+   collisions: optional(Collisions*),
 }
 
-function ShowPositions.new(): ShowPositions
-   local new_system: ShowPositions = {
-      system = {
-         read = {bitset_array.copy(component_masks.position)},
-         write = {}
-      }
-   }
+local ShowCollisionsRunnerStoragesCollection = @record{
+   collisions: Storage(Collisions)*,
+}
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
+global ShowCollisionsSystem = @MakeSystem(ShowCollisionsRunner, 'ShowCollisionsRunner', ShowCollisionsRunnerOptCollection, ShowCollisionsRunnerStoragesCollection, 1, 'collisions', 'Collisions', 0)
+
+global ShowCollidersRunner = @record{
+   collider: Collider*,
+}
+
+function ShowCollidersRunner:run()
+   Raylib.DrawRectangleLinesEx(self.collider.global_rect, 1, GREEN)
 end
 
-function ShowPositions:run(position_storage: Storage(Position)*)
+local ShowCollidersRunnerOptCollection = @record{
+   collider: optional(Collider*),
+}
+
+global ShowCollidersRunnerStoragesCollection = @record{
+   collider: Storage(Collider)*,
+}
+
+global ShowCollidersSystem = @MakeSystem(ShowCollidersRunner, 'ShowCollidersRunner', ShowCollidersRunnerOptCollection, ShowCollidersRunnerStoragesCollection, 1, 'collider', 'Collider', 0)
+
+global ShowPositionsRunner = @record{
+   position: Position*,
+}
+
+function ShowPositionsRunner:run()
    local H_start: Vector2 = { -5, 0 }
    local H_end  : Vector2 = {  5, 0 }
    local V_start: Vector2 = { 0, -5 }
    local V_end  : Vector2 = { 0,  5 }
 
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local position_id = ids[0]
-         local opt_position = position_storage:get_entry(position_id)
-
-         if opt_position.filled then
-            local position = opt_position:get()
-            Raylib.DrawLineV(position.position + H_start, position.position + H_end, RED)
-            Raylib.DrawLineV(position.position + V_start, position.position + V_end, RED)
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
-   end
+   Raylib.DrawLineV(self.position.position + H_start, self.position.position + H_end, RED)
+   Raylib.DrawLineV(self.position.position + V_start, self.position.position + V_end, RED)
 end
 
-global CollisionDetection = @record{
-   system: System
+local ShowPositionsRunnerOptCollection = @record{
+   position: optional(Position*),
+}
+
+global ShowPositionsRunnerStoragesCollection = @record{
+   position: Storage(Position)*,
+}
+
+global ShowPositionsSystem = @MakeSystem(ShowPositionsRunner, 'ShowPositionsRunner', ShowPositionsRunnerOptCollection, ShowPositionsRunnerStoragesCollection, 1, 'position', 'Position', 0)
+
+global CollisionDetectionRunner = @record{
+   collider: Collider*,
+   collisions: Collisions*,
 }
 
 local function is_past_collision(intersections: vector(Intersection)*, collider: Collider*): integer
@@ -325,519 +368,329 @@ local function is_past_collision(intersections: vector(Intersection)*, collider:
    return -1
 end
 
-function CollisionDetection.new(): CollisionDetection
-   local new_system: CollisionDetection = {
-      system = {
-         read = {bitset_array.copy(component_masks.collider)},
-         write = {bitset_array.copy(component_masks.collisions)},
-      }
-   }
+function CollisionDetectionRunner:run()
+   for j = 0, < storages.collider.len do
+      if storages.collider.generations[j].filled then
+         local collider_j = storages.collider.entries[j]
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
+         if self.collider.entity_id ~= collider_j.entity_id then
+            local has_collision = Raylib.CheckCollisionRecs(self.collider.global_rect, collider_j.global_rect)
+            local possible_past_collision = is_past_collision(self.collisions.intersections, collider_j)
 
-function CollisionDetection:run(collider_storage: Storage(Collider)*, collisions_storage: Storage(Collisions)*)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
+            if has_collision then
+               local intersection_rect = Raylib.GetCollisionRec(self.collider.global_rect, collider_j.global_rect)
 
-      if #ids > 0 then
-         local collider_id = ids[0]
-         local collisions_id = ids[1]
-
-         local opt_collider = collider_storage:get_entry(collider_id)
-         local opt_collisions = collisions_storage:get_entry(collisions_id)
-
-         if opt_collider.filled  and opt_collisions.filled then
-            local collider = opt_collider:get()
-            local collisions = opt_collisions:get()
-
-            for j = 0, < collider_storage.len do
-               if collider_storage.generations[j].filled then
-                  local collider_j = collider_storage.entries[j]
-
-                  if collider.entity_id ~= collider_j.entity_id then
-                     local has_collision = Raylib.CheckCollisionRecs(collider.global_rect, collider_j.global_rect)
-                     local possible_past_collision = is_past_collision(collisions.intersections, collider_j)
-
-                     if has_collision then
-                        local intersection_rect = Raylib.GetCollisionRec(collider.global_rect, collider_j.global_rect)
-
-                        if possible_past_collision >= 0 then
-                           collisions.intersections[possible_past_collision].state = CollisionState.Stay
-                           collisions.intersections[possible_past_collision].rect = intersection_rect
-                        else
-                           local new_intersection: Intersection = {
-                              collider = collider_j,
-                              rect = intersection_rect,
-                              state = CollisionState.Enter
-                           }
-                           collisions.intersections:push(new_intersection)
-                        end
-                     elseif possible_past_collision >= 0 then
-                        collisions.intersections:remove(possible_past_collision)
-                     end
-                  end
+               if possible_past_collision >= 0 then
+                  self.collisions.intersections[possible_past_collision].state = CollisionState.Stay
+                  self.collisions.intersections[possible_past_collision].rect = intersection_rect
+               else
+                  local new_intersection: Intersection = {
+                     collider = collider_j,
+                     rect = intersection_rect,
+                     state = CollisionState.Enter
+                  }
+                  self.collisions.intersections:push(new_intersection)
                end
+            elseif possible_past_collision >= 0 then
+               self.collisions.intersections:remove(possible_past_collision)
             end
-         else
-            self.system.system_data:mark_available(i)
          end
       end
    end
 end
 
-global PlayerController = @record{
-   system: System
+local CollisionDetectionRunnerOptCollection = @record{
+   collider: optional(Collider*),
+   collisions: optional(Collisions*),
 }
 
-function PlayerController.new(): PlayerController
-   local new_system: PlayerController = {
-      system = {
-         read = { bitset_array.copy(component_masks.player) },
-         write = { bitset_array.copy(component_masks.velocity), bitset_array.copy(component_masks.animations) }
-      }
-   }
-
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function PlayerController:run(
-   player_storage: Storage(Player)*,
-   velocity_storage: Storage(Velocity)*,
-   animations_storage: Storage(Animations)*,
-   player_input: PlayerInput
-)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local player_id = ids[0]
-         local velocity_id = ids[1]
-         local animations_id = ids[2]
-
-         local opt_player = player_storage:get_entry(player_id)
-         local opt_velocity = velocity_storage:get_entry(velocity_id)
-         local opt_animations = animations_storage:get_entry(animations_id)
-
-         if opt_player.filled and opt_velocity.filled and opt_animations.filled then
-            local player = opt_player:get()
-            local velocity = opt_velocity:get()
-            local animations = opt_animations:get()
-
-            velocity.direction = player_input.direction
-
-            if #player_input.direction < 0.1 then
-               animations:change_animation(0)
-            elseif math.abs(player_input.direction.x) > math.abs(player_input.direction.y) then -- horizontal movement
-               if player_input.action then -- L/R push
-                  animations:change_animation(player_input.direction.x < 0 and 8 or 7)
-               else -- L/R walk
-                  animations:change_animation(player_input.direction.x < 0 and 4 or 3)
-               end
-            else -- vertical movement
-               if player_input.action then -- U/D push
-                  animations:change_animation(player_input.direction.y < 0 and 6 or 5)
-               else -- U/D walk
-                  animations:change_animation(player_input.direction.y < 0 and 2 or 1)
-               end
-            end
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
-   end
-end
-
-global BoxController = @record{
-   system: System
+global CollisionDetectionRunnerStoragesCollection = @record{
+   collider: Storage(Collider)*,
+   collisions: Storage(Collisions)*,
 }
 
-function BoxController.new(): BoxController
-   local new_system: BoxController = {
-      system = {
-         read = {
-            bitset_array.copy(component_masks.box),
-            bitset_array.copy(component_masks.position),
-            bitset_array.copy(component_masks.collisions)
-         },
-         write = { bitset_array.copy(component_masks.velocity) }
-      }
-   }
+global CollisionDetectionSystem = @MakeSystem(CollisionDetectionRunner, 'CollisionDetectionRunner', CollisionDetectionRunnerOptCollection, CollisionDetectionRunnerStoragesCollection, 1, 'collider', 'Collider', 1, 'collisions', 'Collisions')
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function BoxController:run(
-   box_storage: Storage(Box)*,
-   position_storage: Storage(Position)*,
-   collisions_storage: Storage(Collisions)*,
-   velocity_storage: Storage(Velocity),
-   player_input: PlayerInput,
-   player_position: Vector2
-)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local box_id = ids[0]
-         local position_id = ids[1]
-         local collisions_id = ids[2]
-         local velocity_id = ids[3]
-
-         local opt_box = box_storage:get_entry(box_id)
-         local opt_position = position_storage:get_entry(position_id)
-         local opt_collisions = collisions_storage:get_entry(collisions_id)
-         local opt_velocity = velocity_storage:get_entry(velocity_id)
-
-         if opt_box.filled and opt_position.filled and opt_collisions.filled and opt_velocity.filled then
-            local box = opt_box:get()
-            local position = opt_position:get()
-            local collisions = opt_collisions:get()
-            local velocity = opt_velocity:get()
-
-            if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
-               position.position = box.start_position
-               velocity.direction = { 0, 0 }
-            end
-
-            if player_input.action and #collisions.intersections > 0 then
-               for j = 0, < #collisions.intersections do
-                  local intersection: Intersection* = collisions.intersections[j]
-                  if intersection:contains_tag(EntityTag.Player) then
-                     velocity.direction = player_input.direction
-                     break
-                  else
-                     velocity.direction = { 0, 0 }
-                  end
-               end
-            else
-               velocity.direction = { 0, 0 }
-            end
-         end
-      end
-   end
-end
-
-global ObstaclesSystem = @record{
-   system: System
+global PlayerControllerRunner = @record{
+   player: Player*,
+   velocity: Velocity*,
+   animations: Animations*,
 }
 
-function ObstaclesSystem.new(): ObstaclesSystem
-   local new_system: ObstaclesSystem = {
-      system = {
-         read = { bitset_array.copy(component_masks.obstacles), bitset_array.copy(component_masks.collisions) },
-         write = { bitset_array.copy(component_masks.velocity) }
-      }
-   }
+function PlayerControllerRunner:run()
+   self.velocity.direction = Globals.player_input.direction
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function ObstaclesSystem:run(
-   obstacles_storage: Storage(Obstacles)*,
-   collisions_storage: Storage(Collisions)*,
-   velocity_storage: Storage(Velocity)*
-)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local obstacles_id = ids[0]
-         local collisions_id = ids[1]
-         local velocity_id = ids[2]
-
-         local opt_obstacles = obstacles_storage:get_entry(obstacles_id)
-         local opt_collisions = collisions_storage:get_entry(collisions_id)
-         local opt_velocity = velocity_storage:get_entry(velocity_id)
-
-         if opt_obstacles.filled and opt_collisions.filled and opt_velocity.filled then
-            local obstacles = opt_obstacles:get()
-            local collisions = opt_collisions:get()
-            local velocity = opt_velocity:get()
-
-            for j = 0, < #collisions.intersections do
-               local intersection: Intersection* = collisions.intersections[j]
-
-               -- if intersected with a obstacle entity
-               if intersection:contains_tag(obstacles.mask) then
-                  local dir: Vector2 = intersection:get_direction(intersection:get_center(), 2)
-                  local dir_x_inputdir = dir * velocity.direction
-
-                  if dir_x_inputdir.x < 0 and intersection.rect.width / intersection.rect.height < 1 then
-                     velocity.direction.x = 0
-                  end
-                  if dir_x_inputdir.y < 0 and intersection.rect.height / intersection.rect.width < 1 then
-                     velocity.direction.y = 0
-                  end
-               end
-            end
-         else
-            self.system.system_data:mark_available(i)
-         end
+   if #Globals.player_input.direction < 0.1 then
+      self.animations:change_animation(0)
+   elseif math.abs(Globals.player_input.direction.x) > math.abs(Globals.player_input.direction.y) then -- horizontal movement
+      if Globals.player_input.action then -- L/R push
+         self.animations:change_animation(Globals.player_input.direction.x < 0 and 8 or 7)
+      else -- L/R walk
+         self.animations:change_animation(Globals.player_input.direction.x < 0 and 4 or 3)
+      end
+   else -- vertical movement
+      if Globals.player_input.action then -- U/D push
+         self.animations:change_animation(Globals.player_input.direction.y < 0 and 6 or 5)
+      else -- U/D walk
+         self.animations:change_animation(Globals.player_input.direction.y < 0 and 2 or 1)
       end
    end
 end
 
-global VelocitySystem = @record{
-   system: System
+local PlayerControllerRunnerOptCollection = @record{
+   player: optional(Player*),
+   velocity: optional(Velocity*),
+   animations: optional(Animations*),
 }
 
-function VelocitySystem.new(): VelocitySystem
-   local new_system: VelocitySystem = {
-      system = {
-         read = { bitset_array.copy(component_masks.velocity) },
-         write = { bitset_array.copy(component_masks.position) }
-      }
-   }
-
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function VelocitySystem:run(velocity_storage: Storage(Velocity)*, position_storage: Storage(Position)*)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local velocity_id = ids[0]
-         local position_id = ids[1]
-
-         local opt_velocity = velocity_storage:get_entry(velocity_id)
-         local opt_position = position_storage:get_entry(position_id)
-
-         if opt_velocity.filled and opt_position.filled then
-            local velocity = opt_velocity:get()
-            local position = opt_position:get()
-
-            position.position.x = position.position.x + velocity.direction.x * velocity.speed
-            position.position.y = position.position.y + velocity.direction.y * velocity.speed
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
-   end
-end
-
-global GearController = @record{
-   system: System
+global PlayerControllerRunnerStoragesCollection = @record{
+   player: Storage(Player)*,
+   velocity: Storage(Velocity)*,
+   animations: Storage(Animations)*,
 }
 
-function GearController.new(): GearController
-   local new_system: GearController = {
-      system = {
-         read = {
-            bitset_array.copy(component_masks.gear),
-            bitset_array.copy(component_masks.collisions)
-         },
-         write = {
-            bitset_array.copy(component_masks.velocity),
-            bitset_array.copy(component_masks.position),
-            bitset_array.copy(component_masks.animations)
-         }
-      }
-   }
+global PlayerControllerSystem = @MakeSystem(PlayerControllerRunner, 'PlayerControllerRunner', PlayerControllerRunnerOptCollection, PlayerControllerRunnerStoragesCollection, 1, 'player', 'Player', 2, 'velocity', 'animations', 'Velocity', 'Animations')
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function GearController:run(
-   gear_storage: Storage(Gear)*,
-   collisions_storage: Storage(Collisions)*,
-   velocity_storage: Storage(Velocity)*,
-   position_storage: Storage(Position)*,
-   animations_storage: Storage(Animations)*,
-   player_input: PlayerInput,
-   engaged_slots: vector(boolean)*
-)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local gear_id = ids[0]
-         local collisions_id = ids[1]
-         local velocity_id = ids[2]
-         local position_id = ids[3]
-         local animations_id = ids[4]
-
-         local opt_gear = gear_storage:get_entry(gear_id)
-         local opt_collisions = collisions_storage:get_entry(collisions_id)
-         local opt_velocity = velocity_storage:get_entry(velocity_id)
-         local opt_position = position_storage:get_entry(position_id)
-         local opt_animations = animations_storage:get_entry(animations_id)
-
-         if opt_gear.filled and
-            opt_collisions.filled and
-            opt_velocity.filled and
-            opt_position.filled and
-            opt_animations.filled
-         then
-            local gear = opt_gear:get()
-            local collisions = opt_collisions:get()
-            local velocity = opt_velocity:get()
-            local position = opt_position:get()
-            local animations = opt_animations:get()
-
-            if Raylib.IsKeyDown(KeyboardKey.KEY_R) and not gear.engaged then
-               position.position = gear.start_position
-               velocity.direction = { 0, 0 }
-            end
-
-            if not gear.engaged then
-               for j = 0, < #collisions.intersections do
-                  local intersection: Intersection* = collisions.intersections[j]
-
-                  if intersection:contains_tag(EntityTag.Player) and player_input.action and #player_input.direction > 0.01 then
-                     local dir = player_input.direction
-
-                     local is_horizontal = intersection.rect.width / intersection.rect.height < 1
-                     local is_vertical = intersection.rect.height / intersection.rect.width < 1
-
-                     if is_horizontal then
-                        dir.x = dir.x > 0 and 1 or -1
-                        dir.y = 0
-                     elseif is_vertical then
-                        dir.x = 0
-                        dir.y = dir.y > 0 and 1 or -1
-                     end
-
-                     velocity.direction = dir
-                  elseif intersection:contains_tag(EntityTag.GearSlot) then
-                     gear.engaged = true
-                     break
-                  end
-               end
-            else
-               for j = 0, < #collisions.intersections do
-                  local intersection: Intersection* = collisions.intersections[j]
-
-                  if intersection:contains_tag(EntityTag.GearSlot) then
-                     position.position.x = intersection.collider.global_rect.x
-                     position.position.y = intersection.collider.global_rect.y+33
-                     break
-                  end
-               end
-            end
-
-            if not gear.engaged then
-               local in_movement = #velocity.direction > 0.15
-               animations.paused = not in_movement
-
-               if in_movement then
-                  local new_anim_idx = math.abs(velocity.direction.x) > math.abs(velocity.direction.y) and 0 or 1
-                  animations:change_animation(new_anim_idx)
-               end
-            else
-               animations:change_animation(2)
-            end
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
-   end
-end
-
-global EngageSystem = @record{
-   system: System
+global BoxControllerRunner = @record{
+   box: Box*,
+   position: Position*,
+   collisions: Collisions*,
+   velocity: Velocity*,
 }
 
-function EngageSystem.new(): EngageSystem
-   local new_system: EngageSystem = {
-      system = {
-         read = { bitset_array.copy(component_masks.collisions) },
-         write = { bitset_array.copy(component_masks.gear_slot) }
-      }
-   }
+function BoxControllerRunner:run()
+   if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
+      self.position.position = self.box.start_position
+      self.velocity.direction = { 0, 0 }
+   end
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function EngageSystem:run(
-   collisions_storage: Storage(Collisions)*,
-   gear_slot_storage: Storage(GearSlot)*,
-   engaged_slots: vector(boolean)*
-)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local collisions_id = ids[0]
-         local gear_slot_id = ids[1]
-
-         local opt_collisions = collisions_storage:get_entry(collisions_id)
-         local opt_gear_slot = gear_slot_storage:get_entry(gear_slot_id)
-
-         if opt_collisions.filled and opt_gear_slot.filled then
-            local collisions = opt_collisions:get()
-            local gear_slot = opt_gear_slot:get()
-
-            for j = 0, < #collisions.intersections do
-               local intersection: Intersection* = collisions.intersections[j]
-
-               if intersection:contains_tag(EntityTag.Gear) then
-                  engaged_slots[gear_slot.slot_idx] = true
-                  break
-               end
-            end
+   if Globals.player_input.action and #self.collisions.intersections > 0 then
+      for j = 0, < #self.collisions.intersections do
+         local intersection: Intersection* = self.collisions.intersections[j]
+         if intersection:contains_tag(EntityTag.Player) then
+            self.velocity.direction = Globals.player_input.direction
+            break
          else
-            self.system.system_data:mark_available(i)
+            self.velocity.direction = { 0, 0 }
          end
       end
+   else
+      self.velocity.direction = { 0, 0 }
    end
 end
 
-global BridgeSystem = @record{
-   system: System
+local BoxControllerRunnerOptCollection = @record{
+   box: optional(Box*),
+   position: optional(Position*),
+   collisions: optional(Collisions*),
+   velocity: optional(Velocity*),
 }
 
-function BridgeSystem.new(): BridgeSystem
-   local new_system: BridgeSystem = {
-      system = {
-         read = { bitset_array.copy(component_masks.bridge) },
-         write = { bitset_array.copy(component_masks.collider), bitset_array.copy(component_masks.sprite) }
-      }
-   }
+global BoxControllerRunnerStoragesCollection = @record{
+   box: Storage(Box)*,
+   position: Storage(Position)*,
+   collisions: Storage(Collisions)*,
+   velocity: Storage(Velocity)*,
+}
 
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
+global BoxControllerSystem = @MakeSystem(BoxControllerRunner, 'BoxControllerRunner', BoxControllerRunnerOptCollection, BoxControllerRunnerStoragesCollection, 3, 'box', 'position', 'collisions', 'Box', 'Position', 'Collisions', 1, 'velocity', 'Velocity')
 
-function BridgeSystem:run(
-   bridge_storage: Storage(Bridge)*,
-   collider_storage: Storage(Collider)*,
-   sprite_storage: Storage(Sprite)*,
-   engaged_slots: vector(boolean)*
-)
-   for i = 0, < #self.system.system_data.components_indexes do
-      local ids = self.system.system_data.components_indexes[i]
+global ObstaclesRunner = @record{
+   obstacles: Obstacles*,
+   collisions: Collisions*,
+   velocity: Velocity*,
+}
 
-      if #ids > 0 then
-         local bridge_id = ids[0]
-         local collider_id = ids[1]
-         local sprite_id = ids[2]
+function ObstaclesRunner:run()
+   for j = 0, < #self.collisions.intersections do
+      local intersection: Intersection* = self.collisions.intersections[j]
 
-         local opt_bridge = bridge_storage:get_entry(bridge_id)
-         local opt_collider = collider_storage:get_entry(collider_id)
-         local opt_sprite = sprite_storage:get_entry(sprite_id)
+      -- if intersected with a obstacle entity
+      if intersection:contains_tag(self.obstacles.mask) then
+         local dir: Vector2 = intersection:get_direction(intersection:get_center(), 2)
+         local dir_x_inputdir = dir * self.velocity.direction
 
-         if opt_bridge.filled and opt_collider.filled and opt_sprite.filled then
-            local bridge = opt_bridge:get()
-            local collider = opt_collider:get()
-            local sprite = opt_sprite:get()
-
-            if engaged_slots[bridge.slot_idx] then
-               collider.entity_tag = EntityTag.OpenBridge
-               sprite.visible = true
-            end
-         else
-            self.system.system_data:mark_available(i)
+         if dir_x_inputdir.x < 0 and intersection.rect.width / intersection.rect.height < 1 then
+            self.velocity.direction.x = 0
+         end
+         if dir_x_inputdir.y < 0 and intersection.rect.height / intersection.rect.width < 1 then
+            self.velocity.direction.y = 0
          end
       end
    end
 end
+
+local ObstaclesRunnerOptCollection = @record{
+   obstacles: optional(Obstacles*),
+   collisions: optional(Collisions*),
+   velocity: optional(Velocity*),
+}
+
+global ObstaclesStoragesRunnerCollection = @record{
+   obstacles: Storage(Obstacles)*,
+   collisions: Storage(Collisions)*,
+   velocity: Storage(Velocity)*,
+}
+
+global ObstaclesSystem = @MakeSystem(ObstaclesRunner, 'ObstaclesRunner', ObstaclesRunnerOptCollection, ObstaclesStoragesRunnerCollection, 2, 'obstacles', 'collisions', 'Obstacles', 'Collisions', 1, 'velocity', 'Velocity')
+
+global VelocityRunner = @record{
+   velocity: Velocity*,
+   position: Position*,
+}
+
+function VelocityRunner:run()
+   self.position.position.x = self.position.position.x + self.velocity.direction.x * self.velocity.speed
+   self.position.position.y = self.position.position.y + self.velocity.direction.y * self.velocity.speed
+end
+
+local VelocityRunnerOptCollection = @record{
+   velocity: optional(Velocity*),
+   position: optional(Position*),
+}
+
+global VelocityRunnerStoragesCollection = @record{
+   velocity: Storage(Velocity)*,
+   position: Storage(Position)*,
+}
+
+global VelocitySystem = @MakeSystem(VelocityRunner, 'VelocityRunner', VelocityRunnerOptCollection, VelocityRunnerStoragesCollection, 1, 'velocity',  'Velocity', 1, 'position', 'Position')
+
+global GearControllerRunner = @record{
+   gear: Gear*,
+   collisions: Collisions*,
+   velocity: Velocity*,
+   position: Position*,
+   animations: Animations*,
+}
+
+function GearControllerRunner:run()
+   if Raylib.IsKeyDown(KeyboardKey.KEY_R) and not self.gear.engaged then
+      self.position.position = self.gear.start_position
+      self.velocity.direction = { 0, 0 }
+   end
+
+   if not self.gear.engaged then
+      for j = 0, < #self.collisions.intersections do
+         local intersection: Intersection* = self.collisions.intersections[j]
+
+         if intersection:contains_tag(EntityTag.Player) and Globals.player_input.action and #Globals.player_input.direction > 0.01 then
+            local dir = Globals.player_input.direction
+
+            local is_horizontal = intersection.rect.width / intersection.rect.height < 1
+            local is_vertical = intersection.rect.height / intersection.rect.width < 1
+
+            if is_horizontal then
+               dir.x = dir.x > 0 and 1 or -1
+               dir.y = 0
+            elseif is_vertical then
+               dir.x = 0
+               dir.y = dir.y > 0 and 1 or -1
+            end
+
+            self.velocity.direction = dir
+         elseif intersection:contains_tag(EntityTag.GearSlot) then
+            self.gear.engaged = true
+            break
+         end
+      end
+   else
+      for j = 0, < #self.collisions.intersections do
+         local intersection: Intersection* = self.collisions.intersections[j]
+
+         if intersection:contains_tag(EntityTag.GearSlot) then
+            self.position.position.x = intersection.collider.global_rect.x
+            self.position.position.y = intersection.collider.global_rect.y+33
+            break
+         end
+      end
+   end
+
+   if not self.gear.engaged then
+      local in_movement = #self.velocity.direction > 0.15
+      self.animations.paused = not in_movement
+
+      if in_movement then
+         local new_anim_idx = math.abs(self.velocity.direction.x) > math.abs(self.velocity.direction.y) and 0 or 1
+         self.animations:change_animation(new_anim_idx)
+      end
+   else
+      self.animations:change_animation(2)
+   end
+end
+
+local GearControllerRunnerOptCollection = @record{
+   gear: optional(Gear*),
+   collisions: optional(Collisions*),
+   velocity: optional(Velocity*),
+   position: optional(Position*),
+   animations: optional(Animations*),
+}
+
+global GearControllerRunnerStoragesCollection = @record{
+   gear: Storage(Gear)*,
+   collisions: Storage(Collisions)*,
+   velocity: Storage(Velocity)*,
+   position: Storage(Position)*,
+   animations: Storage(Animations)*,
+}
+
+global GearControllerSystem = @MakeSystem(GearControllerRunner, 'GearControllerRunner', GearControllerRunnerOptCollection, GearControllerRunnerStoragesCollection, 2, 'gear', 'collisions', 'Gear', 'Collisions', 3, 'velocity', 'position', 'animations', 'Velocity', 'Position', 'Animations')
+
+global EngageRunner = @record{
+   collisions: Collisions*,
+   gear_slot: GearSlot*,
+}
+
+function EngageRunner:run()
+   for j = 0, < #self.collisions.intersections do
+      local intersection: Intersection* = self.collisions.intersections[j]
+
+      if intersection:contains_tag(EntityTag.Gear) then
+         Globals.engaged_slots[self.gear_slot.slot_idx] = true
+         break
+      end
+   end
+end
+
+local EngageRunnerOptCollection = @record{
+   collisions: optional(Collisions*),
+   gear_slot: optional(GearSlot*),
+}
+
+local EngageRunnerStoragesCollection = @record{
+   collisions: Storage(Collisions)*,
+   gear_slot: Storage(GearSlot)*,
+}
+
+global EngageSystem = @MakeSystem(EngageRunner, 'EngageRunner', EngageRunnerOptCollection, EngageRunnerStoragesCollection, 1, 'collisions', 'Collisions', 1, 'gear_slot', 'GearSlot')
+
+
+global BridgeRunner = @record{
+   bridge: Bridge*,
+   collider: Collider*,
+   sprite: Sprite*,
+}
+
+function BridgeRunner:run()
+   if Globals.engaged_slots[self.bridge.slot_idx] then
+      self.collider.entity_tag = EntityTag.OpenBridge
+      self.sprite.visible = true
+   end
+end
+
+local BridgeRunnerOptCollection = @record{
+   bridge: optional(Bridge*),
+   collider: optional(Collider*),
+   sprite: optional(Sprite*),
+}
+
+local BridgeRunnerStoragesCollection = @record{
+   bridge: Storage(Bridge)*,
+   collider: Storage(Collider)*,
+   sprite: Storage(Sprite)*,
+}
+
+global BridgeSystem = @MakeSystem(BridgeRunner, 'BridgeRunner', BridgeRunnerOptCollection, BridgeRunnerStoragesCollection, 1, 'bridge', 'Bridge', 2, 'collider', 'sprite', 'Collider', 'Sprite')
+
 -- ] systems ]
