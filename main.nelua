@@ -88,7 +88,7 @@ global Game_Systems: record{
 
    animation: AnimationSystem,
 
-   sprite_painter: SpritePainter,
+   sprite_painter: SpritePainterSystem,
 
    show_colliders: ShowCollidersSystem,
    show_collisions: ShowCollisionsSystem,
@@ -109,7 +109,7 @@ global Game_Systems: record{
 
    animation = AnimationSystem.new(),
 
-   sprite_painter = SpritePainter.new(),
+   sprite_painter = SpritePainterSystem.new(),
 
    show_colliders = ShowCollidersSystem.new(),
    show_collisions = ShowCollisionsSystem.new(),
@@ -221,7 +221,7 @@ local function update_draw_frame() -- 15 90
       Raylib.BeginMode2D(Globals.camera)
          Raylib.DrawText(txt_text, 32*26, 32*22, 20, RAYWHITE)
 
-         Game_Systems.sprite_painter:run(storages.sprite, storages.position)
+         Game_Systems.sprite_painter:run()
 
          ## if SHOW_DEV_INFO then
             Game_Systems.show_colliders:run()

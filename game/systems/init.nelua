@@ -7,102 +7,8 @@ require 'game.components'
 global System = @record{
    read: vector(BitsetArray),
    write: vector(BitsetArray),
-   system_data: SystemData
+   system_data: SystemData,
 }
-
--- [ systems [
-
-global SpritePainter = @record{
-   system: System
-}
-
-function SpritePainter.new(): SpritePainter
-   local new_system: SpritePainter = {
-      system = {
-         read = {bitset_array.copy(component_masks.sprite), bitset_array.copy(component_masks.position)},
-         write = {}
-      }
-   }
-
-   new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
-   return new_system
-end
-
-function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: Storage(Position)*)
-   local sys_len = #self.system.system_data.components_indexes
-
-   local draw_order: vector(uinteger) = {}
-   draw_order:reserve(sys_len)
-
-   local y_vec: vector(float32) = {}
-   y_vec:reserve(sys_len)
-
-   for i = 0, < sys_len do
-      local ids = self.system.system_data.components_indexes[i]
-
-      if #ids > 0 then
-         local sprite_id = ids[0]
-         local position_id = ids[1]
-
-         local opt_sprite = sprite_storage:get_entry(sprite_id)
-         local opt_position = position_storage:get_entry(position_id)
-
-         if opt_sprite.filled and opt_position.filled then
-            local position = opt_position:get()
-
-            if  #draw_order == 0 then
-               y_vec:push(position.position.y)
-               draw_order:push(i)
-            else
-               local inserted = false
-               for j = 0, < #draw_order do
-                  if position.position.y < y_vec[j] then
-                     y_vec:insert(j, position.position.y)
-                     draw_order:insert(j, i)
-                     inserted = true
-                     break
-                  end
-               end
-               if not inserted then
-                  y_vec:push(position.position.y)
-                  draw_order:push(i)
-               end
-            end
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
-   end
-
-   for i = 0, < sys_len do
-      local ids = self.system.system_data.components_indexes[ draw_order[i] ]
-
-      if #ids > 0 then
-         local sprite_id = ids[0]
-         local position_id = ids[1]
-
-         local opt_sprite = sprite_storage:get_entry(sprite_id)
-         local opt_position = position_storage:get_entry(position_id)
-
-         if opt_sprite.filled and opt_position.filled then
-            local sprite = opt_sprite:get()
-            if sprite.visible then
-               local position = opt_position:get()
-
-               local img_unit_w: integer = sprite.sprite_sheet.width // sprite.frame_rect.width
-               local img_unit_h: integer = sprite.sprite_sheet.height // sprite.frame_rect.height
-
-               sprite.frame_rect.x = (sprite.frame_index % img_unit_w) * sprite.frame_rect.width
-               sprite.frame_rect.y = (sprite.frame_index // img_unit_w) * sprite.frame_rect.height
-
-               Raylib.DrawTextureRec(sprite.sprite_sheet, sprite.frame_rect, position.position + sprite.offset, WHITE)
-            end
-         else
-            self.system.system_data:mark_available(i)
-         end
-      end
-   end
-end
 
 ## local make_system = generalize(function(T, use_before, use_run, use_after, ...)
    ##[[
@@ -229,6 +135,99 @@ end
 ## end)
 
 local MakeSystem = #[make_system]#
+
+-- [ systems [
+global SpritePainterRunner = @record{
+   sprite: Sprite*,
+   position: Position*,
+   draw_order: vector(uinteger),
+   sorted: boolean,
+}
+function SpritePainterRunner:before_all(system_data: SystemData*)
+   local sys_len = #system_data.components_indexes
+
+   self.draw_order:clear()
+
+   local y_vec: vector(float32) = {}
+   y_vec:reserve(sys_len)
+
+   for i = 0, < sys_len do
+      local ids = system_data.components_indexes[i]
+
+      if #ids > 0 then
+         local sprite_id = ids[0]
+         local position_id = ids[1]
+
+         local opt_sprite = storages.sprite:get_entry(sprite_id)
+         local opt_position = storages.position:get_entry(position_id)
+
+         if opt_sprite.filled and opt_position.filled then
+            local position = opt_position:get()
+
+            if  #self.draw_order == 0 then
+               y_vec:push(position.position.y)
+               self.draw_order:push(i)
+            else
+               local inserted = false
+               for j = 0, < #self.draw_order do
+                  if position.position.y < y_vec[j] then
+                     y_vec:insert(j, position.position.y)
+                     self.draw_order:insert(j, i)
+                     inserted = true
+                     break
+                  end
+               end
+               if not inserted then
+                  y_vec:push(position.position.y)
+                  self.draw_order:push(i)
+               end
+            end
+         else
+            system_data:mark_available(i)
+         end
+      end
+   end
+end
+
+function SpritePainterRunner:after_all(system_data: SystemData*)
+   for i = 0, < #system_data.components_indexes do
+      local ids = system_data.components_indexes[ self.draw_order[i] ]
+
+      if #ids > 0 then
+         local sprite_id = ids[0]
+         local position_id = ids[1]
+
+         local opt_sprite = storages.sprite:get_entry(sprite_id)
+         local opt_position = storages.position:get_entry(position_id)
+
+         if opt_sprite.filled and opt_position.filled then
+            local sprite = opt_sprite:get()
+            if sprite.visible then
+               local position = opt_position:get()
+
+               local img_unit_w: integer = sprite.sprite_sheet.width // sprite.frame_rect.width
+               local img_unit_h: integer = sprite.sprite_sheet.height // sprite.frame_rect.height
+
+               sprite.frame_rect.x = (sprite.frame_index % img_unit_w) * sprite.frame_rect.width
+               sprite.frame_rect.y = (sprite.frame_index // img_unit_w) * sprite.frame_rect.height
+
+               Raylib.DrawTextureRec(sprite.sprite_sheet, sprite.frame_rect, position.position + sprite.offset, WHITE)
+            end
+         else
+            system_data:mark_available(i)
+         end
+      end
+   end
+end
+
+global SpritePainterSystem = @MakeSystem(
+   SpritePainterRunner,
+   true, false, true,
+   2,
+   'sprite', Sprite,
+   'position', Position,
+   0
+)
 
 global CollidersSyncRunner = @record{
    position: Position*,
