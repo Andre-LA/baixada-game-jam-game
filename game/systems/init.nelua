@@ -103,7 +103,7 @@ function SpritePainter:run(sprite_storage: Storage(Sprite)*, position_storage: S
    end
 end
 
-## local make_system = generalize(function(T, run_type, opt_T_coll, stor_T_coll, ...)
+## local make_system = generalize(function(T, run_type, opt_T_coll, ...)
    ##[[
       local function union(a,b)
          local t={}
@@ -164,8 +164,6 @@ end
       --## optCollectionT.value:add_field(comp_name, optTi)
    --## end
 
-   local storagesCollectionT = @#[stor_T_coll]#
-
    local systemT <nickname #[string.format('system(%s)', T)]#> = @record{
       system: System,
       opts: optCollectionT
@@ -202,14 +200,14 @@ end
       return result
    end
 
-   function systemT:run(storages_collection: storagesCollectionT)
+   function systemT:run()
       for i = 0, < #self.system.system_data.components_indexes do
          local ids = self.system.system_data.components_indexes[i]
 
          if #ids > 0 then
             ## for i, v in ipairs(component_names) do
                local #|v..'_id'|# = ids[#[i-1]#]
-               self.opts.#|v|# = storages_collection.#|v|#:get_entry(#|v..'_id'|#)
+               self.opts.#|v|# = storages.#|v|#:get_entry(#|v..'_id'|#)
             ## end
 
             if self:verify() then
@@ -251,13 +249,9 @@ local CollidersSyncRunnerOptCollection = @record{
    collider: optional(Collider*)
 }
 
-local CollidersSyncRunnerStoragesCollection = @record{
-   position: Storage(Position)*,
-   velocity: Storage(Velocity)*,
-   collider: Storage(Collider)*
-}
 
-global CollidersSyncSystem = @MakeSystem(CollidersSyncRunner, 'CollidersSyncRunner', CollidersSyncRunnerOptCollection, CollidersSyncRunnerStoragesCollection, 2, 'position', 'velocity', 'Position', 'Velocity', 1, 'collider', 'Collider')
+
+global CollidersSyncSystem = @MakeSystem(CollidersSyncRunner, 'CollidersSyncRunner', CollidersSyncRunnerOptCollection, 2, 'position', 'velocity', 'Position', 'Velocity', 1, 'collider', 'Collider')
 
 global AnimationRunner = @record{
    animations: Animations*,
@@ -283,12 +277,7 @@ local AnimationRunnerOptCollection = @record{
    sprite: optional(Sprite*),
 }
 
-local AnimationRunnerStoragesCollection = @record{
-   animations: Storage(Animations)*,
-   sprite: Storage(Sprite)*,
-}
-
-global AnimationSystem = @MakeSystem(AnimationRunner, 'AnimationRunner', AnimationRunnerOptCollection, AnimationRunnerStoragesCollection, 0, 2, 'animations', 'sprite', 'Animations', 'Sprite')
+global AnimationSystem = @MakeSystem(AnimationRunner, 'AnimationRunner', AnimationRunnerOptCollection, 0, 2, 'animations', 'sprite', 'Animations', 'Sprite')
 
 global ShowCollisionsRunner = @record{
    collisions: Collisions*,
@@ -306,11 +295,7 @@ local ShowCollisionsRunnerOptCollection = @record{
    collisions: optional(Collisions*),
 }
 
-local ShowCollisionsRunnerStoragesCollection = @record{
-   collisions: Storage(Collisions)*,
-}
-
-global ShowCollisionsSystem = @MakeSystem(ShowCollisionsRunner, 'ShowCollisionsRunner', ShowCollisionsRunnerOptCollection, ShowCollisionsRunnerStoragesCollection, 1, 'collisions', 'Collisions', 0)
+global ShowCollisionsSystem = @MakeSystem(ShowCollisionsRunner, 'ShowCollisionsRunner', ShowCollisionsRunnerOptCollection, 1, 'collisions', 'Collisions', 0)
 
 global ShowCollidersRunner = @record{
    collider: Collider*,
@@ -324,11 +309,7 @@ local ShowCollidersRunnerOptCollection = @record{
    collider: optional(Collider*),
 }
 
-global ShowCollidersRunnerStoragesCollection = @record{
-   collider: Storage(Collider)*,
-}
-
-global ShowCollidersSystem = @MakeSystem(ShowCollidersRunner, 'ShowCollidersRunner', ShowCollidersRunnerOptCollection, ShowCollidersRunnerStoragesCollection, 1, 'collider', 'Collider', 0)
+global ShowCollidersSystem = @MakeSystem(ShowCollidersRunner, 'ShowCollidersRunner', ShowCollidersRunnerOptCollection, 1, 'collider', 'Collider', 0)
 
 global ShowPositionsRunner = @record{
    position: Position*,
@@ -348,11 +329,7 @@ local ShowPositionsRunnerOptCollection = @record{
    position: optional(Position*),
 }
 
-global ShowPositionsRunnerStoragesCollection = @record{
-   position: Storage(Position)*,
-}
-
-global ShowPositionsSystem = @MakeSystem(ShowPositionsRunner, 'ShowPositionsRunner', ShowPositionsRunnerOptCollection, ShowPositionsRunnerStoragesCollection, 1, 'position', 'Position', 0)
+global ShowPositionsSystem = @MakeSystem(ShowPositionsRunner, 'ShowPositionsRunner', ShowPositionsRunnerOptCollection, 1, 'position', 'Position', 0)
 
 global CollisionDetectionRunner = @record{
    collider: Collider*,
@@ -404,12 +381,7 @@ local CollisionDetectionRunnerOptCollection = @record{
    collisions: optional(Collisions*),
 }
 
-global CollisionDetectionRunnerStoragesCollection = @record{
-   collider: Storage(Collider)*,
-   collisions: Storage(Collisions)*,
-}
-
-global CollisionDetectionSystem = @MakeSystem(CollisionDetectionRunner, 'CollisionDetectionRunner', CollisionDetectionRunnerOptCollection, CollisionDetectionRunnerStoragesCollection, 1, 'collider', 'Collider', 1, 'collisions', 'Collisions')
+global CollisionDetectionSystem = @MakeSystem(CollisionDetectionRunner, 'CollisionDetectionRunner', CollisionDetectionRunnerOptCollection, 1, 'collider', 'Collider', 1, 'collisions', 'Collisions')
 
 global PlayerControllerRunner = @record{
    player: Player*,
@@ -443,13 +415,7 @@ local PlayerControllerRunnerOptCollection = @record{
    animations: optional(Animations*),
 }
 
-global PlayerControllerRunnerStoragesCollection = @record{
-   player: Storage(Player)*,
-   velocity: Storage(Velocity)*,
-   animations: Storage(Animations)*,
-}
-
-global PlayerControllerSystem = @MakeSystem(PlayerControllerRunner, 'PlayerControllerRunner', PlayerControllerRunnerOptCollection, PlayerControllerRunnerStoragesCollection, 1, 'player', 'Player', 2, 'velocity', 'animations', 'Velocity', 'Animations')
+global PlayerControllerSystem = @MakeSystem(PlayerControllerRunner, 'PlayerControllerRunner', PlayerControllerRunnerOptCollection, 1, 'player', 'Player', 2, 'velocity', 'animations', 'Velocity', 'Animations')
 
 global BoxControllerRunner = @record{
    box: Box*,
@@ -486,14 +452,7 @@ local BoxControllerRunnerOptCollection = @record{
    velocity: optional(Velocity*),
 }
 
-global BoxControllerRunnerStoragesCollection = @record{
-   box: Storage(Box)*,
-   position: Storage(Position)*,
-   collisions: Storage(Collisions)*,
-   velocity: Storage(Velocity)*,
-}
-
-global BoxControllerSystem = @MakeSystem(BoxControllerRunner, 'BoxControllerRunner', BoxControllerRunnerOptCollection, BoxControllerRunnerStoragesCollection, 3, 'box', 'position', 'collisions', 'Box', 'Position', 'Collisions', 1, 'velocity', 'Velocity')
+global BoxControllerSystem = @MakeSystem(BoxControllerRunner, 'BoxControllerRunner', BoxControllerRunnerOptCollection, 3, 'box', 'position', 'collisions', 'Box', 'Position', 'Collisions', 1, 'velocity', 'Velocity')
 
 global ObstaclesRunner = @record{
    obstacles: Obstacles*,
@@ -526,13 +485,7 @@ local ObstaclesRunnerOptCollection = @record{
    velocity: optional(Velocity*),
 }
 
-global ObstaclesStoragesRunnerCollection = @record{
-   obstacles: Storage(Obstacles)*,
-   collisions: Storage(Collisions)*,
-   velocity: Storage(Velocity)*,
-}
-
-global ObstaclesSystem = @MakeSystem(ObstaclesRunner, 'ObstaclesRunner', ObstaclesRunnerOptCollection, ObstaclesStoragesRunnerCollection, 2, 'obstacles', 'collisions', 'Obstacles', 'Collisions', 1, 'velocity', 'Velocity')
+global ObstaclesSystem = @MakeSystem(ObstaclesRunner, 'ObstaclesRunner', ObstaclesRunnerOptCollection, 2, 'obstacles', 'collisions', 'Obstacles', 'Collisions', 1, 'velocity', 'Velocity')
 
 global VelocityRunner = @record{
    velocity: Velocity*,
@@ -549,12 +502,7 @@ local VelocityRunnerOptCollection = @record{
    position: optional(Position*),
 }
 
-global VelocityRunnerStoragesCollection = @record{
-   velocity: Storage(Velocity)*,
-   position: Storage(Position)*,
-}
-
-global VelocitySystem = @MakeSystem(VelocityRunner, 'VelocityRunner', VelocityRunnerOptCollection, VelocityRunnerStoragesCollection, 1, 'velocity',  'Velocity', 1, 'position', 'Position')
+global VelocitySystem = @MakeSystem(VelocityRunner, 'VelocityRunner', VelocityRunnerOptCollection, 1, 'velocity',  'Velocity', 1, 'position', 'Position')
 
 global GearControllerRunner = @record{
    gear: Gear*,
@@ -627,15 +575,7 @@ local GearControllerRunnerOptCollection = @record{
    animations: optional(Animations*),
 }
 
-global GearControllerRunnerStoragesCollection = @record{
-   gear: Storage(Gear)*,
-   collisions: Storage(Collisions)*,
-   velocity: Storage(Velocity)*,
-   position: Storage(Position)*,
-   animations: Storage(Animations)*,
-}
-
-global GearControllerSystem = @MakeSystem(GearControllerRunner, 'GearControllerRunner', GearControllerRunnerOptCollection, GearControllerRunnerStoragesCollection, 2, 'gear', 'collisions', 'Gear', 'Collisions', 3, 'velocity', 'position', 'animations', 'Velocity', 'Position', 'Animations')
+global GearControllerSystem = @MakeSystem(GearControllerRunner, 'GearControllerRunner', GearControllerRunnerOptCollection, 2, 'gear', 'collisions', 'Gear', 'Collisions', 3, 'velocity', 'position', 'animations', 'Velocity', 'Position', 'Animations')
 
 global EngageRunner = @record{
    collisions: Collisions*,
@@ -658,13 +598,7 @@ local EngageRunnerOptCollection = @record{
    gear_slot: optional(GearSlot*),
 }
 
-local EngageRunnerStoragesCollection = @record{
-   collisions: Storage(Collisions)*,
-   gear_slot: Storage(GearSlot)*,
-}
-
-global EngageSystem = @MakeSystem(EngageRunner, 'EngageRunner', EngageRunnerOptCollection, EngageRunnerStoragesCollection, 1, 'collisions', 'Collisions', 1, 'gear_slot', 'GearSlot')
-
+global EngageSystem = @MakeSystem(EngageRunner, 'EngageRunner', EngageRunnerOptCollection, 1, 'collisions', 'Collisions', 1, 'gear_slot', 'GearSlot')
 
 global BridgeRunner = @record{
    bridge: Bridge*,
@@ -685,12 +619,6 @@ local BridgeRunnerOptCollection = @record{
    sprite: optional(Sprite*),
 }
 
-local BridgeRunnerStoragesCollection = @record{
-   bridge: Storage(Bridge)*,
-   collider: Storage(Collider)*,
-   sprite: Storage(Sprite)*,
-}
-
-global BridgeSystem = @MakeSystem(BridgeRunner, 'BridgeRunner', BridgeRunnerOptCollection, BridgeRunnerStoragesCollection, 1, 'bridge', 'Bridge', 2, 'collider', 'sprite', 'Collider', 'Sprite')
+global BridgeSystem = @MakeSystem(BridgeRunner, 'BridgeRunner', BridgeRunnerOptCollection, 1, 'bridge', 'Bridge', 2, 'collider', 'sprite', 'Collider', 'Sprite')
 
 -- ] systems ]
