@@ -9,7 +9,6 @@ require 'string'
 require 'rotor'
 require 'game.resources'
 
-
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
 local TXT_TEXT_PT_BR: string <const> = "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
