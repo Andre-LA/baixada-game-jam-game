@@ -10,50 +10,24 @@ global System = @record{
    system_data: SystemData,
 }
 
-## local make_system = generalize(function(T, use_before, use_run, use_after, ...)
+## local make_system = generalize(function(T, use_before, use_run, use_after, read_count, ...)
    ##[[
       staticassert(traits.is_type(T), "invalid type %s", T)
+      local metalib = require 'metalib'
 
-      local function union(a,b)
-         local t={}
-         for i=1,#a do t[#t+1]=a[i] end
-         for i=1,#b do t[#t+1]=b[i] end
-         return t
-      end
-
-      local args = {...}
-      local qtd_read = args[1]
-      local w_argpos = 2 + qtd_read*2
-      local qtd_write = args[w_argpos]
-
-      local read_names = {}
-      local read_types = {}
-
-      for i = 2, 1 + qtd_read * 2, 2 do
-         table.insert(read_names, args[i])
-         table.insert(read_types, args[i+1])
-      end
-
-      local write_names = {}
-      local write_types = {}
-
-      for i = w_argpos + 1, #args, 2 do
-         table.insert(write_names, args[i])
-         table.insert(write_types, args[i+1])
-      end
-
-      local component_names = union(read_names, write_names)
-      local component_types = union(read_types, write_types)
+      local read_names, read_types = metalib.collect_doubles(1, read_count*2, ...)
+      local write_names, write_types = metalib.collect_doubles(read_count*2+1, -1, ...)
+      local component_names = metalib.tableunion(read_names, write_names)
+      local component_types = metalib.tableunion(read_types, write_types)
    ]]
 
    local T = @#[T]#
 
    local optCollectionT = @record{}
 
-   ## for i = 1, #component_names do
-      ## local comp_name, comp_type = component_names[i], component_types[i]
-      local optTi: type = @optional(#[comp_type]#*)
-      ## optCollectionT.value:add_field(comp_name, optTi.value)
+   ## for i, name in ipairs(component_names) do
+      local opt_T: type = @optional(#[ component_types[i] ]#*)
+      ## optCollectionT.value:add_field(name, opt_T.value)
    ## end
 
    local systemT <nickname #[string.format('system(%s)', T)]#> = @record{
@@ -98,6 +72,7 @@ global System = @record{
 
    function systemT:run()
       local runner: #|T.nickname|# = {}
+
       ## if use_before then
          runner:before_all(self.system.system_data)
       ## end
@@ -222,11 +197,9 @@ end
 
 global SpritePainterSystem = @MakeSystem(
    SpritePainterRunner,
-   true, false, true,
-   2,
+   true, false, true, 2,
    'sprite', Sprite,
-   'position', Position,
-   0
+   'position', Position
 )
 
 global CollidersSyncRunner = @record{
@@ -241,11 +214,10 @@ end
 
 global CollidersSyncSystem = @MakeSystem(
    CollidersSyncRunner,
-   false, true, false,
-   2,
+   false, true, false, 2,
    'position', Position,
    'velocity', Velocity,
-   1,
+
    'collider', Collider
 )
 
@@ -270,9 +242,7 @@ end
 
 global AnimationSystem = @MakeSystem(
    AnimationRunner,
-   false, true, false,
-   0,
-   2,
+   false, true, false, 0,
    'animations', Animations,
    'sprite', Sprite
 )
@@ -307,9 +277,8 @@ end
 
 global ShowCollidersSystem = @MakeSystem(
    ShowCollidersRunner,
-   false, true, false,
-   1, 'collider', Collider,
-   0
+   false, true, false, 1,
+   'collider', Collider
 )
 
 global ShowPositionsRunner = @record{
@@ -328,8 +297,9 @@ end
 
 global ShowPositionsSystem = @MakeSystem(
    ShowPositionsRunner,
-   false, true, false,
-   1,
+   false, true, false, 1,
+   'position', Position
+)
    'position', Position,
    0
 )
@@ -381,10 +351,9 @@ end
 
 global CollisionDetectionSystem = @MakeSystem(
    CollisionDetectionRunner,
-   false, true, false,
-   1,
+   false, true, false, 1,
    'collider', Collider,
-   1,
+
    'collisions', Collisions
 )
 
@@ -416,10 +385,9 @@ end
 
 global PlayerControllerSystem = @MakeSystem(
    PlayerControllerRunner,
-   false, true, false,
-   1,
+   false, true, false, 1,
    'player', Player,
-   2,
+
    'velocity', Velocity,
    'animations', Animations
 )
@@ -454,12 +422,11 @@ end
 
 global BoxControllerSystem = @MakeSystem(
    BoxControllerRunner,
-   false, true, false,
-   3,
+   false, true, false, 3,
    'box', Box,
    'position', Position,
    'collisions', Collisions,
-   1,
+
    'velocity', Velocity
 )
 
@@ -490,11 +457,10 @@ end
 
 global ObstaclesSystem = @MakeSystem(
    ObstaclesRunner,
-   false, true, false,
-   2,
+   false, true, false, 2,
    'obstacles', Obstacles,
    'collisions', Collisions,
-   1,
+
    'velocity', Velocity
 )
 
@@ -510,10 +476,9 @@ end
 
 global VelocitySystem = @MakeSystem(
    VelocityRunner,
-   false, true, false,
-   1,
+   false, true, false, 1,
    'velocity',  Velocity,
-   1,
+
    'position', Position
 )
 
@@ -582,11 +547,10 @@ end
 
 global GearControllerSystem = @MakeSystem(
    GearControllerRunner,
-   false, true, false,
-   2,
+   false, true, false, 2,
    'gear', Gear,
    'collisions', Collisions,
-   3,
+
    'velocity', Velocity,
    'position', Position,
    'animations', Animations
@@ -610,10 +574,9 @@ end
 
 global EngageSystem = @MakeSystem(
    EngageRunner,
-   false, true, false,
-   1,
+   false, true, false, 1,
    'collisions', Collisions,
-   1,
+
    'gear_slot', GearSlot
 )
 
@@ -632,10 +595,9 @@ end
 
 global BridgeSystem = @MakeSystem(
    BridgeRunner,
-   false, true, false,
-   1,
+   false, true, false, 1,
    'bridge', Bridge,
-   2,
+
    'collider', Collider,
    'sprite', Sprite
 )
