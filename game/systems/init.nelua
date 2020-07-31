@@ -248,6 +248,7 @@ global AnimationSystem = @MakeSystem(
 )
 
 global ShowCollisionsRunner = @record{
+   position: Position*,
    collisions: Collisions*,
 }
 
@@ -255,16 +256,16 @@ function ShowCollisionsRunner:run(system_data: SystemData*)
    for j = 0, < #self.collisions.intersections do
       local intersection: Intersection* = self.collisions.intersections[j]
       local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
+      Raylib.DrawLineV(self.position.position, (@Vector2){ intersection.rect.x, intersection.rect.y}, rect_color)
       Raylib.DrawRectangleLinesEx(intersection.rect, 1, rect_color)
    end
 end
 
 global ShowCollisionsSystem = @MakeSystem(
    ShowCollisionsRunner,
-   false, true, false,
-   1,
-   'collisions', Collisions,
-   0
+   false, true, false, 2,
+   'position', Position,
+   'collisions', Collisions
 )
 
 global ShowCollidersRunner = @record{
