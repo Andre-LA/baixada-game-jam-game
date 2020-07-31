@@ -5,59 +5,60 @@ require 'rotor'
 require 'game.components'
 require 'game.resources'
 
-global PlayerEntity = @record{
-   entity_id: GenerationalIndex,
-   player_id: GenerationalIndex,
-   position_id: GenerationalIndex,
-   velocity_id: GenerationalIndex,
-   obstacles_id: GenerationalIndex,
-   collider_id: GenerationalIndex,
-   collisions_id: GenerationalIndex,
-   sprite_id: GenerationalIndex,
-   animations_id: GenerationalIndex,
-}
+ ## local make_entity = hygienize(function(...)
+   ##[[
+      local metalib = require 'metalib'
+      local component_names, component_types = metalib.collect_doubles(1, -1, ...)
+   ]]##
 
-function PlayerEntity.new(
-   entity_storage: Storage(Entity)*,
-   player_vl: Player,
-   position_vl: Position,
-   velocity_vl: Velocity,
-   obstacles_vl: Obstacles,
-   collider_vl: Collider,
-   sprite_vl: Sprite,
-   animations_vl: Animations,
-   untracked_ids: vector(GenerationalIndex)*
-): PlayerEntity
-   local entity_id, entity = entity_storage:new_entry(Entity.new())
+   local new_entity = @record{ entity_id: GenerationalIndex }
+   local VlCollection = @record{}
 
-   --player_vl.start_position = position_vl.position
+   ## for i, name in ipairs(component_names) do
+      ## new_entity.value:add_field(name .. '_id', GenerationalIndex.value)
 
-   local player_id, player = Player.associate(player_vl, entity)
-   local position_id, position = Position.associate(position_vl, entity)
-   local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
-   local obstacles_id, obstacles = Obstacles.associate(obstacles_vl, entity)
+      ## local _type = component_types[i].value
+      ## staticassert(traits.is_type(_type), "invalid type %s", _type)
 
-   collider_vl.entity_id = entity_id
-   collider_vl:sync_with_position(position_vl.position)
-   local collider_id, collider = Collider.associate(collider_vl, entity)
-   local collisions_id, collisions = Collisions.associate({{}}, entity)
-   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
-   local animations_id, animations = Animations.associate(animations_vl, entity)
+      ## VlCollection.value:add_field(name .. '_vl', _type)
 
-   untracked_ids:push(entity_id)
+      function new_entity:#|'get_'..name|#(storage: Storage(#[_type]#)*): optional(pointer(#[_type]#))
+         return storage:get_entry(self.#|name..'_id'|#)
+      end
+   ## end
 
-   return (@PlayerEntity){
-      entity_id = entity_id,
-      player_id = player_id,
-      position_id = position_id,
-      velocity_id = velocity_id,
-      obstacles_id = obstacles_id,
-      collider_id = collider_id,
-      collisions_id = collisions_id,
-      sprite_id = sprite_id,
-      animations_id = animations_id,
-   }
-end
+   function new_entity.new(entity_storage: Storage(Entity)*, values: VlCollection, untracked_ids: vector(GenerationalIndex)*): new_entity
+      local result: new_entity = {}
+
+      local entity_id, entity = entity_storage:new_entry(Entity.new())
+      result.entity_id = entity_id
+
+      ## for i, name in ipairs(component_names) do
+         ## local _type = component_types[i]
+         ## local name_id = name..'_id'
+
+         local #|name_id|#, #|name|# = #[_type]#.associate(values.#|name..'_vl'|#, entity)
+         result.#|name_id|# = #|name_id|#
+      ## end
+
+      untracked_ids:push(entity_id)
+
+      return result
+   end
+
+   ## return new_entity
+ ## end)
+
+global PlayerEntity = #[ make_entity(
+   'player', Player,
+   'position', Position,
+   'velocity', Velocity,
+   'obstacles', Obstacles,
+   'collider', Collider,
+   'collisions', Collisions,
+   'sprite', Sprite,
+   'animations', Animations
+)]#
 
 function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): PlayerEntity
    local pl_collider: Collider = {
@@ -78,10 +79,10 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
    local pl_animations: Animations = {
       animations = {
          --[[0 idle  ]] { frame_indexes = {  0,  1,  2,  3 }, frame_duration = 0.2 },
-         --[[1 D-walk]] { frame_indexes = {  6,  7,  8,  9, 10, 11 }, frame_duration = 0.2 },
-         --[[2 U-walk]] { frame_indexes = { 12, 13, 14, 15, 16, 17 }, frame_duration = 0.2 },
-         --[[3 R-walk]] { frame_indexes = { 18, 19, 20, 21, 22, 23 }, frame_duration = 0.2 },
-         --[[4 L-walk]] { frame_indexes = { 24, 25, 26, 27, 28, 29 }, frame_duration = 0.2 },
+         --[[1 D-walk]] { frame_indexes = {  6,  7,  8,  9, 10, 11 }, frame_duration = 0.1 },
+         --[[2 U-walk]] { frame_indexes = { 12, 13, 14, 15, 16, 17 }, frame_duration = 0.1 },
+         --[[3 R-walk]] { frame_indexes = { 18, 19, 20, 21, 22, 23 }, frame_duration = 0.1 },
+         --[[4 L-walk]] { frame_indexes = { 24, 25, 26, 27, 28, 29 }, frame_duration = 0.1 },
          --[[5 D-push]] { frame_indexes = { 30, 31, 32, 33, 34, 35 }, frame_duration = 0.2 },
          --[[6 U-push]] { frame_indexes = { 36, 37, 38, 39, 40, 41 }, frame_duration = 0.2 },
          --[[7 R-push]] { frame_indexes = { 42, 43, 44, 45, 46, 47 }, frame_duration = 0.2 },
@@ -93,51 +94,36 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
       paused = false
    }
 
-   return PlayerEntity.new(
+   local player_entity = PlayerEntity.new(
       storages.entity,
-      --[[player]]     {},
-      --[[position]]   { position = pos },
-      --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
-      --[[obstacles]]  { EntityTag.Wall | EntityTag.Box | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
-      --[[collider]]   pl_collider,
-      --[[sprite]]     pl_sprite,
-      --[[animations]] pl_animations,
+      {
+         --[[player]]     {},
+         --[[position]]   { position = pos },
+         --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
+         --[[obstacles]]  { EntityTag.Wall | EntityTag.Box | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
+         --[[collider]]   pl_collider,
+         --[[collisions]] {},
+         --[[sprite]]     pl_sprite,
+         --[[animations]] pl_animations
+      },
       untracked_ids
    )
+
+   local possible_collider = player_entity:get_collider(storages.collider)
+   check(possible_collider.filled, 'collider is not associated with player entity!')
+
+   local collider: Collider* = possible_collider:get()
+   collider.entity_id = player_entity.entity_id
+
+
+   return player_entity
 end
 
-global WallEntity = @record{
-   entity_id: GenerationalIndex,
-   position_id: GenerationalIndex,
-   collider_id: GenerationalIndex,
-   sprite_id: GenerationalIndex,
-}
-
-function WallEntity.new(
-   entity_storage: Storage(Entity)*,
-   position_vl: Position,
-   collider_vl: Collider,
-   sprite_vl: Sprite,
-   untracked_ids: vector(GenerationalIndex)*
-): WallEntity
-   local entity_id, entity = entity_storage:new_entry(Entity.new())
-   local position_id, position = Position.associate(position_vl, entity)
-
-   collider_vl.entity_id = entity_id
-   collider_vl:sync_with_position(position_vl.position)
-   local collider_id, collider = Collider.associate(collider_vl, entity)
-
-   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
-
-   untracked_ids:push(entity_id)
-
-   return (@WallEntity){
-      entity_id = entity_id,
-      position_id = position_id,
-      collider_id = collider_id,
-      sprite_id = sprite_id,
-   }
-end
+global WallEntity = #[make_entity(
+   'position', Position,
+   'collider', Collider,
+   'sprite', Sprite
+)]#
 
 function WallEntity.create(
    pos: Vector2,
@@ -166,65 +152,34 @@ function WallEntity.create(
       visible = true,
    }
 
-   return WallEntity.new(
+   local wall_entity = WallEntity.new(
       storages.entity,
+      {
       --[[position]] { position = pos },
       --[[collider]] wall_collider,
       --[[sprite]]   wall_sprite,
+      },
       untracked_ids
    )
+
+   --local possible_collider = wall_entity:get_collider(storages.collider)
+   --check(possible_collider.filled, 'collider is not associated with wall entity!')
+--
+   --local collider: Collider* = possible_collider:get()
+   --collider.entity_id = wall_entity.entity_id
+
+   return wall_entity
 end
 
-global BoxEntity = @record{
-   entity_id: GenerationalIndex,
-   box_id: GenerationalIndex,
-   position_id: GenerationalIndex,
-   velocity_id: GenerationalIndex,
-   obstacles_id: GenerationalIndex,
-   collider_id: GenerationalIndex,
-   collisions_id: GenerationalIndex,
-   sprite_id: GenerationalIndex,
-}
-
-function BoxEntity.new(
-   entity_storage: Storage(Entity)*,
-   box_vl: Box,
-   position_vl: Position,
-   velocity_vl: Velocity,
-   obstacles_vl: Obstacles,
-   collider_vl: Collider,
-   sprite_vl: Sprite,
-   untracked_ids: vector(GenerationalIndex)*
-): BoxEntity
-   local entity_id, entity = entity_storage:new_entry(Entity.new())
-
-   box_vl.start_position = position_vl.position
-
-   local box_id, box = Box.associate(box_vl, entity)
-   local position_id, position = Position.associate(position_vl, entity)
-   local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
-   local obstacles_id, obstacles = Obstacles.associate(obstacles_vl, entity)
-
-   collider_vl.entity_id = entity_id
-   collider_vl:sync_with_position(position_vl.position)
-   local collider_id, collider = Collider.associate(collider_vl, entity)
-
-   local collisions_id, collisions = Collisions.associate({{}}, entity)
-   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
-
-   untracked_ids:push(entity_id)
-
-   return (@BoxEntity){
-      entity_id = entity_id,
-      box_id = box_id,
-      position_id = position_id,
-      velocity_id = velocity_id,
-      obstacles_id = obstacles_id,
-      collider_id = collider_id,
-      collisions_id = collisions_id,
-      sprite_id = sprite_id,
-   }
-end
+global BoxEntity = #[make_entity(
+   'box', Box,
+   'position', Position,
+   'velocity', Velocity,
+   'obstacles', Obstacles,
+   'collider', Collider,
+   'collisions', Collisions,
+   'sprite', Sprite
+)]#
 
 function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(GenerationalIndex)*): BoxEntity
    local box_collider: Collider = {
@@ -242,72 +197,39 @@ function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(Gene
       visible = true,
    }
 
-   return BoxEntity.new(
+   local box_entity = BoxEntity.new(
       storages.entity,
-      --[[box]]      {},
-      --[[position]] { position = pos },
-      --[[velocity]] { direction = { 0, 0 }, speed = #[PL_VEL]# },
-      --[[obstacles]] { mask = EntityTag.Wall | EntityTag.Player | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
-      --[[collider]] box_collider,
-      --[[sprite]]   box_sprite,
+      {
+      --[[box]]        {},
+      --[[position]]   { position = pos },
+      --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
+      --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Player | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
+      --[[collider]]   box_collider,
+      --[[collisions]] {},
+      --[[sprite]]     box_sprite
+      },
       untracked_ids
    )
+
+   local possible_collider = box_entity:get_collider(storages.collider)
+   check(possible_collider.filled, 'collider is not associated with box entity!')
+
+   local collider: Collider* = possible_collider:get()
+   collider.entity_id = box_entity.entity_id
+
+   return box_entity
 end
 
-global GearEntity = @record{
-   entity_id: GenerationalIndex,
-   gear_id: GenerationalIndex,
-   position_id: GenerationalIndex,
-   velocity_id: GenerationalIndex,
-   obstacles_id: GenerationalIndex,
-   collider_id: GenerationalIndex,
-   collisions_id: GenerationalIndex,
-   sprite_id: GenerationalIndex,
-   animations_id: GenerationalIndex,
-}
-
-function GearEntity.new(
-   entity_storage: Storage(Entity)*,
-   gear_vl: Gear,
-   position_vl: Position,
-   velocity_vl: Velocity,
-   obstacles_vl: Obstacles,
-   collider_vl: Collider,
-   sprite_vl: Sprite,
-   animations_vl: Animations,
-   untracked_ids: vector(GenerationalIndex)*
-): GearEntity
-   local entity_id, entity = entity_storage:new_entry(Entity.new())
-
-   gear_vl.start_position = position_vl.position
-
-   local gear_id, gear = Gear.associate(gear_vl, entity)
-   local position_id, position = Position.associate(position_vl, entity)
-   local velocity_id, velocity = Velocity.associate(velocity_vl, entity)
-   local obstacles_id, obstacles = Obstacles.associate(obstacles_vl, entity)
-
-   collider_vl.entity_id = entity_id
-   collider_vl:sync_with_position(position_vl.position)
-   local collider_id, collider = Collider.associate(collider_vl, entity)
-
-   local collisions_id, collisions = Collisions.associate({{}}, entity)
-   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
-   local animations_id, animations = Animations.associate(animations_vl, entity)
-
-   untracked_ids:push(entity_id)
-
-   return (@GearEntity){
-      entity_id = entity_id,
-      gear_id = gear_id,
-      position_id = position_id,
-      velocity_id = velocity_id,
-      obstacles_id = obstacles_id,
-      collider_id = collider_id,
-      collisions_id = collisions_id,
-      sprite_id = sprite_id,
-      animations_id = animations_id,
-   }
-end
+global GearEntity = #[make_entity(
+   'gear', Gear,
+   'position', Position,
+   'velocity', Velocity,
+   'obstacles', Obstacles,
+   'collider', Collider,
+   'collisions', Collisions,
+   'sprite', Sprite,
+   'animations', Animations
+)]#
 
 function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): GearEntity
    local gear_collider: Collider = {
@@ -337,59 +259,37 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
       paused = true
    }
 
-   return GearEntity.new(
+   local gear_entity = GearEntity.new(
       storages.entity,
+      {
       --[[gear]]       { engaged = false },
       --[[position]]   { position = pos },
       --[[velocity]]   { direction = { 0, 0 }, speed = 2 },
       --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Box | EntityTag.Player | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]]   gear_collider,
+      --[[collisions]] {},
       --[[sprite]]     gear_sprite,
       --[[animations]] gear_animations,
+      },
       untracked_ids
    )
+
+   local possible_collider = gear_entity:get_collider(storages.collider)
+   check(possible_collider.filled, 'collider is not associated with gear entity!')
+
+   local collider: Collider* = possible_collider:get()
+   collider.entity_id = gear_entity.entity_id
+
+   return gear_entity
 end
 
-global GearSlotEntity = @record{
-   entity_id: GenerationalIndex,
-   gear_slot_id: GenerationalIndex,
-   position_id: GenerationalIndex,
-   collider_id: GenerationalIndex,
-   collisions_id: GenerationalIndex,
-   sprite_id: GenerationalIndex,
-}
-
-function GearSlotEntity.new(
-   entity_storage: Storage(Entity)*,
-   gear_slot_vl: GearSlot,
-   position_vl: Position,
-   velocity_vl: Velocity,
-   collider_vl: Collider,
-   sprite_vl: Sprite,
-   untracked_ids: vector(GenerationalIndex)*
-): GearSlotEntity
-   local entity_id, entity = entity_storage:new_entry(Entity.new())
-   local gear_slot_id, gear_slot = GearSlot.associate(gear_slot_vl, entity)
-   local position_id, position = Position.associate(position_vl, entity)
-
-   collider_vl.entity_id = entity_id
-   collider_vl:sync_with_position(position_vl.position)
-   local collider_id, collider = Collider.associate(collider_vl, entity)
-
-   local collisions_id, collisions = Collisions.associate({{}}, entity)
-   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
-
-   untracked_ids:push(entity_id)
-
-   return (@GearSlotEntity){
-      entity_id = entity_id,
-      gear_slot_id = gear_slot_id,
-      position_id = position_id,
-      collider_id = collider_id,
-      collisions_id = collisions_id,
-      sprite_id = sprite_id,
-   }
-end
+global GearSlotEntity = #[make_entity(
+   'gear_slot', GearSlot,
+   'position', Position,
+   'collider', Collider,
+   --'collisions', Collisions,
+   'sprite', Sprite
+)]#
 
 function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: vector(GenerationalIndex)*): GearSlotEntity
    local gear_slot_collider: Collider = {
@@ -407,57 +307,34 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
       visible = true,
    }
 
-   return GearSlotEntity.new(
+   local gear_slot_entity = GearSlotEntity.new(
       storages.entity,
+      {
       --[[gear_slot]] { slot_idx = slot_idx},
       --[[position]]  { position = pos },
-      --[[velocity]]  { direction = { 0, 0 }, speed = 2 },
       --[[collider]]  gear_slot_collider,
+      -- --[[collisions]] {},
       --[[sprite]]    gear_slot_sprite,
+      },
       untracked_ids
    )
+
+   local possible_collider = gear_slot_entity:get_collider(storages.collider)
+   check(possible_collider.filled, 'collider is not associated with gear_slot entity!')
+
+   local collider: Collider* = possible_collider:get()
+   collider.entity_id = gear_slot_entity.entity_id
+
+   return gear_slot_entity
 end
 
-global BridgeEntity = @record{
-   entity_id: GenerationalIndex,
-   bridge_id: GenerationalIndex,
-   position_id: GenerationalIndex,
-   collider_id: GenerationalIndex,
-   collisions_id: GenerationalIndex,
-   sprite_id: GenerationalIndex,
-}
-
-function BridgeEntity.new(
-   entity_storage: Storage(Entity)*,
-   bridge_vl: Bridge,
-   position_vl: Position,
-   velocity_vl: Velocity,
-   collider_vl: Collider,
-   sprite_vl: Sprite,
-   untracked_ids: vector(GenerationalIndex)*
-): BridgeEntity
-   local entity_id, entity = entity_storage:new_entry(Entity.new())
-   local bridge_id, bridge = Bridge.associate(bridge_vl, entity)
-   local position_id, position = Position.associate(position_vl, entity)
-
-   collider_vl.entity_id = entity_id
-   collider_vl:sync_with_position(position_vl.position)
-   local collider_id, collider = Collider.associate(collider_vl, entity)
-
-   local collisions_id, collisions = Collisions.associate({{}}, entity)
-   local sprite_id, sprite = Sprite.associate(sprite_vl, entity)
-
-   untracked_ids:push(entity_id)
-
-   return (@BridgeEntity){
-      entity_id = entity_id,
-      bridge_id = bridge_id,
-      position_id = position_id,
-      collider_id = collider_id,
-      collisions_id = collisions_id,
-      sprite_id = sprite_id,
-   }
-end
+global BridgeEntity = #[make_entity(
+   'bridge', Bridge,
+   'position', Position,
+   'collider', Collider,
+   'collisions', Collisions,
+   'sprite', Sprite
+)]#
 
 function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: vector(GenerationalIndex)*): BridgeEntity
    local bridge_collider: Collider = {
@@ -475,13 +352,23 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
       visible = false,
    }
 
-   return BridgeEntity.new(
+   local bridge_entity = BridgeEntity.new(
       storages.entity,
-      --[[bridge]]   { slot_idx = slot_idx },
-      --[[position]] { position = pos },
-      --[[velocity]] { direction = { 0, 0 }, speed = 2 },
-      --[[collider]] bridge_collider,
-      --[[sprite]]   bridge_sprite,
+      {
+      --[[bridge]]     { slot_idx = slot_idx },
+      --[[position]]   { position = pos },
+      --[[collider]]   bridge_collider,
+      --[[collisions]] {},
+      --[[sprite]]     bridge_sprite,
+      },
       untracked_ids
    )
+
+   local possible_collider = bridge_entity:get_collider(storages.collider)
+   check(possible_collider.filled, 'collider is not associated with bridge entity!')
+
+   local collider: Collider* = possible_collider:get()
+   collider.entity_id = bridge_entity.entity_id
+
+   return bridge_entity
 end
