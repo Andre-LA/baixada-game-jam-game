@@ -300,8 +300,32 @@ global ShowPositionsSystem = @MakeSystem(
    false, true, false, 1,
    'position', Position
 )
+
+global ShowObstaclesRunner = @record{
+   position: Position*,
+   obstacles: Obstacles*,
+   collisions: Collisions*,
+}
+
+function ShowObstaclesRunner:run(system_data: SystemData*)
+   for j = 0, < #self.collisions.intersections do
+      local intersection: Intersection* = self.collisions.intersections[j]
+
+       --if intersected with a obstacle entity
+      if intersection:contains_tag(self.obstacles.mask) then
+         local intersection_center = intersection:get_center()
+         Raylib.DrawLineV(self.position.position, intersection_center, GOLD)
+         Raylib.DrawCircleLines(intersection_center.x // 1, intersection_center.y // 1, 5, GOLD)
+      end
+   end
+end
+
+global ShowObstaclesSystem = @MakeSystem(
+   ShowObstaclesRunner,
+   false, true, false, 3,
    'position', Position,
-   0
+   'obstacles', Obstacles,
+   'collisions', Collisions
 )
 
 global CollisionDetectionRunner = @record{

@@ -92,6 +92,7 @@ global Game_Systems: record{
 
    show_colliders: ShowCollidersSystem,
    show_collisions: ShowCollisionsSystem,
+   show_obstacles: ShowObstaclesSystem,
    show_positions: ShowPositionsSystem,
 } = {
    colliders_sync = CollidersSyncSystem.new(),
@@ -113,6 +114,7 @@ global Game_Systems: record{
 
    show_colliders = ShowCollidersSystem.new(),
    show_collisions = ShowCollisionsSystem.new(),
+   show_obstacles = ShowObstaclesSystem.new(),
    show_positions = ShowPositionsSystem.new(),
 }
 
@@ -165,6 +167,7 @@ local function update_all_systems()
 
    update_system(Game_Systems.show_colliders.system)
    update_system(Game_Systems.show_collisions.system)
+   update_system(Game_Systems.show_obstacles.system)
    update_system(Game_Systems.show_positions.system)
 end
 
@@ -226,6 +229,7 @@ local function update_draw_frame() -- 15 90
          ## if SHOW_DEV_INFO then
             Game_Systems.show_colliders:run()
             Game_Systems.show_collisions:run()
+            Game_Systems.show_obstacles:run()
             Game_Systems.show_positions:run()
          ## end
 
