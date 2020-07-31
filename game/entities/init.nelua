@@ -103,7 +103,7 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
          --[[player]]     {},
          --[[position]]   { position = pos },
          --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
-         --[[obstacles]]  { EntityTag.Wall | EntityTag.Box | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
+         --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Box | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
          --[[collider]]   pl_collider,
          --[[collisions]] {},
          --[[sprite]]     pl_sprite,
