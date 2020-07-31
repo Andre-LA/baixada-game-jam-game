@@ -60,7 +60,7 @@ global Globals: record{
       offset = { #[WIN_WIDTH]# / 2, #[WIN_HEIGHT]# / 2 },
       target = { #[PL_POS_X]#, #[PL_POS_Y]# },
       rotation = 0,
-      zoom = 1
+      zoom = 2
    },
    game_window = {
       #[WIN_WIDTH]# // 1,
