@@ -162,11 +162,11 @@ function WallEntity.create(
       untracked_ids
    )
 
-   --local possible_collider = wall_entity:get_collider(storages.collider)
-   --check(possible_collider.filled, 'collider is not associated with wall entity!')
---
-   --local collider: Collider* = possible_collider:get()
-   --collider.entity_id = wall_entity.entity_id
+   local possible_collider = wall_entity:get_collider(storages.collider)
+   check(possible_collider.filled, 'collider is not associated with wall entity!')
+
+   local collider: Collider* = possible_collider:get()
+   collider.entity_id = wall_entity.entity_id
 
    return wall_entity
 end
