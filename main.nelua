@@ -192,6 +192,10 @@ local function update_draw_frame() -- 15 90
    -- [ Update [
    Globals.dt = Raylib.GetFrameTime()
 
+   ## if PRINT_FPS then
+      print('FPS: ' .. tostring(Raylib.GetFPS()))
+   ## end
+
    update_player_input_values()
 
    Game_Systems.colliders_sync:run()

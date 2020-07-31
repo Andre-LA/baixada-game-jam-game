@@ -40,6 +40,7 @@ Options:
 * `PL_POS_Y: number`: any number (default is 3296)
 * `PL_VEL: number`: any number (default is 2)
 * `SHOW_DEV_INFO`: just define it to use
+* `PRINT_FPS`: just define it to use
 
 Example:
 `$ nelua -r "-D DEFAULT_LANG='pt-BR'" -D WIN_WIDTH=800 main.nelua`
