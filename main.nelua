@@ -27,12 +27,6 @@ global EntityTag = @enum {
    OpenBridge = 128,
 }
 
-global CollisionState = @enum {
-   None = 0,
-   Enter,
-   Stay
-}
-
 global PlayerInput = @record{
    direction: Vector2,
    action: boolean

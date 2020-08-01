@@ -52,6 +52,12 @@ function Collider:sync_with_position(position: Vector2)
    self.global_rect.y = self.local_rect.y + position.y
 end
 
+global CollisionState = @enum {
+   None = 0,
+   Enter,
+   Stay
+}
+
 global Intersection = @record{
    collider: Collider,
    rect: Rectangle,
