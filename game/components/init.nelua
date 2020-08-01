@@ -6,32 +6,39 @@ require 'rotor'
 global Player = @record{
    necessary_field: cchar,
 }
+## Player.value.is_component = true
 
 global Gear = @record{
    engaged: boolean,
    start_position: Vector2,
 }
+## Gear.value.is_component = true
 
 global GearSlot = @record{
    slot_idx: uinteger
 }
+## GearSlot.value.is_component = true
 
 global Bridge = @record{
    slot_idx: uinteger
 }
+## Bridge.value.is_component = true
 
 global Box = @record{
    start_position: Vector2,
 }
+## Box.value.is_component = true
 
 global Position = @record{
    position: Vector2
 }
+## Position.value.is_component = true
 
 global Velocity = @record{
    direction: Vector2,
    speed: number
 }
+## Velocity.value.is_component = true
 
 global Collider = @record{
    local_rect: Rectangle,
@@ -39,6 +46,7 @@ global Collider = @record{
    entity_id: GenerationalIndex,
    entity_tag: EntityTag
 }
+## Collider.value.is_component = true
 
 local function get_center(r: Rectangle): Vector2
    return (@Vector2){ r.x + r.width/2, r.y + r.height/2 }
@@ -79,6 +87,7 @@ end
 global Collisions = @record{
    intersections: vector(Intersection),
 }
+## Collisions.value.is_component = true
 
 global Sprite = @record{
    sprite_sheet: Texture2D,
@@ -87,6 +96,7 @@ global Sprite = @record{
    offset: Vector2,
    visible: boolean
 }
+## Sprite.value.is_component = true
 
 global AnimationData = @record{
    frame_indexes: vector(uinteger),
@@ -100,6 +110,7 @@ global Animations = @record{
    elapsed_time: number,
    paused: boolean
 }
+## Animations.value.is_component = true
 
 function Animations:change_animation(animation_idx: uinteger)
    if not self.paused and self.current_animation_index ~= animation_idx then
@@ -112,6 +123,7 @@ end
 global Obstacles = @record{
    mask: uinteger -- mask of entitytag
 }
+## Obstacles.value.is_component = true
 
 function Obstacles:add_obstacle(e_tag: EntityTag) self.mask = self.mask | e_tag end
 function Obstacles:remove_obstacle(e_tag: EntityTag) self.mask = self.mask ~ e_tag end
