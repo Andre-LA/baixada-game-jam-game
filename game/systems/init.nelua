@@ -156,23 +156,20 @@ function SpritePainterRunner:before_all(system_data: SystemData*)
          if opt_sprite.filled and opt_position.filled then
             local position = opt_position:get()
 
-            if  #self.draw_order == 0 then
+            local inserted = false
+
+            for j = 0, < #self.draw_order do
+               if position.position.y < y_vec[j] then
+                  y_vec:insert(j, position.position.y)
+                  self.draw_order:insert(j, i)
+                  inserted = true
+                  break
+               end
+            end
+
+            if not inserted then
                y_vec:push(position.position.y)
                self.draw_order:push(i)
-            else
-               local inserted = false
-               for j = 0, < #self.draw_order do
-                  if position.position.y < y_vec[j] then
-                     y_vec:insert(j, position.position.y)
-                     self.draw_order:insert(j, i)
-                     inserted = true
-                     break
-                  end
-               end
-               if not inserted then
-                  y_vec:push(position.position.y)
-                  self.draw_order:push(i)
-               end
             end
          else
             system_data:mark_available(i)
