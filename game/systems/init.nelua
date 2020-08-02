@@ -45,7 +45,8 @@ global System = @record{
 
    local systemT <nickname #[string.format('system(%s)', T)]#> = @record{
       system: System,
-      opts: optCollectionT
+      opts: optCollectionT,
+      runner: T,
    }
 
    ## systemT.value.subtype = T
@@ -84,10 +85,12 @@ global System = @record{
    end
 
    function systemT:run()
-      local runner: #|T.nickname|# = {}
+      ## for _, name in ipairs(component_names) do
+         self.runner.#|name|# = nilptr
+      ## end
 
       ## if use_before then
-         runner:before_all(self.system.system_data)
+         self.runner:before_all(self.system.system_data)
       ## end
 
       ## if use_run then
@@ -103,10 +106,10 @@ global System = @record{
 
                if self:verify() then
                   ## for _, name in ipairs(component_names) do
-                     runner.#|name|# = self.opts.#|name|#:get()
+                     self.runner.#|name|# = self.opts.#|name|#:get()
                   ## end
 
-                  runner:run(self.system.system_data)
+                  self.runner:run(self.system.system_data)
                else
                   self.system.system_data:mark_available(i)
                end
@@ -114,8 +117,8 @@ global System = @record{
          end
       ## end
 
-      ## if use_before then
-      runner:after_all(self.system.system_data)
+      ## if use_after then
+         self.runner:after_all(self.system.system_data)
       ## end
    end
 
@@ -176,6 +179,8 @@ function SpritePainterRunner:before_all(system_data: SystemData*)
          end
       end
    end
+
+   y_vec:destroy()
 end
 
 function SpritePainterRunner:after_all(system_data: SystemData*)
