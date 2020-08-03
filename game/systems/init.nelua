@@ -142,6 +142,9 @@ function SpritePainterRunner:before_all(system_data: SystemData*)
 
    local y_vec: vector(float32) = {}
    y_vec:reserve(sys_len)
+   defer
+      y_vec:destroy()
+   end
 
    for i = 0, < sys_len do
       local ids = system_data.components_indexes[i]
@@ -155,7 +158,6 @@ function SpritePainterRunner:before_all(system_data: SystemData*)
 
          if opt_sprite.filled and opt_position.filled then
             local position = opt_position:get()
-
             local inserted = false
 
             for j = 0, < #self.draw_order do
@@ -177,7 +179,6 @@ function SpritePainterRunner:before_all(system_data: SystemData*)
       end
    end
 
-   y_vec:destroy()
 end
 
 function SpritePainterRunner:after_all(system_data: SystemData*)
