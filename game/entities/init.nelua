@@ -18,7 +18,7 @@ require 'game.resources'
       ## new_entity.value:add_field(name .. '_id', GenerationalIndex.value)
 
       ## local _type = component_types[i].value
-      ## staticassert(traits.is_type(_type), "invalid type %s", _type)
+      ## staticassert(traits.is_type(_type) and _type.is_component, "type %s is not a component", _type)
 
       ## VlCollection.value:add_field(name .. '_vl', _type)
 
