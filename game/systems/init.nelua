@@ -10,7 +10,7 @@ global System = @record{
    system_data: SystemData,
 }
 
-## local make_system = generalize(function(T, use_before, use_run, use_after, read_count, ...)
+## local make_system = generalize(function(T, use_before, use_run, use_after, read_count, run_T)
    ##[[
       staticassert(traits.is_type(T), "invalid type %s", T)
 
@@ -19,12 +19,12 @@ global System = @record{
       local component_names = {}
       local component_types = {}
 
-      for i, field in ipairs(T.fields) do
-         local fsubtype = field.type.subtype
-         if fsubtype and fsubtype.is_component then
-            table.insert(component_names, field.name)
-            table.insert(component_types, fsubtype)
-         end
+      for _, field in ipairs(run_T.fields) do
+         local ftype = field.type
+         staticassert(traits.is_type(ftype) and ftype.is_component, 'type %s is not a component!', ftype)
+
+         table.insert(component_names, field.name)
+         table.insert(component_types, ftype)
       end
 
       local read_names = table.move(component_names, 1, read_count, 1, {})
@@ -85,17 +85,17 @@ global System = @record{
    end
 
    function systemT:run()
-      ## for _, name in ipairs(component_names) do
-         self.runner.#|name|# = nilptr
-      ## end
+      local runner: T* = self.runner
 
       ## if use_before then
-         self.runner:before_all(self.system.system_data)
+         runner:before_all(self.system.system_data)
       ## end
 
       ## if use_run then
-         for i = 0, < #self.system.system_data.components_indexes do
-            local ids = self.system.system_data.components_indexes[i]
+         local system_data: SystemData* = self.system.system_data
+
+         for i = 0, < #system_data.components_indexes do
+            local ids = system_data.components_indexes[i]
 
             if #ids > 0 then
                ## for i, name in ipairs(component_names) do
@@ -105,11 +105,19 @@ global System = @record{
                ## end
 
                if self:verify() then
-                  ## for _, name in ipairs(component_names) do
-                     self.runner.#|name|# = self.opts.#|name|#:get()
-                  ## end
+                   ## for _, name in ipairs(component_names) do
+                      local #|name|# = self.opts.#|name|#:get()
+                   ## end
 
-                  self.runner:run(self.system.system_data)
+                  ##[[
+                     local ids = metalib.create_id_nodes(aster, component_names)
+                     table.insert(ids, aster.Id{'system_data'})
+                     table.insert(ids, 1, aster.Id{'runner'})
+
+                     local run_call_node = metalib.create_call_node(aster, T, 'run', table.unpack(ids))
+                  ]]
+
+                  ## ppcontext:add_statnode(run_call_node)
                else
                   self.system.system_data:mark_available(i)
                end
@@ -118,7 +126,7 @@ global System = @record{
       ## end
 
       ## if use_after then
-         self.runner:after_all(self.system.system_data)
+         runner:after_all(self.system.system_data)
       ## end
    end
 
@@ -129,8 +137,6 @@ local MakeSystem = #[make_system]#
 
 -- [ systems [
 global SpritePainterRunner = @record{
-   sprite: Sprite*,
-   position: Position*,
    draw_order: vector(uinteger),
    sorted: boolean,
 }
@@ -211,107 +217,119 @@ function SpritePainterRunner:after_all(system_data: SystemData*)
       end
    end
 end
-global SpritePainterSystem = @MakeSystem(SpritePainterRunner, true, false, true, 2)
-global CollidersSyncRunner = @record{
+
+global SpritePainterSystem = @MakeSystem(SpritePainterRunner, true, false, true, 2, record{
+   sprite: Sprite,
+   position: Position
+})
+
+global CollidersSyncRunner = @record{}
+
+function CollidersSyncRunner:run(
    position: Position*,
    velocity: Velocity*,
-   collider: Collider*
-}
-
-function CollidersSyncRunner:run(system_data: SystemData*)
-   self.collider:sync_with_position(self.position.position)
+   collider: Collider*,
+   system_data: SystemData*
+)
+   collider:sync_with_position(position.position)
 end
 
-global CollidersSyncSystem = @MakeSystem(CollidersSyncRunner, false, true, false, 2)
+global CollidersSyncSystem = @MakeSystem(CollidersSyncRunner, false, true, false, 2, record{
+   position: Position,
+   velocity: Velocity,
+   collider: Collider
+})
 
-global AnimationRunner = @record{
-   animations: Animations*,
-   sprite: Sprite*,
-}
+global AnimationRunner = @record{}
 
-function AnimationRunner:run(system_data: SystemData*)
-   if not self.animations.paused then
-      self.animations.elapsed_time = self.animations.elapsed_time + Globals.dt
-      local current_animation: AnimationData* = self.animations.animations[self.animations.current_animation_index]
+function AnimationRunner:run(animations: Animations*, sprite: Sprite*, system_data: SystemData*)
+   if not animations.paused then
+      animations.elapsed_time = animations.elapsed_time + Globals.dt
+      local current_animation: AnimationData* = animations.animations[animations.current_animation_index]
 
-      if self.animations.elapsed_time > current_animation.frame_duration then
-         self.animations.current_frame_index = (self.animations.current_frame_index + 1) % #current_animation.frame_indexes
-         self.animations.elapsed_time = 0
+      if animations.elapsed_time > current_animation.frame_duration then
+         animations.current_frame_index = (animations.current_frame_index + 1) % #current_animation.frame_indexes
+         animations.elapsed_time = 0
       end
 
-      self.sprite.frame_index = current_animation.frame_indexes[self.animations.current_frame_index]
+      sprite.frame_index = current_animation.frame_indexes[animations.current_frame_index]
    end
 end
 
-global AnimationSystem = @MakeSystem(AnimationRunner, false, true, false, 0)
+global AnimationSystem = @MakeSystem(AnimationRunner, false, true, false, 0, record{
+   animations: Animations,
+   sprite: Sprite
+})
 
-global ShowCollisionsRunner = @record{
-   position: Position*,
-   collisions: Collisions*,
-}
+global ShowCollisionsRunner = @record{}
 
-function ShowCollisionsRunner:run(system_data: SystemData*)
-   for j = 0, < #self.collisions.intersections do
-      local intersection: Intersection* = self.collisions.intersections[j]
+function ShowCollisionsRunner:run(position: Position*, collisions: Collisions*, system_data: SystemData*)
+   for j = 0, < #collisions.intersections do
+      local intersection: Intersection* = collisions.intersections[j]
       local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
-      Raylib.DrawLineV(self.position.position, (@Vector2){ intersection.rect.x, intersection.rect.y}, rect_color)
+      Raylib.DrawLineV(position.position, (@Vector2){ intersection.rect.x, intersection.rect.y}, rect_color)
       Raylib.DrawRectangleLinesEx(intersection.rect, 1, rect_color)
    end
 end
 
-global ShowCollisionsSystem = @MakeSystem(ShowCollisionsRunner, false, true, false, 2)
+global ShowCollisionsSystem = @MakeSystem(ShowCollisionsRunner, false, true, false, 2, record{
+   position: Position,
+   collisions: Collisions,
+})
 
-global ShowCollidersRunner = @record{
-   collider: Collider*,
-}
+global ShowCollidersRunner = @record{}
 
-function ShowCollidersRunner:run(system_data: SystemData*)
-   Raylib.DrawRectangleLinesEx(self.collider.global_rect, 1, GREEN)
+function ShowCollidersRunner:run(collider: Collider*, system_data: SystemData*)
+   Raylib.DrawRectangleLinesEx(collider.global_rect, 1, GREEN)
 end
 
-global ShowCollidersSystem = @MakeSystem(ShowCollidersRunner, false, true, false, 1)
+global ShowCollidersSystem = @MakeSystem(ShowCollidersRunner, false, true, false, 1, record{
+   collider: Collider
+})
 
-global ShowPositionsRunner = @record{
-   position: Position*,
-}
+global ShowPositionsRunner = @record{}
 
-function ShowPositionsRunner:run(system_data: SystemData*)
+function ShowPositionsRunner:run(position: Position*, system_data: SystemData*)
    local H_start: Vector2 = { -5, 0 }
    local H_end  : Vector2 = {  5, 0 }
    local V_start: Vector2 = { 0, -5 }
    local V_end  : Vector2 = { 0,  5 }
 
-   Raylib.DrawLineV(self.position.position + H_start, self.position.position + H_end, RED)
-   Raylib.DrawLineV(self.position.position + V_start, self.position.position + V_end, RED)
+   Raylib.DrawLineV(position.position + H_start, position.position + H_end, RED)
+   Raylib.DrawLineV(position.position + V_start, position.position + V_end, RED)
 end
 
-global ShowPositionsSystem = @MakeSystem(ShowPositionsRunner, false, true, false, 1)
+global ShowPositionsSystem = @MakeSystem(ShowPositionsRunner, false, true, false, 1, record{
+   position: Position,
+})
 
-global ShowObstaclesRunner = @record{
+global ShowObstaclesRunner = @record{}
+
+function ShowObstaclesRunner:run(
    position: Position*,
    obstacles: Obstacles*,
    collisions: Collisions*,
-}
-
-function ShowObstaclesRunner:run(system_data: SystemData*)
-   for j = 0, < #self.collisions.intersections do
-      local intersection: Intersection* = self.collisions.intersections[j]
+   system_data: SystemData*
+)
+   for j = 0, < #collisions.intersections do
+      local intersection: Intersection* = collisions.intersections[j]
 
        --if intersected with a obstacle entity
-      if intersection:contains_tag(self.obstacles.mask) then
+      if intersection:contains_tag(obstacles.mask) then
          local intersection_center = intersection:get_center()
-         Raylib.DrawLineV(self.position.position, intersection_center, GOLD)
+         Raylib.DrawLineV(position.position, intersection_center, GOLD)
          Raylib.DrawCircleLines(intersection_center.x // 1, intersection_center.y // 1, 5, GOLD)
       end
    end
 end
 
-global ShowObstaclesSystem = @MakeSystem(ShowObstaclesRunner, false, true, false, 3)
+global ShowObstaclesSystem = @MakeSystem(ShowObstaclesRunner, false, true, false, 3, record{
+   position: Position,
+   obstacles: Obstacles,
+   collisions: Collisions,
+})
 
-global CollisionDetectionRunner = @record{
-   collider: Collider*,
-   collisions: Collisions*,
-}
+global CollisionDetectionRunner = @record{}
 
 local function is_past_collision(intersections: vector(Intersection)*, entity_id: GenerationalIndex): integer
    for i = 0, < #intersections do
@@ -323,153 +341,173 @@ local function is_past_collision(intersections: vector(Intersection)*, entity_id
 end
 
 -- TODO: Optimize this
-function CollisionDetectionRunner:run(system_data: SystemData*)
+function CollisionDetectionRunner:run(collider: Collider*, collisions: Collisions*, system_data: SystemData*)
    for i = 0, < storages.collider.len do
       if storages.collider.generations[i].filled then
          local collider_i = storages.collider.entries[i]
 
-         if self.collider.entity_id ~= collider_i.entity_id then
-            local has_collision = Raylib.CheckCollisionRecs(self.collider.global_rect, collider_i.global_rect)
-            local possible_past_collision = is_past_collision(self.collisions.intersections, collider_i.entity_id)
+         if collider.entity_id ~= collider_i.entity_id then
+            local has_collision = Raylib.CheckCollisionRecs(collider.global_rect, collider_i.global_rect)
+            local possible_past_collision = is_past_collision(collisions.intersections, collider_i.entity_id)
 
             if has_collision then
-               local intersection_rect = Raylib.GetCollisionRec(self.collider.global_rect, collider_i.global_rect)
+               local intersection_rect = Raylib.GetCollisionRec(collider.global_rect, collider_i.global_rect)
 
                if possible_past_collision >= 0 then
-                  local intersection: Intersection* = self.collisions.intersections[possible_past_collision]
+                  local intersection: Intersection* = collisions.intersections[possible_past_collision]
                   intersection.state = CollisionState.Stay
                   intersection.rect = intersection_rect
                else
-                  self.collisions.intersections:push({
+                  collisions.intersections:push({
                      collider = collider_i,
                      rect = intersection_rect,
                      state = CollisionState.Enter
                   })
                end
             elseif possible_past_collision >= 0 then
-               self.collisions.intersections:remove(possible_past_collision)
+               collisions.intersections:remove(possible_past_collision)
             end
          end
       end
    end
 end
 
-global CollisionDetectionSystem = @MakeSystem(CollisionDetectionRunner, false, true, false, 1)
+global CollisionDetectionSystem = @MakeSystem(CollisionDetectionRunner, false, true, false, 1, record{
+   collider: Collider,
+   collisions: Collisions,
+})
 
-global PlayerControllerRunner = @record{
+global PlayerControllerRunner = @record{}
+
+function PlayerControllerRunner:run(
    player: Player*,
    velocity: Velocity*,
    animations: Animations*,
-}
-
-function PlayerControllerRunner:run(system_data: SystemData*)
-   self.velocity.direction = Globals.player_input.direction
+   system_data: SystemData*
+)
+   velocity.direction = Globals.player_input.direction
 
    if #Globals.player_input.direction < 0.1 then
-      self.animations:change_animation(0)
+      animations:change_animation(0)
    elseif math.abs(Globals.player_input.direction.x) > math.abs(Globals.player_input.direction.y) then -- horizontal movement
       if Globals.player_input.action then -- L/R push
-         self.animations:change_animation(Globals.player_input.direction.x < 0 and 8 or 7)
+         animations:change_animation(Globals.player_input.direction.x < 0 and 8 or 7)
       else -- L/R walk
-         self.animations:change_animation(Globals.player_input.direction.x < 0 and 4 or 3)
+         animations:change_animation(Globals.player_input.direction.x < 0 and 4 or 3)
       end
    else -- vertical movement
       if Globals.player_input.action then -- U/D push
-         self.animations:change_animation(Globals.player_input.direction.y < 0 and 6 or 5)
+         animations:change_animation(Globals.player_input.direction.y < 0 and 6 or 5)
       else -- U/D walk
-         self.animations:change_animation(Globals.player_input.direction.y < 0 and 2 or 1)
+         animations:change_animation(Globals.player_input.direction.y < 0 and 2 or 1)
       end
    end
 end
 
-global PlayerControllerSystem = @MakeSystem(PlayerControllerRunner, false, true, false, 1)
+global PlayerControllerSystem = @MakeSystem(PlayerControllerRunner, false, true, false, 1, record{
+   player: Player,
+   velocity: Velocity,
+   animations: Animations,
+})
 
-global BoxControllerRunner = @record{
+global BoxControllerRunner = @record{}
+
+function BoxControllerRunner:run(
    box: Box*,
    position: Position*,
    collisions: Collisions*,
    velocity: Velocity*,
-}
-
-function BoxControllerRunner:run(system_data: SystemData*)
+   system_data: SystemData*
+)
    if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
-      self.position.position = self.box.start_position
-      self.velocity.direction = { 0, 0 }
+      position.position = box.start_position
+      velocity.direction = { 0, 0 }
    end
 
-   if Globals.player_input.action and #self.collisions.intersections > 0 then
-      for j = 0, < #self.collisions.intersections do
-         local intersection: Intersection* = self.collisions.intersections[j]
+   if Globals.player_input.action and #collisions.intersections > 0 then
+      for j = 0, < #collisions.intersections do
+         local intersection: Intersection* = collisions.intersections[j]
          if intersection:contains_tag(EntityTag.Player) then
-            self.velocity.direction = Globals.player_input.direction
+            velocity.direction = Globals.player_input.direction
             break
          else
-            self.velocity.direction = { 0, 0 }
+            velocity.direction = { 0, 0 }
          end
       end
    else
-      self.velocity.direction = { 0, 0 }
+      velocity.direction = { 0, 0 }
    end
 end
 
-global BoxControllerSystem = @MakeSystem(BoxControllerRunner, false, true, false, 3)
+global BoxControllerSystem = @MakeSystem(BoxControllerRunner, false, true, false, 3, record{
+   box: Box,
+   position: Position,
+   collisions: Collisions,
+   velocity: Velocity,
+})
 
-global ObstaclesRunner = @record{
+global ObstaclesRunner = @record{}
+
+function ObstaclesRunner:run(
    obstacles: Obstacles*,
    collisions: Collisions*,
    velocity: Velocity*,
-}
-
-function ObstaclesRunner:run(system_data: SystemData*)
-   for j = 0, < #self.collisions.intersections do
-      local intersection: Intersection* = self.collisions.intersections[j]
+   system_data: SystemData*
+)
+   for j = 0, < #collisions.intersections do
+      local intersection: Intersection* = collisions.intersections[j]
 
       -- if intersected with a obstacle entity
-      if intersection:contains_tag(self.obstacles.mask) then
+      if intersection:contains_tag(obstacles.mask) then
          local dir: Vector2 = intersection:get_direction(intersection:get_center(), 2)
-         local dir_x_inputdir = dir * self.velocity.direction
+         local dir_x_inputdir = dir * velocity.direction
 
          if dir_x_inputdir.x < 0 and intersection.rect.width / intersection.rect.height < 1 then
-            self.velocity.direction.x = 0
+            velocity.direction.x = 0
          end
          if dir_x_inputdir.y < 0 and intersection.rect.height / intersection.rect.width < 1 then
-            self.velocity.direction.y = 0
+            velocity.direction.y = 0
          end
       end
    end
 end
 
-global ObstaclesSystem = @MakeSystem(ObstaclesRunner, false, true, false, 2)
+global ObstaclesSystem = @MakeSystem(ObstaclesRunner, false, true, false, 2, record{
+   obstacles: Obstacles,
+   collisions: Collisions,
+   velocity: Velocity,
+})
 
-global VelocityRunner = @record{
-   velocity: Velocity*,
-   position: Position*,
-}
+global VelocityRunner = @record{}
 
-function VelocityRunner:run(system_data: SystemData*)
-   self.position.position.x = self.position.position.x + self.velocity.direction.x * self.velocity.speed
-   self.position.position.y = self.position.position.y + self.velocity.direction.y * self.velocity.speed
+function VelocityRunner:run(velocity: Velocity*, position: Position*, system_data: SystemData*)
+   position.position.x = position.position.x + velocity.direction.x * velocity.speed
+   position.position.y = position.position.y + velocity.direction.y * velocity.speed
 end
 
-global VelocitySystem = @MakeSystem(VelocityRunner, false, true, false, 1)
+global VelocitySystem = @MakeSystem(VelocityRunner, false, true, false, 1, record{
+   velocity: Velocity,
+   position: Position,
+})
 
-global GearControllerRunner = @record{
+global GearControllerRunner = @record{}
+
+function GearControllerRunner:run(
    gear: Gear*,
    collisions: Collisions*,
    velocity: Velocity*,
    position: Position*,
    animations: Animations*,
-}
-
-function GearControllerRunner:run(system_data: SystemData*)
-   if Raylib.IsKeyDown(KeyboardKey.KEY_R) and not self.gear.engaged then
-      self.position.position = self.gear.start_position
-      self.velocity.direction = { 0, 0 }
+   system_data: SystemData*
+)
+   if Raylib.IsKeyDown(KeyboardKey.KEY_R) and not gear.engaged then
+      position.position = gear.start_position
+      velocity.direction = { 0, 0 }
    end
 
-   if not self.gear.engaged then
-      for j = 0, < #self.collisions.intersections do
-         local intersection: Intersection* = self.collisions.intersections[j]
+   if not gear.engaged then
+      for j = 0, < #collisions.intersections do
+         local intersection: Intersection* = collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.Player) and Globals.player_input.action and #Globals.player_input.direction > 0.01 then
             local dir = Globals.player_input.direction
@@ -485,70 +523,76 @@ function GearControllerRunner:run(system_data: SystemData*)
                dir.y = dir.y > 0 and 1 or -1
             end
 
-            self.velocity.direction = dir
+            velocity.direction = dir
          elseif intersection:contains_tag(EntityTag.GearSlot) then
-            self.gear.engaged = true
+            gear.engaged = true
             break
          end
       end
    else
-      for j = 0, < #self.collisions.intersections do
-         local intersection: Intersection* = self.collisions.intersections[j]
+      for j = 0, < #collisions.intersections do
+         local intersection: Intersection* = collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.GearSlot) then
-            self.position.position.x = intersection.collider.global_rect.x
-            self.position.position.y = intersection.collider.global_rect.y+33
+            position.position.x = intersection.collider.global_rect.x
+            position.position.y = intersection.collider.global_rect.y+33
             break
          end
       end
    end
 
-   if not self.gear.engaged then
-      local in_movement = #self.velocity.direction > 0.15
-      self.animations.paused = not in_movement
+   if not gear.engaged then
+      local in_movement = #velocity.direction > 0.15
+      animations.paused = not in_movement
 
       if in_movement then
-         local new_anim_idx = math.abs(self.velocity.direction.x) > math.abs(self.velocity.direction.y) and 0 or 1
-         self.animations:change_animation(new_anim_idx)
+         local new_anim_idx = math.abs(velocity.direction.x) > math.abs(velocity.direction.y) and 0 or 1
+         animations:change_animation(new_anim_idx)
       end
    else
-      self.animations:change_animation(2)
+      animations:change_animation(2)
    end
 end
 
-global GearControllerSystem = @MakeSystem(GearControllerRunner, false, true, false, 2)
+global GearControllerSystem = @MakeSystem(GearControllerRunner, false, true, false, 2, record{
+   gear: Gear,
+   collisions: Collisions,
+   velocity: Velocity,
+   position: Position,
+   animations: Animations,
+})
 
-global EngageRunner = @record{
-   collisions: Collisions*,
-   gear_slot: GearSlot*,
-}
+global EngageRunner = @record{}
 
-function EngageRunner:run(system_data: SystemData*)
-   for i = 0, < #self.collisions.intersections do
-      local intersection: Intersection* = self.collisions.intersections[i]
+function EngageRunner:run(collisions: Collisions*, gear_slot: GearSlot*, system_data: SystemData*)
+   for i = 0, < #collisions.intersections do
+      local intersection: Intersection* = collisions.intersections[i]
 
       if intersection:contains_tag(EntityTag.Gear) then
-         Globals.engaged_slots[self.gear_slot.slot_idx] = true
+         Globals.engaged_slots[gear_slot.slot_idx] = true
          break
       end
    end
 end
 
-global EngageSystem = @MakeSystem(EngageRunner, false, true, false, 1)
+global EngageSystem = @MakeSystem(EngageRunner, false, true, false, 1, record{
+   collisions: Collisions,
+   gear_slot: GearSlot,
+})
 
-global BridgeRunner = @record{
-   bridge: Bridge*,
-   collider: Collider*,
-   sprite: Sprite*,
-}
+global BridgeRunner = @record{}
 
-function BridgeRunner:run(system_data: SystemData*)
-   if Globals.engaged_slots[self.bridge.slot_idx] then
-      self.collider.entity_tag = EntityTag.OpenBridge
-      self.sprite.visible = true
+function BridgeRunner:run(bridge: Bridge*, collider: Collider*, sprite: Sprite*, system_data: SystemData*)
+   if Globals.engaged_slots[bridge.slot_idx] then
+      collider.entity_tag = EntityTag.OpenBridge
+      sprite.visible = true
    end
 end
 
-global BridgeSystem = @MakeSystem(BridgeRunner, false, true, false, 1)
+global BridgeSystem = @MakeSystem(BridgeRunner, false, true, false, 1, record{
+   bridge: Bridge,
+   collider: Collider,
+   sprite: Sprite,
+})
 
 -- ] systems ]

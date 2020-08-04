@@ -1,3 +1,5 @@
+local tabler = require 'nelua.utils.tabler'
+
 local metalib = {}
 
 function metalib.tableunion(a,b)
@@ -26,6 +28,18 @@ function metalib.collect_doubles(start, _end, ...)
    end
 
    return first, second
+end
+
+function metalib.create_id_nodes(aster, names)
+   local function name_to_id(name) return aster.Id{name} end
+   return tabler.imap(names, name_to_id)
+end
+
+function metalib.create_call_node(aster, T, func_name, ...)
+   return aster.Call{
+      {...},
+      aster.DotIndex{ func_name, aster.Id{ T.nickname } }
+   }
 end
 
 return metalib
