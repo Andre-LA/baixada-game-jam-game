@@ -170,17 +170,14 @@ create_level({ 32*8, 32*3 })
 
 update_all_systems()
 
-local player_position_opt = storages.position:get_entry(player_entity.position_id)
-global player_position: Position* = player_position_opt:get()
-
-local player_animations_opt = storages.animations:get_entry(player_entity.animations_id)
-local player_animations: Animations* = player_animations_opt:get()
-player_animations.current_animation_index = 1
 
 -- ] Game initialization ]
 
 -- [ Game loop [
-local function update_draw_frame() -- 15 90
+local function update_draw_frame()
+   local player_position_opt = storages.position:get_entry(player_entity.position_id)
+   local player_position: Position* = player_position_opt:get()
+
    local game_finalized = player_position.position.y < 400
 
    -- [ Update [
