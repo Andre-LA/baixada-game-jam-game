@@ -1,0 +1,200 @@
+## local metalib = require 'rotor-quick.metalib'
+
+-- [ mark as component [
+##[[
+   function is_component(T)
+      T.value.is_component = true
+   end
+]]
+-- ] mark as component ]
+
+-- [ Entity maker [
+## make_entity = hygienize(function(...)
+   ## local component_names, component_types = metalib.collect_doubles(1, -1, ...)
+
+   local new_entity = @record{ entity_id: GenerationalIndex }
+   local VlCollection = @record{}
+
+   ## for i, name in ipairs(component_names) do
+      ## new_entity.value:add_field(name .. '_id', GenerationalIndex.value)
+
+      ## local _type = component_types[i].value
+      ## staticassert(traits.is_type(_type) and _type.is_component, "type %s is not a component", _type)
+
+      ## VlCollection.value:add_field(name .. '_vl', _type)
+
+      function new_entity:#|'get_'..name|#(storage: Storage(#[_type]#)*): pointer(#[_type]#)
+         local possible_result = storage:get_entry(self.#|name..'_id'|#)
+         check(possible_result.filled, #[name .. ' is not associated with entity!']#)
+         local result = possible_result:get()
+         return result
+      end
+   ## end
+
+   function new_entity.new(entity_storage: Storage(Entity)*, values: VlCollection, untracked_ids: vector(GenerationalIndex)*): new_entity
+      local result: new_entity = {}
+
+      local entity_id, entity = entity_storage:new_entry(Entity.new())
+      result.entity_id = entity_id
+
+      ## for i, name in ipairs(component_names) do
+         ## local _type = component_types[i]
+         ## local name_id = name..'_id'
+
+         local #|name_id|#, #|name|# = #[_type]#.associate(values.#|name..'_vl'|#, entity)
+         result.#|name_id|# = #|name_id|#
+      ## end
+
+      untracked_ids:push(entity_id)
+
+      return result
+   end
+
+   ## return new_entity
+## end)
+
+-- ] Entity maker ]
+
+-- [ system maker [
+global System = @record{
+   read: vector(BitsetArray),
+   write: vector(BitsetArray),
+   system_data: SystemData,
+}
+
+## local make_system = generalize(function(T, use_before, use_run, use_after, read_count, run_T)
+   ##[[
+      staticassert(traits.is_type(T), "invalid type %s", T)
+
+      local component_names = {}
+      local component_types = {}
+
+      for _, field in ipairs(run_T.fields) do
+         local ftype = field.type
+         staticassert(traits.is_type(ftype) and ftype.is_component, 'type %s is not a component!', ftype)
+
+         table.insert(component_names, field.name)
+         table.insert(component_types, ftype)
+      end
+
+      local read_names = table.move(component_names, 1, read_count, 1, {})
+      local read_types = table.move(component_types, 1, read_count, 1, {})
+
+      local write_names = table.move(component_names, read_count+1, #component_names, 1, {})
+      local write_types = table.move(component_types, read_count+1, #component_names, 1, {})
+   ]]
+
+   local T = @#[T]#
+
+   local optCollectionT = @record{}
+   local storagesCollectionT = @record{}
+
+   ## for i, name in ipairs(component_names) do
+      local opt_T = @optional(#[ component_types[i] ]#*)
+      ## optCollectionT.value:add_field(name, opt_T.value)
+
+      local stor_T = @pointer(Storage( #[ component_types[i] ]# ))
+      ## storagesCollectionT.value:add_field(name, stor_T.value)
+   ## end
+
+   local systemT <nickname #[string.format('system(%s)', T)]#> = @record{
+      system: System,
+      opts: optCollectionT,
+      runner: T,
+   }
+
+   ## systemT.value.subtype = T
+
+   function systemT.new(): systemT
+      local new_system: systemT = {}
+
+      new_system.system.read:reserve(#[#read_names]#)
+      new_system.system.write:reserve(#[#read_names]#)
+
+      ## for _, name in ipairs(read_names) do
+         new_system.system.read:push(bitset_array.copy(component_masks.#|name|#))
+      ## end
+
+      ## for _, name in ipairs(write_names) do
+         new_system.system.write:push(bitset_array.copy(component_masks.#|name|#))
+      ## end
+
+      new_system.system.system_data = SystemData.new(new_system.system.read, new_system.system.write)
+      return new_system
+   end
+
+   function systemT:verify(): boolean
+      local values: array(boolean, #[ #component_names]#) = {}
+      local result: boolean = true
+
+      ## for i, name in ipairs(component_names) do
+         values[#[i-1]#] = self.opts.#|name|#.filled
+      ## end
+
+      for i = 0, < #[#component_names]# do
+         result = result and values[i]
+      end
+
+      return result
+   end
+
+   function systemT:run(storages: storagesCollectionT)
+      local runner: T* = self.runner
+
+      ## if use_before then
+         runner:before_all(self.system.system_data)
+      ## end
+
+      ## if use_run then
+         local system_data: SystemData* = self.system.system_data
+
+         for i = 0, < #system_data.components_indexes do
+            local ids = system_data.components_indexes[i]
+
+            if #ids > 0 then
+               ## for i, name in ipairs(component_names) do
+                  ## local name_id = name..'_id'
+                  local #|name_id|# = ids[#[i-1]#]
+                  self.opts.#|name|# = storages.#|name|#:get_entry(#|name_id|#)
+               ## end
+
+               if self:verify() then
+                   ## for _, name in ipairs(component_names) do
+                      local #|name|# = self.opts.#|name|#:get()
+                   ## end
+
+                  ##[[
+                     local ids = metalib.create_id_nodes(aster, component_names)
+                     table.insert(ids, aster.Id{'system_data'})
+                     table.insert(ids, 1, aster.Id{'runner'})
+
+                     local run_call_node = metalib.create_call_node(aster, T, 'run', table.unpack(ids))
+                  ]]
+
+                  ## ppcontext:add_statnode(run_call_node)
+               else
+                  self.system.system_data:mark_available(i)
+               end
+            end
+         end
+      ## end
+
+      ## if use_after then
+         runner:after_all(self.system.system_data)
+      ## end
+   end
+
+   function systemT:update(entity_storage: Storage(Entity)*, untracked_ids: vector(GenerationalIndex)*)
+      self.system.system_data:update(entity_storage, untracked_ids)
+   end
+
+   ## return systemT
+## end)
+
+global MakeSystem = #[make_system]#
+
+-- ] system maker ]
+
+-- [ component maker [
+
+-- ] component maker ]

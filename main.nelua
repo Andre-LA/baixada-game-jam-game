@@ -192,20 +192,20 @@ local function update_draw_frame() -- 15 90
 
    update_player_input_values()
 
-   Game_Systems.colliders_sync:run()
-   Game_Systems.collision_detection:run()
+   Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
+   Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
 
-   Game_Systems.player_controller:run()
-   Game_Systems.box_controller:run()
-   Game_Systems.gear_controller:run()
+   Game_Systems.player_controller:run({&storages.player, &storages.velocity, &storages.animations})
+   Game_Systems.box_controller:run({&storages.box, &storages.position, &storages.collisions, &storages.velocity})
+   Game_Systems.gear_controller:run({&storages.gear, &storages.collisions, &storages.velocity, &storages.position, &storages.animations})
 
-   Game_Systems.engage_system:run()
-   Game_Systems.bridge_system:run()
+   Game_Systems.engage_system:run({&storages.collisions, &storages.gear_slot})
+   Game_Systems.bridge_system:run({&storages.bridge, &storages.collider, &storages.sprite})
 
-   Game_Systems.obstacles_system:run()
-   Game_Systems.velocity_system:run()
+   Game_Systems.obstacles_system:run({&storages.obstacles, &storages.collisions, &storages.velocity})
+   Game_Systems.velocity_system:run({&storages.velocity, &storages.position})
 
-   Game_Systems.animation:run()
+   Game_Systems.animation:run({&storages.animations, &storages.sprite})
 
    Globals.camera.target = player_position.position
 
@@ -222,13 +222,13 @@ local function update_draw_frame() -- 15 90
       Raylib.BeginMode2D(Globals.camera)
          Raylib.DrawText(txt_text, 32*26, 32*22, 20, RAYWHITE)
 
-         Game_Systems.sprite_painter:run()
+         Game_Systems.sprite_painter:run({&storages.sprite, &storages.position})
 
          ## if SHOW_DEV_INFO then
-            Game_Systems.show_colliders:run()
-            Game_Systems.show_collisions:run()
-            Game_Systems.show_obstacles:run()
-            Game_Systems.show_positions:run()
+            Game_Systems.show_colliders:run({&storages.collider})
+            Game_Systems.show_collisions:run({&storages.collisions})
+            Game_Systems.show_obstacles:run({&storages.collisions})
+            Game_Systems.show_positions:run({&storages.position, &storages.obstacles, &storages.collisions})
          ## end
 
       Raylib.EndMode2D()

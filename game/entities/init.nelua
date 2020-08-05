@@ -4,53 +4,7 @@ require 'raylib'
 require 'rotor'
 require 'game.components'
 require 'game.resources'
-
-## local make_entity = hygienize(function(...)
-   ##[[
-      local metalib = require 'metalib'
-      local component_names, component_types = metalib.collect_doubles(1, -1, ...)
-   ]]##
-
-   local new_entity = @record{ entity_id: GenerationalIndex }
-   local VlCollection = @record{}
-
-   ## for i, name in ipairs(component_names) do
-      ## new_entity.value:add_field(name .. '_id', GenerationalIndex.value)
-
-      ## local _type = component_types[i].value
-      ## staticassert(traits.is_type(_type) and _type.is_component, "type %s is not a component", _type)
-
-      ## VlCollection.value:add_field(name .. '_vl', _type)
-
-      function new_entity:#|'get_'..name|#(storage: Storage(#[_type]#)*): pointer(#[_type]#)
-         local possible_result = storage:get_entry(self.#|name..'_id'|#)
-         check(possible_result.filled, #[name .. ' is not associated with entity!']#)
-         local result = possible_result:get()
-         return result
-      end
-   ## end
-
-   function new_entity.new(entity_storage: Storage(Entity)*, values: VlCollection, untracked_ids: vector(GenerationalIndex)*): new_entity
-      local result: new_entity = {}
-
-      local entity_id, entity = entity_storage:new_entry(Entity.new())
-      result.entity_id = entity_id
-
-      ## for i, name in ipairs(component_names) do
-         ## local _type = component_types[i]
-         ## local name_id = name..'_id'
-
-         local #|name_id|#, #|name|# = #[_type]#.associate(values.#|name..'_vl'|#, entity)
-         result.#|name_id|# = #|name_id|#
-      ## end
-
-      untracked_ids:push(entity_id)
-
-      return result
-   end
-
-   ## return new_entity
-## end)
+require 'rotor-quick.makers'
 
 global PlayerEntity = #[ make_entity(
    'player', Player,
