@@ -5,15 +5,14 @@ require 'allocators.gc'
    gc:pause() -- conservative GCs cannot run automatically with emscripten
 ## end
 require 'vector'
-require 'string'
 require 'rotor'
 require 'game.resources'
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
-local TXT_TEXT_PT_BR: string <const> = "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
-local TXT_TEXT_EN_US: string <const> = "After so much effort, the princess\ncan finally escape this \nterrible prison!"
-local txt_text: string = #[DEFAULT_LANG]# == 'en-US' and TXT_TEXT_EN_US or TXT_TEXT_PT_BR
+local TXT_TEXT_PT_BR: stringview <const> = "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
+local TXT_TEXT_EN_US: stringview <const> = "After so much effort, the princess\ncan finally escape this \nterrible prison!"
+local txt_text: stringview = #[DEFAULT_LANG]# == 'en-US' and TXT_TEXT_EN_US or TXT_TEXT_PT_BR
 
 -- [ Main game records  and enums[
 global EntityTag = @enum {
@@ -40,7 +39,7 @@ global Globals: record{
    game_window: record{
       width: integer,
       height: integer,
-      title: string
+      title: stringview
    },
    untracked_ids: vector(GenerationalIndex),
 } = {
@@ -169,7 +168,6 @@ local player_entity = PlayerEntity.create({ #[PL_POS_X * 32]#, #[PL_POS_Y * 32]#
 create_level({ 32*8, 32*3 })
 
 update_all_systems()
-
 
 -- ] Game initialization ]
 
