@@ -36,8 +36,8 @@ Options:
 * `WIN_WIDTH: number`: any number (default is 800)
 * `WIN_HEIGHT: number`: any number (default is 600)
 * `WIN_TITLE: string`: any string (default is the "Castle Escape" text translated to the selected language on DEFAULT_LANG)
-* `PL_POS_X: number`: any number (default is 896)
-* `PL_POS_Y: number`: any number (default is 3296)
+* `PL_POS_X: number`: any number (default is 28)
+* `PL_POS_Y: number`: any number (default is 103)
 * `PL_VEL: number`: any number (default is 2)
 * `SHOW_DEV_INFO`: just define it to use
 * `PRINT_FPS`: just define it to use

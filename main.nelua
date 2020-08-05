@@ -51,8 +51,8 @@ global Globals: record{
    },
    engaged_slots = { false, false, false },
    camera = {
-      offset = { #[WIN_WIDTH]# / 2, #[WIN_HEIGHT]# / 2 },
-      target = { #[PL_POS_X]#, #[PL_POS_Y]# },
+      offset = { #[WIN_WIDTH / 2]#, #[WIN_HEIGHT / 2]#},
+      target = { #[PL_POS_X * 32]#, #[PL_POS_Y * 32]# },
       rotation = 0,
       zoom = 2
    },
@@ -165,7 +165,7 @@ local function update_all_systems()
    update_system(Game_Systems.show_positions.system)
 end
 
-local player_entity = PlayerEntity.create({ #[PL_POS_X]#, #[PL_POS_Y]# }, Globals.untracked_ids)
+local player_entity = PlayerEntity.create({ #[PL_POS_X * 32]#, #[PL_POS_Y * 32]# }, Globals.untracked_ids)
 create_level({ 32*8, 32*3 })
 
 update_all_systems()
