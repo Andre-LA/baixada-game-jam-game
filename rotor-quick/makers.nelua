@@ -9,22 +9,61 @@
 -- ] mark record as component ]
 
 -- [ Entity maker [
-## make_entity = hygienize(function(...)
-   ## local component_names, component_types = metalib.collect_doubles(1, -1, ...)
+## make_entity = hygienize(function(components_context)
+   ##[[
+      local function sa_err_msg(e_n, t_n, expected_type, got_type)
+         local nth_tbl = {'st', 'nd', '3rd'}
+         local e_nth = e_n .. (nth_tbl[e_n] or 'th')
+         local t_nth = t_n .. (nth_tbl[t_n] or 'th')
+         return string.format(
+            '%s element of the %s element of the "components_context" argument is not a %s; got: %s',
+            e_nth, t_nth, expected_type, got_type
+         )
+      end
+
+      local function assert_comp_ctx(n, i)
+         local t = {'string', 'type', 'string', 'string'}
+         local is_trait = traits[ 'is_'..t[n] ]
+
+         local comp_ctx_n = components_context[i][n]
+
+         if t[n] == 'type' then
+            comp_ctx_n = comp_ctx_n.value
+         end
+
+         staticassert( is_trait(comp_ctx_n), sa_err_msg(n, i, t[n], '?') )
+         return comp_ctx_n
+      end
+
+      local function unpack_components_context(i)
+         local name = assert_comp_ctx(1, i)
+
+         local _type = assert_comp_ctx(2, i)
+         staticassert(_type.is_component, '%s is not a component!', _type)
+
+         local storage = assert_comp_ctx(3, i)
+         local mask = assert_comp_ctx(4, i)
+
+         return name, _type, storage, mask
+      end
+   ]]
 
    local new_entity = @record{ entity_id: GenerationalIndex }
    local VlCollection = @record{}
 
-   ## for i, name in ipairs(component_names) do
-      ## new_entity.value:add_field(name .. '_id', GenerationalIndex.value)
+   ## for i = 1, #components_context do
+      ##[[
+         local name, _type, storage, mask = unpack_components_context(i)
+         local name_id = name..'_id'
+         local name_vl = name..'_vl'
+         local get_name =  'get_'..name
+      ]]
 
-      ## local _type = component_types[i].value
-      ## staticassert(traits.is_type(_type) and _type.is_component, "type %s is not a component", _type)
+      ## new_entity.value:add_field(name_id, GenerationalIndex.value)
+      ## VlCollection.value:add_field(name_vl, _type)
 
-      ## VlCollection.value:add_field(name .. '_vl', _type)
-
-      function new_entity:#|'get_'..name|#(storage: Storage(#[_type]#)*): pointer(#[_type]#)
-         local possible_result = storage:get_entry(self.#|name..'_id'|#)
+      function new_entity:#|get_name|#(storage: pointer(Storage(#[_type]#))): pointer(#[_type]#)
+         local possible_result = storage:get_entry(self.#|name_id|#)
          check(possible_result.filled, #[name .. ' is not associated with entity!']#)
          local result = possible_result:get()
          return result
@@ -37,11 +76,19 @@
       local entity_id, entity = entity_storage:new_entry(Entity.new())
       result.entity_id = entity_id
 
-      ## for i, name in ipairs(component_names) do
-         ## local _type = component_types[i]
-         ## local name_id = name..'_id'
+      ## for i = 1, #components_context do
+         ##[[
+            local name, _type, storage, mask = unpack_components_context(i)
+            local name_id = name..'_id'
+            local name_vl = name..'_vl'
 
-         local #|name_id|#, #|name|# = #[_type]#.associate(values.#|name..'_vl'|#, entity)
+            local storage_symstr = storage:sub( 1, (storage:find'%.' - 1) )
+            local mask_symstr = mask:sub( 1, (mask:find'%.' - 1) )
+         ]]
+
+         local #|name_id|#, #|name_vl|# = #|storage_symstr|#.#|name|#:new_entry(values.#|name_vl|#)
+         entity:associate(#|name_id|#, #|mask_symstr|#.#|name|#)
+
          result.#|name_id|# = #|name_id|#
       ## end
 
@@ -194,7 +241,3 @@ global System = @record{
 global MakeSystem = #[make_system]#
 
 -- ] system maker ]
-
--- [ component maker [
-
--- ] component maker ]

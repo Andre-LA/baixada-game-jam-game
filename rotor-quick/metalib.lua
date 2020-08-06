@@ -2,6 +2,13 @@ local tabler = require 'nelua.utils.tabler'
 
 local metalib = {}
 
+function metalib.get_var_field_codestr(rec, fname)
+   -- check if this actually exists at compile time
+   assert(rec.type:get_field(fname), "field %s.%s don't exist", rec.nickname, fname)
+   local recname = assert(rec.name, 'rec.name is nil (rec is: %s)', rec)
+   return string.format('%s.%s', recname, fname)
+end
+
 function metalib.tableunion(a,b)
    local t={}
 
