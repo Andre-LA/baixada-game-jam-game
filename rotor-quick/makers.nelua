@@ -1,12 +1,12 @@
 ## local metalib = require 'rotor-quick.metalib'
 
--- [ mark as component [
+-- [ mark record as component [
 ##[[
-   function is_component(T)
-      T.value.is_component = true
+   function is_component(rec)
+      rec.value.is_component = true
    end
 ]]
--- ] mark as component ]
+-- ] mark record as component ]
 
 -- [ Entity maker [
 ## make_entity = hygienize(function(...)

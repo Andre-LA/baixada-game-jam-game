@@ -1,0 +1,107 @@
+require 'rotor-quick.makers'
+
+-- [ Position [
+global Position = @record{
+   position: Vector2
+} ## is_component(Position)
+-- ] Position ]
+
+-- [ Velocity [
+global Velocity = @record{
+   direction: Vector2,
+   speed: number
+} ## is_component(Velocity)
+-- ] Velocity ]
+
+-- [ Collider [
+global Collider = @record{
+   local_rect: Rectangle,
+   global_rect: Rectangle,
+   entity_id: GenerationalIndex,
+   entity_tag: EntityTag
+} ## is_component(Collider)
+
+local function get_center(r: Rectangle): Vector2
+   return (@Vector2){ r.x + r.width/2, r.y + r.height/2 }
+end
+
+function Collider:get_local_center():  Vector2 return get_center(self.local_rect) end
+function Collider:get_global_center(): Vector2 return get_center(self.global_rect) end
+
+function Collider:sync_with_position(position: Vector2)
+   self.global_rect.x = self.local_rect.x + position.x
+   self.global_rect.y = self.local_rect.y + position.y
+end
+-- ] Collider ]
+
+-- [ Collisions [
+global CollisionState = @enum {
+   None = 0,
+   Enter,
+   Stay
+}
+
+global Intersection = @record{
+   collider: Collider,
+   rect: Rectangle,
+   state: CollisionState
+}
+
+function Intersection:get_center(): Vector2 return get_center(self.rect) end
+
+function Intersection:contains_tag(mask: uinteger): boolean return mask & self.collider.entity_tag ~= 0 end
+
+function Intersection:get_direction(point: Vector2, tolerance: number): Vector2
+   local difference = point - self.collider:get_global_center()
+   return (@Vector2){
+      difference.x <= -tolerance and -1 or (difference.x >= tolerance and 1 or 0),
+      difference.y <= -tolerance and -1 or (difference.y >= tolerance and 1 or 0)
+   }
+end
+
+global Collisions = @record{
+   intersections: vector(Intersection),
+} ## is_component(Collisions)
+-- ] Collisions ]
+
+-- [ Sprite [
+global Sprite = @record{
+   sprite_sheet: Texture2D,
+   frame_index: uinteger,
+   frame_rect: Rectangle,
+   offset: Vector2,
+   visible: boolean
+} ## is_component(Sprite)
+-- ] Sprite ]
+
+-- [ Animations [
+global AnimationData = @record{
+   frame_indexes: vector(uinteger),
+   frame_duration: number
+}
+
+global Animations = @record{
+   animations: vector(AnimationData),
+   current_animation_index: uinteger,
+   current_frame_index: uinteger,
+   elapsed_time: number,
+   paused: boolean
+} ## is_component(Animations)
+
+function Animations:change_animation(animation_idx: uinteger)
+   if not self.paused and self.current_animation_index ~= animation_idx then
+      self.current_animation_index = animation_idx
+      self.current_frame_index = 0
+      self.elapsed_time = 0
+   end
+end
+-- ] Animations ]
+
+-- [ Obstacles [
+global Obstacles = @record{
+   mask: uinteger -- mask of entitytag
+} ## is_component(Obstacles)
+
+function Obstacles:add_obstacle(e_tag: EntityTag) self.mask = self.mask | e_tag end
+function Obstacles:remove_obstacle(e_tag: EntityTag) self.mask = self.mask ~ e_tag end
+-- ] Obstacles ]
