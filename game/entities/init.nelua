@@ -55,7 +55,7 @@ global PlayerEntity = #[make_entity{
    {'animations', Animations, ent_pp_quick.storages.animations, ent_pp_quick.masks.animations}
 }]#
 
-function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): PlayerEntity
+function PlayerEntity.create(pos: Vector2): PlayerEntity
    local pl_collider: Collider = {
       local_rect = { 8, 16 - 32, 16, 16},
       global_rect = { 8, 16 - 32, 16, 16},
@@ -89,7 +89,7 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
       paused = false
    }
 
-   local player_entity = PlayerEntity.new(
+   local player_entity, entity = PlayerEntity.new(
       storages.entity,
       {
          --[[player]]     {},
@@ -100,8 +100,7 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
          --[[collisions]] {},
          --[[sprite]]     pl_sprite,
          --[[animations]] pl_animations
-      },
-      untracked_ids
+      }
    )
 
    local position = player_entity:get_position(storages.position)
@@ -109,6 +108,8 @@ function PlayerEntity.create(pos: Vector2, untracked_ids: vector(GenerationalInd
 
    collider.entity_id = player_entity.entity_id
    collider:sync_with_position(position.position)
+
+   Game_Systems:update_all(entity)
 
    return player_entity
 end
@@ -119,13 +120,7 @@ global WallEntity = #[make_entity{
    {'sprite'  , Sprite  , ent_pp_quick.storages.sprite  , ent_pp_quick.masks.sprite},
 }]#
 
-function WallEntity.create(
-   pos: Vector2,
-   fi: uinteger,
-   col: Rectangle,
-   offset_mul: integer,
-   untracked_ids: vector(GenerationalIndex)*
-): WallEntity
+function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mul: integer): WallEntity
    local _col: Rectangle = {
       col.x, col.y - 32 * offset_mul,
       col.width, col.height
@@ -146,14 +141,13 @@ function WallEntity.create(
       visible = true,
    }
 
-   local wall_entity = WallEntity.new(
+   local wall_entity, entity = WallEntity.new(
       storages.entity,
       {
       --[[position]] { position = pos },
       --[[collider]] wall_collider,
       --[[sprite]]   wall_sprite,
-      },
-      untracked_ids
+      }
    )
 
    local position = wall_entity:get_position(storages.position)
@@ -161,6 +155,8 @@ function WallEntity.create(
 
    collider.entity_id = wall_entity.entity_id
    collider:sync_with_position(position.position)
+
+   Game_Systems:update_all(entity)
 
    return wall_entity
 end
@@ -175,7 +171,7 @@ global BoxEntity = #[make_entity{
    {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
 }]#
 
-function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(GenerationalIndex)*): BoxEntity
+function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
    local box_collider: Collider = {
       local_rect = { 0, 12 - 32, 32, 20},
       global_rect = { 0, 12 - 32, 32, 20},
@@ -191,7 +187,7 @@ function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(Gene
       visible = true,
    }
 
-   local box_entity = BoxEntity.new(
+   local box_entity, entity = BoxEntity.new(
       storages.entity,
       {
       --[[box]]        {},
@@ -201,8 +197,7 @@ function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(Gene
       --[[collider]]   box_collider,
       --[[collisions]] {},
       --[[sprite]]     box_sprite
-      },
-      untracked_ids
+      }
    )
 
    local position = box_entity:get_position(storages.position)
@@ -210,6 +205,8 @@ function BoxEntity.create(pos: Vector2, fi: uinteger, untracked_ids: vector(Gene
 
    collider.entity_id = box_entity.entity_id
    collider:sync_with_position(position.position)
+
+   Game_Systems:update_all(entity)
 
    return box_entity
 end
@@ -225,7 +222,7 @@ global GearEntity = #[make_entity{
    {'animations', Animations, ent_pp_quick.storages.animations, ent_pp_quick.masks.animations},
 }]#
 
-function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex)*): GearEntity
+function GearEntity.create(pos: Vector2): GearEntity
    local gear_collider: Collider = {
       local_rect = { 0, -32, 32, 32},
       global_rect = { 0, -32, 32, 32},
@@ -253,7 +250,7 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
       paused = true
    }
 
-   local gear_entity = GearEntity.new(
+   local gear_entity, entity = GearEntity.new(
       storages.entity,
       {
       --[[gear]]       { engaged = false },
@@ -264,8 +261,7 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
       --[[collisions]] {},
       --[[sprite]]     gear_sprite,
       --[[animations]] gear_animations,
-      },
-      untracked_ids
+      }
    )
 
    local position = gear_entity:get_position(storages.position)
@@ -273,6 +269,8 @@ function GearEntity.create(pos: Vector2, untracked_ids: vector(GenerationalIndex
 
    collider.entity_id = gear_entity.entity_id
    collider:sync_with_position(position.position)
+
+   Game_Systems:update_all(entity)
 
    return gear_entity
 end
@@ -285,7 +283,7 @@ global GearSlotEntity = #[make_entity{
    {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
 }]#
 
-function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: vector(GenerationalIndex)*): GearSlotEntity
+function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger): GearSlotEntity
    local gear_slot_collider: Collider = {
       local_rect = { 0, -32, 32, 32},
       global_rect = { 0, -23, 32, 32},
@@ -301,7 +299,7 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
       visible = true,
    }
 
-   local gear_slot_entity = GearSlotEntity.new(
+   local gear_slot_entity, entity = GearSlotEntity.new(
       storages.entity,
       {
       --[[gear_slot]] { slot_idx = slot_idx},
@@ -309,8 +307,7 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
       --[[collider]]  gear_slot_collider,
       --[[collisions]] {},
       --[[sprite]]    gear_slot_sprite,
-      },
-      untracked_ids
+      }
    )
 
    local position = gear_slot_entity:get_position(storages.position)
@@ -318,6 +315,8 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: 
 
    collider.entity_id = gear_slot_entity.entity_id
    collider:sync_with_position(position.position)
+
+   Game_Systems:update_all(entity)
 
    return gear_slot_entity
 end
@@ -330,7 +329,7 @@ global BridgeEntity = #[make_entity{
    {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
 }]#
 
-function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: vector(GenerationalIndex)*): BridgeEntity
+function BridgeEntity.create(pos: Vector2, slot_idx: uinteger): BridgeEntity
    local bridge_collider: Collider = {
       local_rect = { 0, 0, 32, 32},
       global_rect = { 0, 0, 32, 32},
@@ -346,7 +345,7 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
       visible = false,
    }
 
-   local bridge_entity = BridgeEntity.new(
+   local bridge_entity, entity = BridgeEntity.new(
       storages.entity,
       {
       --[[bridge]]     { slot_idx = slot_idx },
@@ -354,8 +353,7 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
       --[[collider]]   bridge_collider,
       --[[collisions]] {},
       --[[sprite]]     bridge_sprite,
-      },
-      untracked_ids
+      }
    )
 
    local position = bridge_entity:get_position(storages.position)
@@ -363,6 +361,8 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger, untracked_ids: ve
 
    collider.entity_id = bridge_entity.entity_id
    collider:sync_with_position(position.position)
+
+   Game_Systems:update_all(entity)
 
    return bridge_entity
 end

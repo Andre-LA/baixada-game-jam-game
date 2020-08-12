@@ -70,7 +70,7 @@
       end
    ## end
 
-   function new_entity.new(entity_storage: Storage(Entity)*, values: VlCollection, untracked_ids: vector(GenerationalIndex)*): new_entity
+   function new_entity.new(entity_storage: Storage(Entity)*, values: VlCollection): (new_entity, Entity*)
       local result: new_entity = {}
 
       local entity_id, entity = entity_storage:new_entry(Entity.new())
@@ -92,9 +92,7 @@
          result.#|name_id|# = #|name_id|#
       ## end
 
-      untracked_ids:push(entity_id)
-
-      return result
+      return result, entity
    end
 
    ## return new_entity
@@ -231,8 +229,8 @@ global System = @record{
       ## end
    end
 
-   function systemT:update(entity_storage: Storage(Entity)*, untracked_ids: vector(GenerationalIndex)*)
-      self.system.system_data:update(entity_storage, untracked_ids)
+   function systemT:update(entity: Entity*)
+      self.system.system_data:update(entity)
    end
 
    ## return systemT

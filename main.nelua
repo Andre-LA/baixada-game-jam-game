@@ -40,8 +40,7 @@ global Globals: record{
       width: integer,
       height: integer,
       title: stringview
-   },
-   untracked_ids: vector(GenerationalIndex),
+   }
 } = {
    dt = 0,
    player_input = {
@@ -60,12 +59,12 @@ global Globals: record{
       #[WIN_HEIGHT]# // 1,
       #[WIN_TITLE]#
    },
-   untracked_ids = {},
 }
 
-require 'game'
+require 'game.components'
+require 'game.systems'
 
-global Game_Systems: record{
+local GameSystems = @record{
    colliders_sync: CollidersSyncSystem,
    collision_detection: CollisionDetectionSystem,
 
@@ -87,7 +86,33 @@ global Game_Systems: record{
    show_collisions: ShowCollisionsSystem,
    show_obstacles: ShowObstaclesSystem,
    show_positions: ShowPositionsSystem,
-} = {
+}
+
+function GameSystems:update_all(entity: Entity*)
+   self.colliders_sync.system.system_data:update(entity)
+   self.collision_detection.system.system_data:update(entity)
+
+   self.box_controller.system.system_data:update(entity)
+   self.gear_controller.system.system_data:update(entity)
+   self.player_controller.system.system_data:update(entity)
+
+   self.engage_system.system.system_data:update(entity)
+   self.bridge_system.system.system_data:update(entity)
+
+   self.obstacles_system.system.system_data:update(entity)
+   self.velocity_system.system.system_data:update(entity)
+
+   self.animation.system.system_data:update(entity)
+
+   self.sprite_painter.system.system_data:update(entity)
+
+   self.show_colliders.system.system_data:update(entity)
+   self.show_collisions.system.system_data:update(entity)
+   self.show_obstacles.system.system_data:update(entity)
+   self.show_positions.system.system_data:update(entity)
+end
+
+global Game_Systems: GameSystems = {
    colliders_sync = CollidersSyncSystem.new(),
    collision_detection = CollisionDetectionSystem.new(),
 
@@ -111,9 +136,11 @@ global Game_Systems: record{
    show_positions = ShowPositionsSystem.new(),
 }
 
+-- ] Main game records ]
+
+require 'game.entities'
 require 'game.tilemap_creator'
 require 'game.levels'
--- ] Main game records ]
 
 local function update_player_input_values()
    local right_is_down = Raylib.IsKeyDown(KeyboardKey.KEY_D) or Raylib.IsKeyDown(KeyboardKey.KEY_RIGHT) or Raylib.IsKeyDown(KeyboardKey.KEY_L)
@@ -136,38 +163,8 @@ end
 Raylib.InitWindow(Globals.game_window.width, Globals.game_window.height, Globals.game_window.title)
 resources:load()
 
-local function update_system(system: System*)
-   system.system_data:update(storages.entity, Globals.untracked_ids)
-end
-
-local function update_all_systems()
-   update_system(Game_Systems.colliders_sync.system)
-   update_system(Game_Systems.collision_detection.system)
-
-   update_system(Game_Systems.box_controller.system)
-   update_system(Game_Systems.gear_controller.system)
-   update_system(Game_Systems.player_controller.system)
-
-   update_system(Game_Systems.engage_system.system)
-   update_system(Game_Systems.bridge_system.system)
-
-   update_system(Game_Systems.obstacles_system.system)
-   update_system(Game_Systems.velocity_system.system)
-
-   update_system(Game_Systems.animation.system)
-
-   update_system(Game_Systems.sprite_painter.system)
-
-   update_system(Game_Systems.show_colliders.system)
-   update_system(Game_Systems.show_collisions.system)
-   update_system(Game_Systems.show_obstacles.system)
-   update_system(Game_Systems.show_positions.system)
-end
-
-local player_entity = PlayerEntity.create({ #[PL_POS_X * 32]#, #[PL_POS_Y * 32]# }, Globals.untracked_ids)
+local player_entity = PlayerEntity.create({ #[PL_POS_X * 32]#, #[PL_POS_Y * 32]# })
 create_level({ 32*8, 32*3 })
-
-update_all_systems()
 
 -- ] Game initialization ]
 

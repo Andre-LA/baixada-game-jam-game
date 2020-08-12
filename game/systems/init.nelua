@@ -212,7 +212,7 @@ end
 
 -- TODO: Optimize this
 function CollisionDetectionRunner:run(collider: Collider*, collisions: Collisions*, system_data: SystemData*)
-   for i = 0, < storages.collider.len do
+   for i = 0, < #storages.collider.generations do
       if storages.collider.generations[i].filled then
          local collider_i = storages.collider.entries[i]
 

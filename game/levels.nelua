@@ -169,9 +169,5 @@ global function create_level(
       { WTP7, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP3, WTP8, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
    }
 
-   create_tiles(
-      origin,
-      tilemap,
-      Globals.untracked_ids
-   )
+   create_tiles(origin, tilemap)
 end
