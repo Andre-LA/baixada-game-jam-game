@@ -1,4 +1,4 @@
--- require 'string'
+require 'string'
 
 global GenerationalIndex = @record{
    index: isize,
@@ -9,6 +9,6 @@ function GenerationalIndex.__eq(gidx1: GenerationalIndex, gidx2: GenerationalInd
    return gidx1.index == gidx2.index and gidx1.generation == gidx2.generation
 end
 
--- function GenerationalIndex:__tostring(): string
---    return '(@GenerationalIndex){ index = ' .. self.index .. ', generation = ' .. self.generation .. '}'
--- end
+function GenerationalIndex:__tostring(): string
+   return '(@GenerationalIndex){ index = ' .. self.index .. ', generation = ' .. self.generation .. '}'
+end

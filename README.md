@@ -19,8 +19,6 @@ This project also uses these bundled libraries:
 * [Raylib-nelua][raylib-nelua-repo-mirror]
 * [Rotor-nelua][rotor-nelua-repo-mirror]
 
-(note: this project uses a modified version of Rotor)
-
 ## Play the Game!
 
 [JAM version on itch.io][itch-io-page]  
