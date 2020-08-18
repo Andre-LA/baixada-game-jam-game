@@ -6,53 +6,15 @@ require 'game.components'
 require 'game.resources'
 require 'rotor-quick.makers'
 
-##[[
-   -- the entity maker will render the returned string using name replacement ( #||# )
-   local get_var_field_codestr = require ('rotor-quick.metalib').get_var_field_codestr
-
-   local ent_pp_quick = {
-      storages = {
-         entity = get_var_field_codestr(storages, 'entity'),
-         player = get_var_field_codestr(storages, 'player'),
-         gear = get_var_field_codestr(storages, 'gear'),
-         gear_slot = get_var_field_codestr(storages, 'gear_slot'),
-         bridge = get_var_field_codestr(storages, 'bridge'),
-         box = get_var_field_codestr(storages, 'box'),
-         position = get_var_field_codestr(storages, 'position'),
-         velocity = get_var_field_codestr(storages, 'velocity'),
-         collider = get_var_field_codestr(storages, 'collider'),
-         collisions = get_var_field_codestr(storages, 'collisions'),
-         sprite = get_var_field_codestr(storages, 'sprite'),
-         animations = get_var_field_codestr(storages, 'animations'),
-         obstacles = get_var_field_codestr(storages, 'obstacles'),
-      },
-      masks = {
-         entity = get_var_field_codestr(component_masks, 'entity'),
-         player = get_var_field_codestr(component_masks, 'player'),
-         gear = get_var_field_codestr(component_masks, 'gear'),
-         gear_slot = get_var_field_codestr(component_masks, 'gear_slot'),
-         bridge = get_var_field_codestr(component_masks, 'bridge'),
-         box = get_var_field_codestr(component_masks, 'box'),
-         position = get_var_field_codestr(component_masks, 'position'),
-         velocity = get_var_field_codestr(component_masks, 'velocity'),
-         collider = get_var_field_codestr(component_masks, 'collider'),
-         collisions = get_var_field_codestr(component_masks, 'collisions'),
-         sprite = get_var_field_codestr(component_masks, 'sprite'),
-         animations = get_var_field_codestr(component_masks, 'animations'),
-         obstacles = get_var_field_codestr(component_masks, 'obstacles'),
-      }
-   }
-]]
-
 global PlayerEntity = #[make_entity{
-   {'player'    , Player    , ent_pp_quick.storages.player    , ent_pp_quick.masks.player},
-   {'position'  , Position  , ent_pp_quick.storages.position  , ent_pp_quick.masks.position},
-   {'velocity'  , Velocity  , ent_pp_quick.storages.velocity  , ent_pp_quick.masks.velocity},
-   {'obstacles' , Obstacles , ent_pp_quick.storages.obstacles , ent_pp_quick.masks.obstacles},
-   {'collider'  , Collider  , ent_pp_quick.storages.collider  , ent_pp_quick.masks.collider},
-   {'collisions', Collisions, ent_pp_quick.storages.collisions, ent_pp_quick.masks.collisions},
-   {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
-   {'animations', Animations, ent_pp_quick.storages.animations, ent_pp_quick.masks.animations}
+   {'player'    , Player    },
+   {'position'  , Position  },
+   {'velocity'  , Velocity  },
+   {'obstacles' , Obstacles },
+   {'collider'  , Collider  },
+   {'collisions', Collisions},
+   {'sprite'    , Sprite    },
+   {'animations', Animations},
 }]#
 
 function PlayerEntity.create(pos: Vector2): PlayerEntity
@@ -115,9 +77,9 @@ function PlayerEntity.create(pos: Vector2): PlayerEntity
 end
 
 global WallEntity = #[make_entity{
-   {'position', Position, ent_pp_quick.storages.position, ent_pp_quick.masks.position},
-   {'collider', Collider, ent_pp_quick.storages.collider, ent_pp_quick.masks.collider},
-   {'sprite'  , Sprite  , ent_pp_quick.storages.sprite  , ent_pp_quick.masks.sprite},
+   {'position', Position},
+   {'collider', Collider},
+   {'sprite'  , Sprite  },
 }]#
 
 function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mul: integer): WallEntity
@@ -162,13 +124,13 @@ function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mu
 end
 
 global BoxEntity = #[make_entity{
-   {'box'       , Box       , ent_pp_quick.storages.box       , ent_pp_quick.masks.box},
-   {'position'  , Position  , ent_pp_quick.storages.position  , ent_pp_quick.masks.position},
-   {'velocity'  , Velocity  , ent_pp_quick.storages.velocity  , ent_pp_quick.masks.velocity},
-   {'obstacles' , Obstacles , ent_pp_quick.storages.obstacles , ent_pp_quick.masks.obstacles},
-   {'collider'  , Collider  , ent_pp_quick.storages.collider  , ent_pp_quick.masks.collider},
-   {'collisions', Collisions, ent_pp_quick.storages.collisions, ent_pp_quick.masks.collisions},
-   {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
+   {'box'       , Box       },
+   {'position'  , Position  },
+   {'velocity'  , Velocity  },
+   {'obstacles' , Obstacles },
+   {'collider'  , Collider  },
+   {'collisions', Collisions},
+   {'sprite'    , Sprite    },
 }]#
 
 function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
@@ -212,14 +174,14 @@ function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
 end
 
 global GearEntity = #[make_entity{
-   {'gear'      , Gear      , ent_pp_quick.storages.gear      , ent_pp_quick.masks.gear},
-   {'position'  , Position  , ent_pp_quick.storages.position  , ent_pp_quick.masks.position},
-   {'velocity'  , Velocity  , ent_pp_quick.storages.velocity  , ent_pp_quick.masks.velocity},
-   {'obstacles' , Obstacles , ent_pp_quick.storages.obstacles , ent_pp_quick.masks.obstacles},
-   {'collider'  , Collider  , ent_pp_quick.storages.collider  , ent_pp_quick.masks.collider},
-   {'collisions', Collisions, ent_pp_quick.storages.collisions, ent_pp_quick.masks.collisions},
-   {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
-   {'animations', Animations, ent_pp_quick.storages.animations, ent_pp_quick.masks.animations},
+   {'gear'      , Gear      },
+   {'position'  , Position  },
+   {'velocity'  , Velocity  },
+   {'obstacles' , Obstacles },
+   {'collider'  , Collider  },
+   {'collisions', Collisions},
+   {'sprite'    , Sprite    },
+   {'animations', Animations},
 }]#
 
 function GearEntity.create(pos: Vector2): GearEntity
@@ -276,11 +238,11 @@ function GearEntity.create(pos: Vector2): GearEntity
 end
 
 global GearSlotEntity = #[make_entity{
-   {'gear_slot' , GearSlot  , ent_pp_quick.storages.gear_slot , ent_pp_quick.masks.gear_slot},
-   {'position'  , Position  , ent_pp_quick.storages.position  , ent_pp_quick.masks.position},
-   {'collider'  , Collider  , ent_pp_quick.storages.collider  , ent_pp_quick.masks.collider},
-   {'collisions', Collisions, ent_pp_quick.storages.collisions, ent_pp_quick.masks.collisions},
-   {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
+   {'gear_slot' , GearSlot  },
+   {'position'  , Position  },
+   {'collider'  , Collider  },
+   {'collisions', Collisions},
+   {'sprite'    , Sprite    },
 }]#
 
 function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger): GearSlotEntity
@@ -322,11 +284,11 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger): GearSlotEntity
 end
 
 global BridgeEntity = #[make_entity{
-   {'bridge'    , Bridge    , ent_pp_quick.storages.bridge    , ent_pp_quick.masks.bridge},
-   {'position'  , Position  , ent_pp_quick.storages.position  , ent_pp_quick.masks.position},
-   {'collider'  , Collider  , ent_pp_quick.storages.collider  , ent_pp_quick.masks.collider},
-   {'collisions', Collisions, ent_pp_quick.storages.collisions, ent_pp_quick.masks.collisions},
-   {'sprite'    , Sprite    , ent_pp_quick.storages.sprite    , ent_pp_quick.masks.sprite},
+   {'bridge'    , Bridge    },
+   {'position'  , Position  },
+   {'collider'  , Collider  },
+   {'collisions', Collisions},
+   {'sprite'    , Sprite    },
 }]#
 
 function BridgeEntity.create(pos: Vector2, slot_idx: uinteger): BridgeEntity

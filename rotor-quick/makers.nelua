@@ -22,7 +22,7 @@
       end
 
       local function assert_comp_ctx(n, i)
-         local t = {'string', 'type', 'string', 'string'}
+         local t = {'string', 'type'}
          local is_trait = traits[ 'is_'..t[n] ]
 
          local comp_ctx_n = components_context[i][n]
@@ -41,10 +41,7 @@
          local _type = assert_comp_ctx(2, i)
          staticassert(_type.is_component, '%s is not a component!', _type)
 
-         local storage = assert_comp_ctx(3, i)
-         local mask = assert_comp_ctx(4, i)
-
-         return name, _type, storage, mask
+         return name, _type
       end
    ]]
 
@@ -53,7 +50,7 @@
 
    ## for i = 1, #components_context do
       ##[[
-         local name, _type, storage, mask = unpack_components_context(i)
+         local name, _type = unpack_components_context(i)
          local name_id = name..'_id'
          local name_vl = name..'_vl'
          local get_name =  'get_'..name
@@ -78,16 +75,13 @@
 
       ## for i = 1, #components_context do
          ##[[
-            local name, _type, storage, mask = unpack_components_context(i)
+            local name, _type = unpack_components_context(i)
             local name_id = name..'_id'
             local name_vl = name..'_vl'
-
-            local storage_symstr = storage:sub( 1, (storage:find'%.' - 1) )
-            local mask_symstr = mask:sub( 1, (mask:find'%.' - 1) )
          ]]
 
-         local #|name_id|#, #|name_vl|# = #|storage_symstr|#.#|name|#:new_entry(values.#|name_vl|#)
-         entity:associate(#|name_id|#, #|mask_symstr|#.#|name|#)
+         local #|name_id|#, #|name_vl|# = storages.#|name|#:new_entry(values.#|name_vl|#)
+         entity:associate(#|name_id|#, component_masks.#|name|#)
 
          result.#|name_id|# = #|name_id|#
       ## end
