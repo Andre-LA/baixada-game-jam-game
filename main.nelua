@@ -6,6 +6,7 @@ require 'allocators.gc'
 ## end
 require 'vector'
 require 'rotor'
+require 'rotor-quick.components'
 require 'game.resources'
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
@@ -62,6 +63,72 @@ global Globals: record{
 }
 
 require 'game.components'
+
+-- [ storages [
+global storages: record{
+   entity: Storage(Entity),
+   player: Storage(Player),
+   gear: Storage(Gear),
+   gear_slot: Storage(GearSlot),
+   bridge: Storage(Bridge),
+   box: Storage(Box),
+   position: Storage(Position),
+   velocity: Storage(Velocity),
+   collider: Storage(Collider),
+   collisions: Storage(Collisions),
+   sprite: Storage(Sprite),
+   animations: Storage(Animations),
+   obstacles: Storage(Obstacles),
+} = {
+   entity = (@Storage(Entity)).new(),
+   player = (@Storage(Player)).new(),
+   gear = (@Storage(Gear)).new(),
+   gear_slot = (@Storage(GearSlot)).new(),
+   bridge = (@Storage(Bridge)).new(),
+   box = (@Storage(Box)).new(),
+   position = (@Storage(Position)).new(),
+   velocity = (@Storage(Velocity)).new(),
+   collider = (@Storage(Collider)).new(),
+   collisions = (@Storage(Collisions)).new(),
+   sprite = (@Storage(Sprite)).new(),
+   animations = (@Storage(Animations)).new(),
+   obstacles = (@Storage(Obstacles)).new(),
+}
+-- ] storages ]
+
+-- [ component masks [
+global component_masks: record{
+   entity: BitsetArray,     --    1
+   player: BitsetArray,     --    2
+   gear: BitsetArray,       --    4
+   gear_slot: BitsetArray,  --    8
+   bridge: BitsetArray,     --   16
+   box: BitsetArray,        --   32
+   position: BitsetArray,   --   64
+   velocity: BitsetArray,   --  128
+   collider: BitsetArray,   --  256
+   collisions: BitsetArray, --  512
+   sprite: BitsetArray,     -- 1024
+   animations: BitsetArray, -- 2048
+   obstacles: BitsetArray,  -- 4096
+} = {
+   entity = bitset_array.lshift(BITSETARRAY_OF_ONE,     0), --    1
+   player = bitset_array.lshift(BITSETARRAY_OF_ONE,     1), --    2
+   gear = bitset_array.lshift(BITSETARRAY_OF_ONE,       2), --    4
+   gear_slot = bitset_array.lshift(BITSETARRAY_OF_ONE,  3), --    8
+   bridge = bitset_array.lshift(BITSETARRAY_OF_ONE,     4), --   16
+   box = bitset_array.lshift(BITSETARRAY_OF_ONE,        5), --   32
+   position = bitset_array.lshift(BITSETARRAY_OF_ONE,   6), --   64
+   velocity = bitset_array.lshift(BITSETARRAY_OF_ONE,   7), --  128
+   collider = bitset_array.lshift(BITSETARRAY_OF_ONE,   8), --  256
+   collisions = bitset_array.lshift(BITSETARRAY_OF_ONE, 9), --  512
+   sprite = bitset_array.lshift(BITSETARRAY_OF_ONE,    10), -- 1024
+   animations = bitset_array.lshift(BITSETARRAY_OF_ONE,11), -- 2048
+   obstacles = bitset_array.lshift(BITSETARRAY_OF_ONE, 12), -- 4096
+}
+-- ] component masks ]
+
+require 'rotor-quick.systems'
 require 'game.systems'
 
 local GameSystems = @record{

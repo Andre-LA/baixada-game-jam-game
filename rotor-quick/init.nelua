@@ -1,3 +1,0 @@
-require 'rotor-quick.entities'
-require 'rotor-quick.components'
-require 'rotor-quick.systems'

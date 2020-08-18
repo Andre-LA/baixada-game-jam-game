@@ -18,7 +18,7 @@ global Collider = @record{
    local_rect: Rectangle,
    global_rect: Rectangle,
    entity_id: GenerationalIndex,
-   entity_tag: EntityTag
+   entity_tag: uinteger
 } ## is_component(Collider)
 
 local function get_center(r: Rectangle): Vector2
@@ -102,6 +102,6 @@ global Obstacles = @record{
    mask: uinteger -- mask of entitytag
 } ## is_component(Obstacles)
 
-function Obstacles:add_obstacle(e_tag: EntityTag) self.mask = self.mask | e_tag end
-function Obstacles:remove_obstacle(e_tag: EntityTag) self.mask = self.mask ~ e_tag end
+function Obstacles:add_obstacle(e_tag: uinteger) self.mask = self.mask | e_tag end
+function Obstacles:remove_obstacle(e_tag: uinteger) self.mask = self.mask ~ e_tag end
 -- ] Obstacles ]
