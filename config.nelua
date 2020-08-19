@@ -1,6 +1,10 @@
 ##[[
 -- default options
-DEFAULT_LANG = DEFAULT_LANG or 'pt-BR'
+DEFAULT_LANG = DEFAULT_LANG or 'en-US'
+if DEFAULT_LANG ~= 'pt-BR' and DEFAULT_LANG ~= 'en-US' then
+   print('language "' .. DEFAULT_LANG .. '" is not available, using en-US')
+   DEFAULT_LANG = 'en-US'
+end
 
 WIN_WIDTH = WIN_WIDTH or 800
 WIN_HEIGHT = WIN_HEIGHT or 600
