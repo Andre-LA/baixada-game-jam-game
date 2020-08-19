@@ -240,7 +240,7 @@ local function update_draw_frame()
    local player_position_opt = storages.position:get_entry(player_entity.position_id)
    local player_position: Position* = player_position_opt:get()
 
-   local game_finalized = player_position.position.y < 400
+   local game_finalized = player_position.position.y < 2600
 
    -- [ Update [
    Globals.dt = Raylib.GetFrameTime()
