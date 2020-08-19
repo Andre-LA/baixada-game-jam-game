@@ -152,7 +152,7 @@ function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
    local box_entity, entity = BoxEntity.new(
       storages.entity,
       {
-      --[[box]]        {},
+      --[[box]]        { start_position = pos },
       --[[position]]   { position = pos },
       --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
       --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Player | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
@@ -215,7 +215,7 @@ function GearEntity.create(pos: Vector2): GearEntity
    local gear_entity, entity = GearEntity.new(
       storages.entity,
       {
-      --[[gear]]       { engaged = false },
+      --[[gear]]       { engaged = false, start_position = pos },
       --[[position]]   { position = pos },
       --[[velocity]]   { direction = { 0, 0 }, speed = 2 },
       --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Box | EntityTag.Player | EntityTag.GearSlot | EntityTag.ClosedBridge },
