@@ -11,9 +11,44 @@ require 'game.resources'
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
-local TXT_TEXT_PT_BR: stringview <const> = "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
-local TXT_TEXT_EN_US: stringview <const> = "After so much effort, the princess\ncan finally escape this \nterrible prison!"
-local txt_text: stringview = #[DEFAULT_LANG]# == 'en-US' and TXT_TEXT_EN_US or TXT_TEXT_PT_BR
+local Language  = @enum {en_US = 0, pt_BR = 1}
+local current_lang: Language = #[DEFAULT_LANG]# == 'en-US' and Language.en_US or Language.pt_BR
+
+local txt_text: stringview[2] <const> = {
+   "After so much effort, the princess\ncan finally escape this \nterrible prison!",
+   "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
+}
+
+local txt_credits: stringview[2] <const> = {
+[[ == Castle Escape ==
+
+Made by:
+- André Luiz Alvares: Game programmer
+- Leonardo Santos: Pixel artist
+
+Special Thanks!
+- Eduardo Bart: Helped us with the web building
+
+Technologies used:
+- Nelua Programming language
+- Raylib Game framework
+- Rotor (ECS library for Nelua)
+]],
+[[ == Fuga do Castelo ==
+
+Feito por:
+- André Luiz Alvares: Programador do jogo
+- Leonardo Santos: Artista de pixel
+
+Agradecimentos especiais!
+- Eduardo Bart: Nos ajudou com a build da web
+
+Tecnologias usadas:
+- Linguagem de programação Nelua
+- Arcabouço de jogos Raylib
+- Rotor (biblioteca de ECS para Nelua)
+]]
+}
 
 -- [ Main game records  and enums[
 global EntityTag = @enum {
@@ -37,6 +72,7 @@ global Globals: record{
    player_input: PlayerInput,
    engaged_slots: vector(boolean),
    camera: Camera2D,
+   finalized_camera: Camera2D,
    game_window: record{
       width: integer,
       height: integer,
@@ -52,6 +88,12 @@ global Globals: record{
    camera = {
       offset = { #[WIN_WIDTH / 2]#, #[WIN_HEIGHT / 2]#},
       target = { #[PL_POS_X * 32]#, #[PL_POS_Y * 32]# },
+      rotation = 0,
+      zoom = 2
+   },
+   finalized_camera = {
+      offset = { #[WIN_WIDTH / 2]#, #[WIN_HEIGHT / 2]#},
+      target = { 0, 0 },
       rotation = 0,
       zoom = 2
    },
@@ -240,7 +282,8 @@ local function update_draw_frame()
    local player_position_opt = storages.position:get_entry(player_entity.position_id)
    local player_position: Position* = player_position_opt:get()
 
-   local game_finalized = player_position.position.y < 2600
+   local pos_to_finalize <comptime> = 2600
+   local game_finalized = player_position.position.y < pos_to_finalize
 
    -- [ Update [
    Globals.dt = Raylib.GetFrameTime()
@@ -249,7 +292,13 @@ local function update_draw_frame()
       print('FPS: ' .. tostring(Raylib.GetFPS()))
    ## end
 
-   update_player_input_values()
+   if not game_finalized then
+      update_player_input_values()
+   else
+      local player_velocity_opt = storages.velocity:get_entry(player_entity.velocity_id)
+      local player_velocity: Velocity* = player_velocity_opt:get()
+      player_velocity.direction.y = 1
+   end
 
    Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
    Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
@@ -268,8 +317,15 @@ local function update_draw_frame()
 
    Globals.camera.target = player_position.position
 
+   player_position.position.y = math.max(0, player_position.position.y)
+
    if Raylib.IsKeyPressed(KeyboardKey.KEY_T) then
-      txt_text = txt_text == TXT_TEXT_EN_US and TXT_TEXT_PT_BR or TXT_TEXT_EN_US
+      switch current_lang
+      case Language.en_US then
+         current_lang = Language.pt_BR
+      case Language.pt_BR then
+         current_lang = Language.en_US
+      end
    end
 
    -- ] Update ]
@@ -279,7 +335,7 @@ local function update_draw_frame()
       Raylib.ClearBackground(BACKGROUND_COLOR)
 
       Raylib.BeginMode2D(Globals.camera)
-         Raylib.DrawText(txt_text, 32*26, 32*22, 20, RAYWHITE)
+         Raylib.DrawText(txt_text[current_lang], 32*25, 32*104, 16, RAYWHITE)
 
          Game_Systems.sprite_painter:run({&storages.sprite, &storages.position})
 
@@ -289,8 +345,61 @@ local function update_draw_frame()
             Game_Systems.show_obstacles:run({&storages.position, &storages.obstacles, &storages.collisions})
             Game_Systems.show_positions:run({&storages.position})
          ## end
-
       Raylib.EndMode2D()
+
+      if game_finalized then
+         local interval  <comptime> = 200
+         local fade1_len <comptime> = 500
+         local fade2_len <comptime> = 250
+         local fade3_len <comptime> = 500
+         local fade4_len <comptime> = 500
+
+         local rec_color1: Color = BLACK
+         local rec_color2: Color = WHITE
+         local rec_color3: Color = WHITE
+         local rec_color4: Color = DARKBROWN
+
+         do
+            local fade_posvl = player_position.position.y - (pos_to_finalize - fade1_len)
+            local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade1_len)) * 255)
+            rec_color1.a = fade_vl
+
+            Raylib.DrawRectangle(0, 0, Globals.game_window.width, Globals.game_window.height, rec_color1)
+         end
+
+         local pos_to_fade2 = pos_to_finalize - fade1_len - interval
+         if rec_color1.a == 255 and player_position.position.y < pos_to_fade2 then
+            local fade_posvl = player_position.position.y - (pos_to_fade2 - fade2_len)
+            local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade2_len)) * 255)
+            rec_color2.a = fade_vl
+
+            Raylib.DrawRectangle(0, 0, Globals.game_window.width, Globals.game_window.height, rec_color2)
+         end
+
+         local pos_to_fade3 = pos_to_fade2 - fade2_len
+         if rec_color1.a == 255 and player_position.position.y < pos_to_fade3 then
+            local fade_posvl = player_position.position.y - (pos_to_fade3 - fade3_len)
+            local a = 1.0 - math.max(0.0, fade_posvl / fade3_len)
+            local fade_vl = math.floor(a * 255)
+            rec_color3.a = fade_vl
+
+            Globals.finalized_camera.target = Vector2.Lerp({ 1100, 1000 }, { 800, 680 }, a)
+            Globals.finalized_camera.zoom = Raymath.Lerp(1, 0.5, a)
+
+            Raylib.BeginMode2D(Globals.finalized_camera)
+               Raylib.DrawTexture(resources.end_scene, 0, 0, rec_color3)
+            Raylib.EndMode2D()
+         end
+
+         local pos_to_fade4 = pos_to_fade3 - fade3_len + 150
+         if rec_color3.a == 255 and player_position.position.y < pos_to_fade4 then
+            local fade_posvl = player_position.position.y - (pos_to_fade4 - fade4_len)
+            local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade4_len)) * 255)
+            rec_color4.a = fade_vl
+
+            Raylib.DrawText(txt_credits[current_lang], 300, 20, 20, rec_color4)
+         end
+      end
    Raylib.EndDrawing()
    -- ] Draw ]
 
