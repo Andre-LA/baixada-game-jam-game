@@ -54,7 +54,6 @@ function SpritePainterRunner:before_all(system_data: SystemData*)
          end
       end
    end
-
 end
 
 function SpritePainterRunner:after_all(system_data: SystemData*)
@@ -214,7 +213,7 @@ end
 function CollisionDetectionRunner:run(collider: Collider*, collisions: Collisions*, system_data: SystemData*)
    for i = 0, < #storages.collider.generations do
       if storages.collider.generations[i].filled then
-         local collider_i = storages.collider.entries[i]
+         local collider_i: Collider* = storages.collider.entries[i]
 
          if collider.entity_id ~= collider_i.entity_id then
             local has_collision = Raylib.CheckCollisionRecs(collider.global_rect, collider_i.global_rect)
@@ -229,7 +228,7 @@ function CollisionDetectionRunner:run(collider: Collider*, collisions: Collision
                   intersection.rect = intersection_rect
                else
                   collisions.intersections:push({
-                     collider = collider_i,
+                     collider = $collider_i,
                      rect = intersection_rect,
                      state = CollisionState.Enter
                   })
