@@ -8,6 +8,8 @@ require 'vector'
 require 'rotor'
 require 'rotor-quick.components'
 require 'game.resources'
+require 'nprof'
+local nprof: NProf = {}
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
@@ -279,6 +281,8 @@ create_level({ 32*8, 32*3 })
 
 -- [ Game loop [
 local function update_draw_frame()
+   nprof:push'frame'
+
    local player_position_opt = storages.position:get_entry(player_entity.position_id)
    local player_position: Position* = player_position_opt:get()
 
@@ -300,20 +304,45 @@ local function update_draw_frame()
       player_velocity.direction.y = 1
    end
 
+   nprof:push'update systems'
+
+   nprof:push'colliders_sync'
    Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
+   nprof:pop()
+
+   nprof:push'collision_detection'
    Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
+   nprof:pop()
 
+   nprof:push'player_controller'
    Game_Systems.player_controller:run({&storages.player, &storages.velocity, &storages.animations})
+   nprof:pop()
+   nprof:push'box_controller'
    Game_Systems.box_controller:run({&storages.box, &storages.position, &storages.collisions, &storages.velocity})
+   nprof:pop()
+   nprof:push'gear_controller'
    Game_Systems.gear_controller:run({&storages.gear, &storages.collisions, &storages.velocity, &storages.position, &storages.animations})
+   nprof:pop()
 
+   nprof:push'engage_system'
    Game_Systems.engage_system:run({&storages.collisions, &storages.gear_slot})
+   nprof:pop()
+   nprof:push'bridge_system'
    Game_Systems.bridge_system:run({&storages.bridge, &storages.collider, &storages.sprite})
+   nprof:pop()
 
+   nprof:push'obstacles_system'
    Game_Systems.obstacles_system:run({&storages.obstacles, &storages.collisions, &storages.velocity})
+   nprof:pop()
+   nprof:push'velocity_system'
    Game_Systems.velocity_system:run({&storages.velocity, &storages.position})
+   nprof:pop()
 
+   nprof:push'animation'
    Game_Systems.animation:run({&storages.animations, &storages.sprite})
+   nprof:pop()
+
+   nprof:pop()
 
    Globals.camera.target = player_position.position
 
@@ -331,13 +360,17 @@ local function update_draw_frame()
    -- ] Update ]
 
    -- [ Draw [
+   nprof:push'drawing systems'
+
    Raylib.BeginDrawing()
       Raylib.ClearBackground(BACKGROUND_COLOR)
 
       Raylib.BeginMode2D(Globals.camera)
          Raylib.DrawText(txt_text[current_lang], 32*25, 32*104, 16, RAYWHITE)
 
+         nprof:push'sprite painter'
          Game_Systems.sprite_painter:run({&storages.sprite, &storages.position})
+         nprof:pop()
 
          ## if SHOW_DEV_INFO then
             Game_Systems.show_colliders:run({&storages.collider})
@@ -348,6 +381,8 @@ local function update_draw_frame()
       Raylib.EndMode2D()
 
       if game_finalized then
+         nprof:push'end game drawing'
+
          local interval  <comptime> = 200
          local fade1_len <comptime> = 500
          local fade2_len <comptime> = 250
@@ -383,7 +418,7 @@ local function update_draw_frame()
             local fade_vl = math.floor(a * 255)
             rec_color3.a = fade_vl
 
-            Globals.finalized_camera.target = Vector2.Lerp({ 1100, 1000 }, { 800, 680 }, a)
+            Globals.finalized_camera.target = Vector2.Lerp({ 1100, 1000 }, { 800, 600 }, a)
             Globals.finalized_camera.zoom = Raymath.Lerp(1, 0.5, a)
 
             Raylib.BeginMode2D(Globals.finalized_camera)
@@ -391,7 +426,7 @@ local function update_draw_frame()
             Raylib.EndMode2D()
          end
 
-         local pos_to_fade4 = pos_to_fade3 - fade3_len + 150
+         local pos_to_fade4 = pos_to_fade3 - fade3_len
          if rec_color3.a == 255 and player_position.position.y < pos_to_fade4 then
             local fade_posvl = player_position.position.y - (pos_to_fade4 - fade4_len)
             local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade4_len)) * 255)
@@ -399,13 +434,22 @@ local function update_draw_frame()
 
             Raylib.DrawText(txt_credits[current_lang], 300, 20, 20, rec_color4)
          end
+
+         nprof:pop()
       end
+
+      nprof:pop()
+
+      nprof:pop()
+      nprof:draw()
    Raylib.EndDrawing()
    -- ] Draw ]
 
    ## if PLATFORM_WEB then
       gc:run() -- safe to collect garbage here
    ## end
+
+   nprof:reset()
 end
 
 ## if PLATFORM_WEB then
