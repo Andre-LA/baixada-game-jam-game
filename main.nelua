@@ -8,8 +8,11 @@ require 'vector'
 require 'rotor'
 require 'rotor-quick.components'
 require 'game.resources'
-require 'nprof'
-local nprof: NProf = {}
+
+## if PROF then
+   require 'nprof'
+   local nprof: NProf = {}
+## end
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
@@ -281,7 +284,9 @@ create_level({ 32*8, 32*3 })
 
 -- [ Game loop [
 local function update_draw_frame()
-   nprof:push'frame'
+   ## if PROF then
+      nprof:push'frame'
+   ## end
 
    local player_position_opt = storages.position:get_entry(player_entity.position_id)
    local player_position: Position* = player_position_opt:get()
@@ -304,152 +309,207 @@ local function update_draw_frame()
       player_velocity.direction.y = 1
    end
 
-   nprof:push'update systems'
+   do --  [ Update [
+      ## if PROF then
+         nprof:push'update systems'
+         defer nprof:pop() end
+      ## end
 
-   nprof:push'colliders_sync'
-   Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
-   nprof:pop()
-
-   nprof:push'collision_detection'
-   Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
-   nprof:pop()
-
-   nprof:push'player_controller'
-   Game_Systems.player_controller:run({&storages.player, &storages.velocity, &storages.animations})
-   nprof:pop()
-   nprof:push'box_controller'
-   Game_Systems.box_controller:run({&storages.box, &storages.position, &storages.collisions, &storages.velocity})
-   nprof:pop()
-   nprof:push'gear_controller'
-   Game_Systems.gear_controller:run({&storages.gear, &storages.collisions, &storages.velocity, &storages.position, &storages.animations})
-   nprof:pop()
-
-   nprof:push'engage_system'
-   Game_Systems.engage_system:run({&storages.collisions, &storages.gear_slot})
-   nprof:pop()
-   nprof:push'bridge_system'
-   Game_Systems.bridge_system:run({&storages.bridge, &storages.collider, &storages.sprite})
-   nprof:pop()
-
-   nprof:push'obstacles_system'
-   Game_Systems.obstacles_system:run({&storages.obstacles, &storages.collisions, &storages.velocity})
-   nprof:pop()
-   nprof:push'velocity_system'
-   Game_Systems.velocity_system:run({&storages.velocity, &storages.position})
-   nprof:pop()
-
-   nprof:push'animation'
-   Game_Systems.animation:run({&storages.animations, &storages.sprite})
-   nprof:pop()
-
-   nprof:pop()
-
-   Globals.camera.target = player_position.position
-
-   player_position.position.y = math.max(0, player_position.position.y)
-
-   if Raylib.IsKeyPressed(KeyboardKey.KEY_T) then
-      switch current_lang
-      case Language.en_US then
-         current_lang = Language.pt_BR
-      case Language.pt_BR then
-         current_lang = Language.en_US
-      end
-   end
-
-   -- ] Update ]
-
-   -- [ Draw [
-   nprof:push'drawing systems'
-
-   Raylib.BeginDrawing()
-      Raylib.ClearBackground(BACKGROUND_COLOR)
-
-      Raylib.BeginMode2D(Globals.camera)
-         Raylib.DrawText(txt_text[current_lang], 32*25, 32*104, 16, RAYWHITE)
-
-         nprof:push'sprite painter'
-         Game_Systems.sprite_painter:run({&storages.sprite, &storages.position})
-         nprof:pop()
-
-         ## if SHOW_DEV_INFO then
-            Game_Systems.show_colliders:run({&storages.collider})
-            Game_Systems.show_collisions:run({&storages.position, &storages.collisions})
-            Game_Systems.show_obstacles:run({&storages.position, &storages.obstacles, &storages.collisions})
-            Game_Systems.show_positions:run({&storages.position})
+      do -- [ colliders_sync [
+         ## if PROF then
+            nprof:push'colliders_sync'
+            defer nprof:pop() end
          ## end
-      Raylib.EndMode2D()
+         Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
+      end -- ] colliders_sync ]
 
-      if game_finalized then
-         nprof:push'end game drawing'
+      do -- [ collision_detection [
+         ## if PROF then
+            nprof:push'collision_detection'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
+      end -- ] collision_detection ]
 
-         local interval  <comptime> = 200
-         local fade1_len <comptime> = 500
-         local fade2_len <comptime> = 250
-         local fade3_len <comptime> = 500
-         local fade4_len <comptime> = 500
+      do  -- [ player_controller [
+         ## if PROF then
+            nprof:push'player_controller'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.player_controller:run({&storages.player, &storages.velocity, &storages.animations})
+      end -- ] player_controller ]
 
-         local rec_color1: Color = BLACK
-         local rec_color2: Color = WHITE
-         local rec_color3: Color = WHITE
-         local rec_color4: Color = DARKBROWN
+      do -- [ box_controller [
+         ## if PROF then
+            nprof:push'box_controller'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.box_controller:run({&storages.box, &storages.position, &storages.collisions, &storages.velocity})
+      end -- ] box_controller ]
 
-         do
-            local fade_posvl = player_position.position.y - (pos_to_finalize - fade1_len)
-            local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade1_len)) * 255)
-            rec_color1.a = fade_vl
+      do -- [ gear_controller [
+         ## if PROF then
+            nprof:push'gear_controller'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.gear_controller:run({&storages.gear, &storages.collisions, &storages.velocity, &storages.position, &storages.animations})
+      end -- ] gear_controller ]
 
-            Raylib.DrawRectangle(0, 0, Globals.game_window.width, Globals.game_window.height, rec_color1)
+      do -- [ engage_system [
+         ## if PROF then
+            nprof:push'engage_system'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.engage_system:run({&storages.collisions, &storages.gear_slot})
+      end -- ] engage_system ]
+
+      do -- [ bridge_system [
+         ## if PROF then
+            nprof:push'bridge_system'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.bridge_system:run({&storages.bridge, &storages.collider, &storages.sprite})
+      end -- ] bridge_system ]
+
+      do -- [ obstacles_system [
+         ## if PROF then
+            nprof:push'obstacles_system'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.obstacles_system:run({&storages.obstacles, &storages.collisions, &storages.velocity})
+      end -- ] obstacles_system ]
+
+      do -- [ velocity_system [
+         ## if PROF then
+            nprof:push'velocity_system'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.velocity_system:run({&storages.velocity, &storages.position})
+      end -- ] velocity_system ]
+
+      do  -- [ animation [
+         ## if PROF then
+            nprof:push'animation'
+            defer nprof:pop() end
+         ## end
+         Game_Systems.animation:run({&storages.animations, &storages.sprite})
+      end -- ] animation ]
+
+      Globals.camera.target = player_position.position
+
+      player_position.position.y = math.max(0, player_position.position.y)
+
+      if Raylib.IsKeyPressed(KeyboardKey.KEY_T) then
+         switch current_lang
+         case Language.en_US then
+            current_lang = Language.pt_BR
+         case Language.pt_BR then
+            current_lang = Language.en_US
          end
-
-         local pos_to_fade2 = pos_to_finalize - fade1_len - interval
-         if rec_color1.a == 255 and player_position.position.y < pos_to_fade2 then
-            local fade_posvl = player_position.position.y - (pos_to_fade2 - fade2_len)
-            local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade2_len)) * 255)
-            rec_color2.a = fade_vl
-
-            Raylib.DrawRectangle(0, 0, Globals.game_window.width, Globals.game_window.height, rec_color2)
-         end
-
-         local pos_to_fade3 = pos_to_fade2 - fade2_len
-         if rec_color1.a == 255 and player_position.position.y < pos_to_fade3 then
-            local fade_posvl = player_position.position.y - (pos_to_fade3 - fade3_len)
-            local a = 1.0 - math.max(0.0, fade_posvl / fade3_len)
-            local fade_vl = math.floor(a * 255)
-            rec_color3.a = fade_vl
-
-            Globals.finalized_camera.target = Vector2.Lerp({ 1100, 1000 }, { 800, 600 }, a)
-            Globals.finalized_camera.zoom = Raymath.Lerp(1, 0.5, a)
-
-            Raylib.BeginMode2D(Globals.finalized_camera)
-               Raylib.DrawTexture(resources.end_scene, 0, 0, rec_color3)
-            Raylib.EndMode2D()
-         end
-
-         local pos_to_fade4 = pos_to_fade3 - fade3_len
-         if rec_color3.a == 255 and player_position.position.y < pos_to_fade4 then
-            local fade_posvl = player_position.position.y - (pos_to_fade4 - fade4_len)
-            local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade4_len)) * 255)
-            rec_color4.a = fade_vl
-
-            Raylib.DrawText(txt_credits[current_lang], 300, 20, 20, rec_color4)
-         end
-
-         nprof:pop()
       end
+   end -- ] Update ]
 
-      nprof:pop()
+   do -- [ Draw [
+      ## if PROF then
+         nprof:push'drawing systems'
+      ## end
 
-      nprof:pop()
-      nprof:draw()
-   Raylib.EndDrawing()
-   -- ] Draw ]
+
+      Raylib.BeginDrawing()
+         Raylib.ClearBackground(BACKGROUND_COLOR)
+
+         Raylib.BeginMode2D(Globals.camera)
+            Raylib.DrawText(txt_text[current_lang], 32*25, 32*104, 16, RAYWHITE)
+
+            do -- [ sprite_painter [
+               ## if PROF then
+                  nprof:push'sprite painter'
+                  defer nprof:pop() end
+               ## end
+               Game_Systems.sprite_painter:run({&storages.sprite, &storages.position})
+            end -- ] sprite_painter ]
+
+            ## if SHOW_DEV_INFO then
+               Game_Systems.show_colliders:run({&storages.collider})
+               Game_Systems.show_collisions:run({&storages.position, &storages.collisions})
+               Game_Systems.show_obstacles:run({&storages.position, &storages.obstacles, &storages.collisions})
+               Game_Systems.show_positions:run({&storages.position})
+            ## end
+         Raylib.EndMode2D()
+
+         if game_finalized then
+            do
+               ## if PROF then
+                  nprof:push'end game drawing'
+                  defer nprof:pop() end
+               ## end
+
+               local interval  <comptime> = 200
+               local fade1_len <comptime> = 500
+               local fade2_len <comptime> = 250
+               local fade3_len <comptime> = 500
+               local fade4_len <comptime> = 500
+
+               local rec_color1: Color = BLACK
+               local rec_color2: Color = WHITE
+               local rec_color3: Color = WHITE
+               local rec_color4: Color = DARKBROWN
+
+               do
+                  local fade_posvl = player_position.position.y - (pos_to_finalize - fade1_len)
+                  local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade1_len)) * 255)
+                  rec_color1.a = fade_vl
+
+                  Raylib.DrawRectangle(0, 0, Globals.game_window.width, Globals.game_window.height, rec_color1)
+               end
+
+               local pos_to_fade2 = pos_to_finalize - fade1_len - interval
+               if rec_color1.a == 255 and player_position.position.y < pos_to_fade2 then
+                  local fade_posvl = player_position.position.y - (pos_to_fade2 - fade2_len)
+                  local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade2_len)) * 255)
+                  rec_color2.a = fade_vl
+
+                  Raylib.DrawRectangle(0, 0, Globals.game_window.width, Globals.game_window.height, rec_color2)
+               end
+
+               local pos_to_fade3 = pos_to_fade2 - fade2_len
+               if rec_color1.a == 255 and player_position.position.y < pos_to_fade3 then
+                  local fade_posvl = player_position.position.y - (pos_to_fade3 - fade3_len)
+                  local a = 1.0 - math.max(0.0, fade_posvl / fade3_len)
+                  local fade_vl = math.floor(a * 255)
+                  rec_color3.a = fade_vl
+
+                  Globals.finalized_camera.target = Vector2.Lerp({ 1100, 1000 }, { 800, 600 }, a)
+                  Globals.finalized_camera.zoom = Raymath.Lerp(1, 0.5, a)
+
+                  Raylib.BeginMode2D(Globals.finalized_camera)
+                     Raylib.DrawTexture(resources.end_scene, 0, 0, rec_color3)
+                  Raylib.EndMode2D()
+               end
+
+               local pos_to_fade4 = pos_to_fade3 - fade3_len
+               if rec_color3.a == 255 and player_position.position.y < pos_to_fade4 then
+                  local fade_posvl = player_position.position.y - (pos_to_fade4 - fade4_len)
+                  local fade_vl = math.floor((1.0 - math.max(0.0, fade_posvl / fade4_len)) * 255)
+                  rec_color4.a = fade_vl
+
+                  Raylib.DrawText(txt_credits[current_lang], 300, 20, 20, rec_color4)
+               end
+            end
+         end
+
+         ## if PROF then
+            nprof:pop()
+            nprof:pop()
+            nprof:draw()
+            nprof:reset()
+         ## end
+      Raylib.EndDrawing()
+   end -- ] Draw ]
 
    ## if PLATFORM_WEB then
       gc:run() -- safe to collect garbage here
    ## end
-
-   nprof:reset()
 end
 
 ## if PLATFORM_WEB then

@@ -39,6 +39,7 @@ Options:
 * `PL_VEL: number`: any number (default is 2)
 * `SHOW_DEV_INFO`: just define it to use
 * `PRINT_FPS`: just define it to use
+* `PROF`: (requires [nprof][nprof-repository]) just define it to use
 
 Example:
 `$ nelua -r "-D DEFAULT_LANG='pt-BR'" -D WIN_WIDTH=800 main.nelua`
@@ -58,3 +59,4 @@ Example:
 
 [raylib-nelua-repo-mirror]: https://github.com/Andre-LA/raylib-nelua-mirror/
 [rotor-nelua-repo-mirror]: https://github.com/Andre-LA/Rotor-nelua/
+[nprof-repository]: https://github.com/Andre-LA/nprof/
