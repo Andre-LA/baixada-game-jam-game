@@ -69,7 +69,7 @@ function PlayerEntity.create(pos: Vector2): PlayerEntity
    local collider = player_entity:get_collider(storages.collider)
 
    collider.entity_id = player_entity.entity_id
-   collider:sync_with_position(position.position)
+   collider:init_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -116,7 +116,7 @@ function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mu
    local collider = wall_entity:get_collider(storages.collider)
 
    collider.entity_id = wall_entity.entity_id
-   collider:sync_with_position(position.position)
+   collider:init_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -166,7 +166,7 @@ function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
    local collider = box_entity:get_collider(storages.collider)
 
    collider.entity_id = box_entity.entity_id
-   collider:sync_with_position(position.position)
+   collider:init_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -230,7 +230,7 @@ function GearEntity.create(pos: Vector2): GearEntity
    local collider = gear_entity:get_collider(storages.collider)
 
    collider.entity_id = gear_entity.entity_id
-   collider:sync_with_position(position.position)
+   collider:init_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -276,7 +276,7 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger): GearSlotEntity
    local collider = gear_slot_entity:get_collider(storages.collider)
 
    collider.entity_id = gear_slot_entity.entity_id
-   collider:sync_with_position(position.position)
+   collider:init_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -322,7 +322,7 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger): BridgeEntity
    local collider = bridge_entity:get_collider(storages.collider)
 
    collider.entity_id = bridge_entity.entity_id
-   collider:sync_with_position(position.position)
+   collider:init_with_position(position.position)
 
    Game_Systems:update_all(entity)
 

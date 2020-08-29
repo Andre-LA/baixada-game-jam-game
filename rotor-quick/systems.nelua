@@ -215,7 +215,7 @@ function CollisionDetectionRunner:run(collider: Collider*, collisions: Collision
       if storages.collider.generations[i].filled then
          local collider_i: Collider* = storages.collider.entries[i]
 
-         if collider.entity_id ~= collider_i.entity_id then
+         if (collider.was_sync or collider_i.was_sync) and collider.entity_id ~= collider_i.entity_id then
             local has_collision = Raylib.CheckCollisionRecs(collider.global_rect, collider_i.global_rect)
             local possible_past_collision = is_past_collision(collisions.intersections, collider_i.entity_id)
 

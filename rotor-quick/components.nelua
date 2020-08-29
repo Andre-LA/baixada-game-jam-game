@@ -19,6 +19,7 @@ global Collider = @record{
    global_rect: Rectangle,
    entity_id: GenerationalIndex,
    entity_tag: uinteger,
+   was_sync: boolean,
 } ## is_component(Collider)
 
 local function get_center(r: Rectangle*): Vector2
@@ -29,8 +30,17 @@ function Collider:get_local_center():  Vector2 return get_center(self.local_rect
 function Collider:get_global_center(): Vector2 return get_center(self.global_rect) end
 
 function Collider:sync_with_position(position: Vector2)
+   local old_x, old_y = self.global_rect.x, self.global_rect.y
+
    self.global_rect.x = self.local_rect.x + position.x
    self.global_rect.y = self.local_rect.y + position.y
+
+   self.was_sync = old_x ~= self.global_rect.x or old_y ~= self.global_rect.y
+end
+
+function Collider:init_with_position(position: Vector2)
+   self:sync_with_position(position)
+   self.was_sync = false
 end
 -- ] Collider ]
 
