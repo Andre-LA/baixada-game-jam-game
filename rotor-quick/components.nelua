@@ -18,7 +18,7 @@ global Collider = @record{
    local_rect: Rectangle,
    global_rect: Rectangle,
    entity_id: GenerationalIndex,
-   entity_tag: uinteger
+   entity_tag: uinteger,
 } ## is_component(Collider)
 
 local function get_center(r: Rectangle*): Vector2

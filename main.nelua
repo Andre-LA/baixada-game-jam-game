@@ -1,5 +1,10 @@
+
 require 'config'
 require 'raylib'
+## if PROF then
+   require 'nprof'
+   global nprof: NProf = {}
+## end
 require 'allocators.gc'
 ## if PLATFORM_WEB then
    gc:pause() -- conservative GCs cannot run automatically with emscripten
@@ -9,10 +14,6 @@ require 'rotor'
 require 'rotor-quick.components'
 require 'game.resources'
 
-## if PROF then
-   require 'nprof'
-   local nprof: NProf = {}
-## end
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
@@ -430,10 +431,17 @@ local function update_draw_frame()
             end -- ] sprite_painter ]
 
             ## if SHOW_DEV_INFO then
-               Game_Systems.show_colliders:run({&storages.collider})
-               Game_Systems.show_collisions:run({&storages.position, &storages.collisions})
-               Game_Systems.show_obstacles:run({&storages.position, &storages.obstacles, &storages.collisions})
-               Game_Systems.show_positions:run({&storages.position})
+               do -- [ Dev Info [
+                  ## if PROF then
+                     nprof:push'dev info'
+                     defer nprof:pop() end
+                  ## end
+
+                  Game_Systems.show_colliders:run({&storages.collider})
+                  Game_Systems.show_collisions:run({&storages.position, &storages.collisions})
+                  Game_Systems.show_obstacles:run({&storages.position, &storages.obstacles, &storages.collisions})
+                  Game_Systems.show_positions:run({&storages.position})
+               end -- ] Dev Info ]
             ## end
          Raylib.EndMode2D()
 
