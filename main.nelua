@@ -62,6 +62,7 @@ global EntityTag = @enum {
    Gear = 32,
    ClosedBridge = 64,
    OpenBridge = 128,
+   Floor = 256,
 }
 
 global PlayerInput = @record{

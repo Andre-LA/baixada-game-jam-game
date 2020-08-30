@@ -57,25 +57,35 @@ local function is_floor(kind: TileKind): boolean
 end
 
 local function create_bridge(
-   origin: Vector2*,
+   origin: Vector2,
    i: integer,
    j: integer,
-   tile: Tile*
+   tile: Tile
 )
    local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 64}
    BridgeEntity.create(position, tile.kind - 100)
 end
 
 local function create_wall(
-   origin: Vector2*,
+   origin: Vector2,
    i: integer,
    j: integer,
-   tile: Tile*
+   tile: Tile
 )
    local offset_pos: Vector2 = {0, tile.offset_y}
    local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 32 }
 
    WallEntity.create(position + offset_pos, tile.kind, tile.collider_rect, tile.offset_mul)
+end
+
+local function create_floor(
+   origin: Vector2,
+   i: integer,
+   j: integer,
+   tile: Tile
+)
+   local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 32 }
+   FloorEntity.create(position, tile.kind)
 end
 
 local function create_gear_slot(
@@ -92,7 +102,7 @@ local function create_gear_slot(
 end
 
 local function create_gear(
-   origin: Vector2*,
+   origin: Vector2,
    i: integer,
    j: integer,
    tile: Tile
@@ -105,7 +115,7 @@ local function create_gear(
 end
 
 local function create_box(
-   origin: Vector2*,
+   origin: Vector2,
    i: integer,
    j: integer,
    tile: Tile
@@ -117,10 +127,7 @@ local function create_box(
    create_wall(origin, i, j, tile) -- a floor
 end
 
-global function create_tiles(
-   origin: Vector2,
-   tilemap: vector(vector(Tile))*
-)
+global function create_tiles(origin: Vector2, tilemap: vector(vector(Tile))*)
    for i = 0, < #tilemap do
       local tile_line = tilemap[i]
 
@@ -137,7 +144,7 @@ global function create_tiles(
          elseif is_wall(tile.kind) then
             create_wall(origin, i, j, tile)
          elseif is_floor(tile.kind) then
-            create_wall(origin, i, j, tile)
+            create_floor(origin, i, j, tile)
          end
       end
    end

@@ -76,6 +76,32 @@ function PlayerEntity.create(pos: Vector2): PlayerEntity
    return player_entity
 end
 
+global FloorEntity = #[make_entity{
+   {'position', Position},
+   {'sprite'  , Sprite  },
+}]#
+
+function FloorEntity.create(pos: Vector2, fi: uinteger): FloorEntity
+   local floor_sprite: Sprite = {
+      sprite_sheet = resources.tileset,
+      frame_index = fi,
+      frame_rect = { 0, 0, 32, 32 },
+      offset = { 0, -32 }
+   }
+
+   local floor_entity, entity = FloorEntity.new(
+      storages.entity,
+      {
+         --[[position]] { position = pos },
+         --[[sprite  ]] floor_sprite,
+      }
+   )
+
+   Game_Systems:update_all(entity)
+
+   return floor_entity
+end
+
 global WallEntity = #[make_entity{
    {'position', Position},
    {'collider', Collider},
