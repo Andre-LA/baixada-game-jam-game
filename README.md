@@ -38,7 +38,7 @@ Options:
 * `PL_POS_Y: number`: any number (default is 103)
 * `PL_VEL: number`: any number (default is 2)
 * `SHOW_DEV_INFO`: just define it to use
-* `PRINT_FPS`: just define it to use
+* `DRAW_FPS`: just define it to use
 * `PROF`: (requires [nprof][nprof-repository]) just define it to use
 
 Example:

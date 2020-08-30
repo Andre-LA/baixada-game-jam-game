@@ -294,9 +294,6 @@ local function update_draw_frame()
    -- [ Update [
    Globals.dt = Raylib.GetFrameTime()
 
-   ## if PRINT_FPS then
-      print('FPS: ' .. tostring(Raylib.GetFPS()))
-   ## end
 
    if not game_finalized then
       update_player_input_values()
@@ -328,7 +325,6 @@ local function update_draw_frame()
       Game_Systems.animation:run({&storages.animations, &storages.sprite})
 
       Globals.camera.target = player_position.position
-
       player_position.position.y = math.max(0, player_position.position.y)
 
       if Raylib.IsKeyPressed(KeyboardKey.KEY_T) then
@@ -436,6 +432,10 @@ local function update_draw_frame()
             nprof:pop()
             nprof:draw()
             nprof:reset()
+         ## end
+
+         ## if DRAW_FPS then
+            Raylib.DrawFPS( Globals.game_window.width-100, 20 )
          ## end
       Raylib.EndDrawing()
    end -- ] Draw ]
