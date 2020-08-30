@@ -1,9 +1,9 @@
 require 'vector'
 require 'game.tilemap_creator'
 
-local NONE: Tile <const> = { {0,0,0,0 }, 0, 0, TileKind.None }
-local GEAR: Tile <const> = { {0,0,0,0 }, 0, -32, TileKind.Gear }
-local  BOX: Tile <const> = { {0,0,0,0 }, 0, -32, TileKind.Box  }
+local NONE: Tile <const> = { {}, 0, 0, TileKind.None }
+local GEAR: Tile <const> = { {}, 0, -32, TileKind.Gear }
+local  BOX: Tile <const> = { {}, 0, -32, TileKind.Box  }
 
 ## local levels_count = 3
 
@@ -32,9 +32,9 @@ local WAFL: Tile <const> = { {0, 24, 32, 8}, 1, 0, TileKind.WallTL}
 local WAFC: Tile <const> = { {0, 24, 32, 8}, 1, 0, TileKind.WallTC}
 local WAFR: Tile <const> = { {0, 24, 32, 8}, 1, 0, TileKind.WallTR}
 
-local WTPL: Tile <const> = { { 0,0,0,0 }, 2, 32, TileKind.WallTop4}
-local WTPC: Tile <const> = { { 0,0,0,0 }, 2, 32, TileKind.WallTop3}
-local WTPR: Tile <const> = { { 0,0,0,0 }, 2, 32, TileKind.WallTop9}
+local WTPL: Tile <const> = { {}, 2, 32, TileKind.WallTop4}
+local WTPC: Tile <const> = { {}, 2, 32, TileKind.WallTop3}
+local WTPR: Tile <const> = { {}, 2, 32, TileKind.WallTop9}
 
 ## for i = 1, 3 do
    local #|'FLR'..i|#: Tile <const> = { {}, 0, -32, TileKind.#|'Floor'..i|# }
