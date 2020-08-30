@@ -86,7 +86,8 @@ function FloorEntity.create(pos: Vector2, fi: uinteger): FloorEntity
       sprite_sheet = resources.tileset,
       frame_index = fi,
       frame_rect = { 0, 0, 32, 32 },
-      offset = { 0, -32 }
+      offset = { 0, 0 },
+      visible = true
    }
 
    local floor_entity, entity = FloorEntity.new(

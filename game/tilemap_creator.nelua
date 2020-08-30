@@ -84,8 +84,10 @@ local function create_floor(
    j: integer,
    tile: Tile
 )
+   local offset_pos: Vector2 = {0, tile.offset_y}
    local position: Vector2 = { origin.x + 32 * j, (origin.y + 32 * i) - 32 }
-   FloorEntity.create(position, tile.kind)
+
+   FloorEntity.create(position + offset_pos, tile.kind)
 end
 
 local function create_gear_slot(
@@ -111,7 +113,7 @@ local function create_gear(
    GearEntity.create(position)
 
    tile.kind = TileKind.Floor2
-   create_wall(origin, i, j, tile) -- a floor
+   create_floor(origin, i, j, tile) -- a floor
 end
 
 local function create_box(
@@ -124,7 +126,7 @@ local function create_box(
    BoxEntity.create(position, TileKind.Box)
 
    tile.kind = TileKind.Floor2
-   create_wall(origin, i, j, tile) -- a floor
+   create_floor(origin, i, j, tile) -- a floor
 end
 
 global function create_tiles(origin: Vector2, tilemap: vector(vector(Tile))*)
