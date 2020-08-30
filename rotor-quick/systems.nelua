@@ -100,6 +100,7 @@ function CollidersSyncRunner:run(
    collider: Collider*,
    system_data: SystemData*
 )
+   collider.cycles_without_sync = collider.cycles_without_sync + 1
    collider:sync_with_position(position.position)
 end
 
@@ -211,11 +212,14 @@ end
 
 -- TODO: Optimize this
 function CollisionDetectionRunner:run(collider: Collider*, collisions: Collisions*, system_data: SystemData*)
+   local collider_was_recently_moved = not collider.is_immovable and collider.cycles_without_sync < 2
+
    for i = 0, < #storages.collider.generations do
       if storages.collider.generations[i].filled then
          local collider_i: Collider* = storages.collider.entries[i]
+         local collider_i_was_recently_moved = not collider_i.is_immovable and collider_i.cycles_without_sync < 2
 
-         if (collider.was_sync or collider_i.was_sync) and collider.entity_id ~= collider_i.entity_id then
+         if (collider_was_recently_moved or collider_i_was_recently_moved) and collider.entity_id ~= collider_i.entity_id then
             local has_collision = Raylib.CheckCollisionRecs(collider.global_rect, collider_i.global_rect)
             local possible_past_collision = is_past_collision(collisions.intersections, collider_i.entity_id)
 

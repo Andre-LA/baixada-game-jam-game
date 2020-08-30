@@ -69,7 +69,7 @@ function PlayerEntity.create(pos: Vector2): PlayerEntity
    local collider = player_entity:get_collider(storages.collider)
 
    collider.entity_id = player_entity.entity_id
-   collider:init_with_position(position.position)
+   collider:sync_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -119,7 +119,8 @@ function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mu
       local_rect = _col,
       global_rect = _col,
       entity_id = { -1, 0 },
-      entity_tag = EntityTag.Wall
+      entity_tag = EntityTag.Wall,
+      is_immovable = true,
    }
 
    local wall_sprite: Sprite = {
@@ -193,7 +194,7 @@ function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
    local collider = box_entity:get_collider(storages.collider)
 
    collider.entity_id = box_entity.entity_id
-   collider:init_with_position(position.position)
+   collider:sync_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -257,7 +258,7 @@ function GearEntity.create(pos: Vector2): GearEntity
    local collider = gear_entity:get_collider(storages.collider)
 
    collider.entity_id = gear_entity.entity_id
-   collider:init_with_position(position.position)
+   collider:sync_with_position(position.position)
 
    Game_Systems:update_all(entity)
 
@@ -277,7 +278,8 @@ function GearSlotEntity.create(pos: Vector2, slot_idx: uinteger): GearSlotEntity
       local_rect = { 0, -32, 32, 32},
       global_rect = { 0, -23, 32, 32},
       entity_id = { -1, 0 },
-      entity_tag = EntityTag.GearSlot
+      entity_tag = EntityTag.GearSlot,
+      is_immovable = true,
    }
 
    local gear_slot_sprite: Sprite = {
@@ -323,7 +325,8 @@ function BridgeEntity.create(pos: Vector2, slot_idx: uinteger): BridgeEntity
       local_rect = { 0, 0, 32, 32},
       global_rect = { 0, 0, 32, 32},
       entity_id = { -1, 0 },
-      entity_tag = EntityTag.ClosedBridge
+      entity_tag = EntityTag.ClosedBridge,
+      is_immovable = true,
    }
 
    local bridge_sprite: Sprite = {

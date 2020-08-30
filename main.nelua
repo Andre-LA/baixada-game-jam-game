@@ -295,7 +295,6 @@ local function update_draw_frame()
    -- [ Update [
    Globals.dt = Raylib.GetFrameTime()
 
-
    if not game_finalized then
       update_player_input_values()
    else
@@ -342,7 +341,6 @@ local function update_draw_frame()
       ## if PROF then
          nprof:push'drawing systems'
       ## end
-
 
       Raylib.BeginDrawing()
          Raylib.ClearBackground(BACKGROUND_COLOR)
