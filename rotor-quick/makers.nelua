@@ -213,13 +213,12 @@ global System = @record{
 
                   ##[[
                      local ids = metalib.create_id_nodes(aster, component_names)
+
                      table.insert(ids, aster.Id{'system_data'})
                      table.insert(ids, 1, aster.Id{'runner'})
 
-                     local run_call_node = metalib.create_call_node(aster, T, 'run', table.unpack(ids))
+                     inject_astnode(metalib.create_call_node(aster, T, 'run', table.unpack(ids)))
                   ]]
-
-                  ## ppcontext:add_statnode(run_call_node)
                else
                   self.system.system_data:mark_available(i)
                end
