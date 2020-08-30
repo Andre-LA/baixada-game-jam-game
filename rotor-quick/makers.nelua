@@ -1,4 +1,8 @@
 ## local metalib = require 'rotor-quick.metalib'
+## if PROF then
+require 'nprof'
+global nprof: NProf = {}
+## end
 
 -- [ mark record as component [
 ##[[
@@ -178,6 +182,11 @@ global System = @record{
    end
 
    function systemT:run(storages: storagesCollectionT)
+      ## if PROF then
+         nprof:push(#[systemT.value.nickname]#)
+         defer nprof:pop() end
+      ## end
+
       local runner: T* = self.runner
 
       ## if use_before then

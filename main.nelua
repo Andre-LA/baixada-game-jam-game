@@ -1,10 +1,6 @@
 
 require 'config'
 require 'raylib'
-## if PROF then
-   require 'nprof'
-   global nprof: NProf = {}
-## end
 require 'allocators.gc'
 ## if PLATFORM_WEB then
    gc:pause() -- conservative GCs cannot run automatically with emscripten
@@ -316,85 +312,20 @@ local function update_draw_frame()
          defer nprof:pop() end
       ## end
 
-      do -- [ colliders_sync [
-         ## if PROF then
-            nprof:push'colliders_sync'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
-      end -- ] colliders_sync ]
+      Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
+      Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
 
-      do -- [ collision_detection [
-         ## if PROF then
-            nprof:push'collision_detection'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
-      end -- ] collision_detection ]
+      Game_Systems.player_controller:run({&storages.player, &storages.velocity, &storages.animations})
+      Game_Systems.box_controller:run({&storages.box, &storages.position, &storages.collisions, &storages.velocity})
+      Game_Systems.gear_controller:run({&storages.gear, &storages.collisions, &storages.velocity, &storages.position, &storages.animations})
 
-      do  -- [ player_controller [
-         ## if PROF then
-            nprof:push'player_controller'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.player_controller:run({&storages.player, &storages.velocity, &storages.animations})
-      end -- ] player_controller ]
+      Game_Systems.engage_system:run({&storages.collisions, &storages.gear_slot})
+      Game_Systems.bridge_system:run({&storages.bridge, &storages.collider, &storages.sprite})
 
-      do -- [ box_controller [
-         ## if PROF then
-            nprof:push'box_controller'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.box_controller:run({&storages.box, &storages.position, &storages.collisions, &storages.velocity})
-      end -- ] box_controller ]
+      Game_Systems.obstacles_system:run({&storages.obstacles, &storages.collisions, &storages.velocity})
+      Game_Systems.velocity_system:run({&storages.velocity, &storages.position})
 
-      do -- [ gear_controller [
-         ## if PROF then
-            nprof:push'gear_controller'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.gear_controller:run({&storages.gear, &storages.collisions, &storages.velocity, &storages.position, &storages.animations})
-      end -- ] gear_controller ]
-
-      do -- [ engage_system [
-         ## if PROF then
-            nprof:push'engage_system'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.engage_system:run({&storages.collisions, &storages.gear_slot})
-      end -- ] engage_system ]
-
-      do -- [ bridge_system [
-         ## if PROF then
-            nprof:push'bridge_system'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.bridge_system:run({&storages.bridge, &storages.collider, &storages.sprite})
-      end -- ] bridge_system ]
-
-      do -- [ obstacles_system [
-         ## if PROF then
-            nprof:push'obstacles_system'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.obstacles_system:run({&storages.obstacles, &storages.collisions, &storages.velocity})
-      end -- ] obstacles_system ]
-
-      do -- [ velocity_system [
-         ## if PROF then
-            nprof:push'velocity_system'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.velocity_system:run({&storages.velocity, &storages.position})
-      end -- ] velocity_system ]
-
-      do  -- [ animation [
-         ## if PROF then
-            nprof:push'animation'
-            defer nprof:pop() end
-         ## end
-         Game_Systems.animation:run({&storages.animations, &storages.sprite})
-      end -- ] animation ]
+      Game_Systems.animation:run({&storages.animations, &storages.sprite})
 
       Globals.camera.target = player_position.position
 
@@ -422,13 +353,7 @@ local function update_draw_frame()
          Raylib.BeginMode2D(Globals.camera)
             Raylib.DrawText(txt_text[current_lang], 32*25, 32*104, 16, RAYWHITE)
 
-            do -- [ sprite_painter [
-               ## if PROF then
-                  nprof:push'sprite painter'
-                  defer nprof:pop() end
-               ## end
-               Game_Systems.sprite_painter:run({&storages.sprite, &storages.position})
-            end -- ] sprite_painter ]
+            Game_Systems.sprite_painter:run({&storages.sprite, &storages.position})
 
             ## if SHOW_DEV_INFO then
                do -- [ Dev Info [
