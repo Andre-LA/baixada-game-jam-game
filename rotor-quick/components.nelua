@@ -121,3 +121,10 @@ global Obstacles = @record{
 function Obstacles:add_obstacle(e_tag: uinteger) self.mask = self.mask | e_tag end
 function Obstacles:remove_obstacle(e_tag: uinteger) self.mask = self.mask ~ e_tag end
 -- ] Obstacles ]
+
+-- [ Follower [
+global Follower = @record{
+   followed_id: GenerationalIndex,
+   offset: Vector2,
+} ## is_component(Follower)
+-- ] Follower ]

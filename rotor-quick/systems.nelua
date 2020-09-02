@@ -294,4 +294,20 @@ global VelocitySystem = @MakeSystem(VelocityRunner, false, true, false, 1, recor
    position: Position,
 })
 
+global FollowerRunner = @record{}
+
+function FollowerRunner:run(follower: Follower*, position: Position*, system_data: SystemData*)
+   local opt_followed_position = storages.position:get_entry(follower.followed_id)
+
+   if opt_followed_position.filled then
+      local followed_position: Position* = opt_followed_position:get()
+
+      position.position = followed_position.position + follower.offset;
+   end
+end
+
+global FollowerSystem = @MakeSystem(FollowerRunner, false, true, false, 1, record{
+   follower: Follower,
+   position: Position
+})
 -- ] rotor-quick systems ]

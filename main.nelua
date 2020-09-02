@@ -1,4 +1,3 @@
-
 require 'config'
 require 'raylib'
 require 'allocators.gc'
@@ -9,7 +8,6 @@ require 'vector'
 require 'rotor'
 require 'rotor-quick.components'
 require 'game.resources'
-
 
 local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 
@@ -124,6 +122,7 @@ global storages: record{
    sprite: Storage(Sprite),
    animations: Storage(Animations),
    obstacles: Storage(Obstacles),
+   follower: Storage(Follower),
 } = {
    entity = (@Storage(Entity)).new(),
    player = (@Storage(Player)).new(),
@@ -138,6 +137,7 @@ global storages: record{
    sprite = (@Storage(Sprite)).new(),
    animations = (@Storage(Animations)).new(),
    obstacles = (@Storage(Obstacles)).new(),
+   follower = (@Storage(Follower)).new(),
 }
 -- ] storages ]
 
@@ -156,6 +156,7 @@ global component_masks: record{
    sprite: BitsetArray,     -- 1024
    animations: BitsetArray, -- 2048
    obstacles: BitsetArray,  -- 4096
+   follower: BitsetArray,   -- 8192
 } = {
    entity = bitset_array.lshift(BITSETARRAY_OF_ONE,     0), --    1
    player = bitset_array.lshift(BITSETARRAY_OF_ONE,     1), --    2
@@ -170,6 +171,7 @@ global component_masks: record{
    sprite = bitset_array.lshift(BITSETARRAY_OF_ONE,    10), -- 1024
    animations = bitset_array.lshift(BITSETARRAY_OF_ONE,11), -- 2048
    obstacles = bitset_array.lshift(BITSETARRAY_OF_ONE, 12), -- 4096
+   follower = bitset_array.lshift(BITSETARRAY_OF_ONE,  13), -- 8192
 }
 -- ] component masks ]
 
@@ -177,6 +179,8 @@ require 'rotor-quick.systems'
 require 'game.systems'
 
 local GameSystems = @record{
+   follower_system: FollowerSystem,
+
    colliders_sync: CollidersSyncSystem,
    collision_detection: CollisionDetectionSystem,
 
@@ -201,6 +205,8 @@ local GameSystems = @record{
 }
 
 function GameSystems:update_all(entity: Entity*)
+   self.follower_system.system.system_data:update(entity)
+
    self.colliders_sync.system.system_data:update(entity)
    self.collision_detection.system.system_data:update(entity)
 
@@ -225,6 +231,8 @@ function GameSystems:update_all(entity: Entity*)
 end
 
 global Game_Systems: GameSystems = {
+   follower_system = FollowerSystem.new(),
+
    colliders_sync = CollidersSyncSystem.new(),
    collision_detection = CollisionDetectionSystem.new(),
 
@@ -308,6 +316,8 @@ local function update_draw_frame()
          nprof:push'update systems'
          defer nprof:pop() end
       ## end
+
+      Game_Systems.follower_system:run({&storages.follower, &storages.position})
 
       Game_Systems.colliders_sync:run({&storages.position, &storages.velocity, &storages.collider})
       Game_Systems.collision_detection:run({&storages.collider, &storages.collisions})
