@@ -17,20 +17,56 @@ function PlayerControllerRunner:run(
 )
    velocity.direction = Globals.player_input.direction
 
-   if #Globals.player_input.direction < 0.1 then
-      animations:change_animation(0)
-   elseif math.abs(Globals.player_input.direction.x) > math.abs(Globals.player_input.direction.y) then -- horizontal movement
-      if Globals.player_input.action then -- L/R push
-         animations:change_animation(Globals.player_input.direction.x < 0 and 8 or 7)
-      else -- L/R walk
-         animations:change_animation(Globals.player_input.direction.x < 0 and 4 or 3)
+   if #Globals.player_input.direction < 0.1 and not Globals.player_input.action then
+      animations:change_animation(PlayerAnimations.Idle)
+   else
+      local current_animation = animations.current_animation_index
+      local animation_to_use = current_animation
+
+      local input_mov_is_horizontal = math.abs(Globals.player_input.direction.x) > math.abs(Globals.player_input.direction.y)
+      local input_mov_is_vertical = not input_mov_is_horizontal
+
+      if Globals.player_input.action then
+         local current_animation_is_vertical_push = (
+            current_animation == PlayerAnimations.PushUp or
+            current_animation == PlayerAnimations.PushDown
+         )
+
+         local current_animation_is_horizontal_push = (
+            current_animation == PlayerAnimations.PushLeft or
+            current_animation == PlayerAnimations.PushRight
+         )
+
+         if input_mov_is_horizontal and not current_animation_is_vertical_push then -- L/R push
+            if Globals.player_input.direction.x < 0 and current_animation ~= PlayerAnimations.PushRight then
+               animation_to_use = PlayerAnimations.PushLeft
+            elseif current_animation ~= PlayerAnimations.PushLeft then
+               animation_to_use = PlayerAnimations.PushRight
+            end
+         elseif input_mov_is_vertical and not current_animation_is_horizontal_push then -- U/D push
+            if Globals.player_input.direction.y < 0 and  current_animation ~= PlayerAnimations.PushDown then
+               animation_to_use = PlayerAnimations.PushUp
+            elseif current_animation ~= PlayerAnimations.PushUp then
+               animation_to_use = PlayerAnimations.PushDown
+            end
+         end
+      else -- is movement
+         if input_mov_is_horizontal then -- L/R walk
+            if Globals.player_input.direction.x < 0 then
+               animation_to_use = PlayerAnimations.WalkLeft
+            else
+               animation_to_use = PlayerAnimations.WalkRight
+            end--
+         else -- U/D walk
+            if Globals.player_input.direction.y < 0 then
+               animation_to_use = PlayerAnimations.WalkUp
+            else
+               animation_to_use = PlayerAnimations.WalkDown
+            end
+         end
       end
-   else -- vertical movement
-      if Globals.player_input.action then -- U/D push
-         animations:change_animation(Globals.player_input.direction.y < 0 and 6 or 5)
-      else -- U/D walk
-         animations:change_animation(Globals.player_input.direction.y < 0 and 2 or 1)
-      end
+
+      animations:change_animation(animation_to_use)
    end
 end
 
@@ -57,6 +93,7 @@ function BoxControllerRunner:run(
    if Globals.player_input.action and #collisions.intersections > 0 then
       for j = 0, < #collisions.intersections do
          local intersection: Intersection* = collisions.intersections[j]
+
          if intersection:contains_tag(EntityTag.Player) then
             velocity.direction = Globals.player_input.direction
             break

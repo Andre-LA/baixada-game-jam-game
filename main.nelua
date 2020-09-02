@@ -51,6 +51,19 @@ Tecnologias usadas:
 }
 
 -- [ Main game records  and enums[
+
+global PlayerAnimations = @enum {
+   Idle = 0,
+   WalkDown,
+   WalkUp,
+   WalkRight,
+   WalkLeft,
+   PushDown,
+   PushUp,
+   PushRight,
+   PushLeft,
+}
+
 global EntityTag = @enum {
    Player = 1,
    TileMap = 2,
