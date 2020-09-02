@@ -74,6 +74,7 @@ global EntityTag = @enum {
    ClosedBridge = 64,
    OpenBridge = 128,
    Floor = 256,
+   BoxCollider = 512,
 }
 
 global PlayerInput = @record{

@@ -57,7 +57,7 @@ function PlayerEntity.create(pos: Vector2): PlayerEntity
          --[[player]]     {},
          --[[position]]   { position = pos },
          --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
-         --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Box | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
+         --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.BoxCollider | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
          --[[collider]]   pl_collider,
          --[[collisions]] {},
          --[[sprite]]     pl_sprite,
@@ -151,6 +151,49 @@ function WallEntity.create(pos: Vector2, fi: uinteger, col: Rectangle, offset_mu
    return wall_entity
 end
 
+global BoxColliderEntity = #[make_entity{
+   {'position'  , Position},
+   {'velocity'  , Velocity},
+   {'collider'  , Collider},
+   {'follower'  , Follower},
+}]#
+
+function BoxColliderEntity.create(pos: Vector2, followed_id: GenerationalIndex): BoxColliderEntity
+   local pl_vel <comptime> = #[PL_VEL]#
+
+   local box_col_collider: Collider = {
+      local_rect = { pl_vel, 12 - 32 + pl_vel, 32 - (pl_vel*2), 20 - (pl_vel*2)},
+      global_rect = { pl_vel, 12 - 32 + pl_vel, 32 - (pl_vel*2), 20 - (pl_vel*2)},
+      entity_id = { -1, 0 },
+      entity_tag = EntityTag.BoxCollider
+   }
+
+   local box_col_follower: Follower = {
+      followed_id = followed_id,
+      offset = { 0, 0 },
+   }
+
+   local box_col_entity, entity = BoxColliderEntity.new(
+      storages.entity,
+      {
+      --[[position]]  { position = pos },
+      --[[velocity]]  {},
+      --[[collider]]  box_col_collider,
+      --[[follower]]  box_col_follower,
+      }
+   )
+
+   local position = box_col_entity:get_position(storages.position)
+   local collider = box_col_entity:get_collider(storages.collider)
+
+   collider.entity_id = box_col_entity.entity_id
+   collider:sync_with_position(position.position)
+
+   Game_Systems:update_all(entity)
+
+   return box_col_entity
+end
+
 global BoxEntity = #[make_entity{
    {'box'       , Box       },
    {'position'  , Position  },
@@ -183,7 +226,7 @@ function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
       --[[box]]        { start_position = pos },
       --[[position]]   { position = pos },
       --[[velocity]]   { direction = { 0, 0 }, speed = #[PL_VEL]# },
-      --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Player | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
+      --[[obstacles]]  { mask = EntityTag.Wall | EntityTag.Gear | EntityTag.GearSlot | EntityTag.ClosedBridge },
       --[[collider]]   box_collider,
       --[[collisions]] {},
       --[[sprite]]     box_sprite
@@ -195,6 +238,8 @@ function BoxEntity.create(pos: Vector2, fi: uinteger): BoxEntity
 
    collider.entity_id = box_entity.entity_id
    collider:sync_with_position(position.position)
+
+   BoxColliderEntity.create(pos, box_entity.entity_id)
 
    Game_Systems:update_all(entity)
 
