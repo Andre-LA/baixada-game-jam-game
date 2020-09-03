@@ -1,6 +1,8 @@
 # Baixada Santista Game Jam
 Game made for [Baixada Game Jam][BGJ-website], written in [Nelua][nelua-website] using [Raylib][raylib-website]
 
+![Castle Game Preview GIF](preview.gif)
+
 ## Creators
 
 * [André Luiz Alvares][andre_la-github]: programmer
@@ -44,9 +46,6 @@ Options:
 Example:
 `$ nelua -r "-D DEFAULT_LANG='pt-BR'" -D WIN_WIDTH=800 main.nelua`
 
-# Preview
-
-![Castle Game Preview GIF](preview.gif)
 
 [BGJ-website]: https://itch.io/jam/baixada-gamejam/
 [itch-io-page]: https://andre-la.itch.io/castle-escape/
