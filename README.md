@@ -3,6 +3,11 @@ Game made for [Baixada Game Jam][BGJ-website], written in [Nelua][nelua-website]
 
 ![Castle Game Preview GIF](preview.gif)
 
+## Play
+
+[JAM version on itch.io][itch-io-page]  
+[post-JAM version on github][github-page]
+
 ## Creators
 
 * [André Luiz Alvares][andre_la-github]: programmer
@@ -21,10 +26,6 @@ This project also uses these bundled libraries:
 * [Raylib-nelua][raylib-nelua-repo-mirror]
 * [Rotor-nelua][rotor-nelua-repo-mirror]
 
-## Play the Game!
-
-[JAM version on itch.io][itch-io-page]  
-[post-JAM version on github][github-page]
 
 ## Build and run
 
