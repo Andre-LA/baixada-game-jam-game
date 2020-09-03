@@ -1,5 +1,5 @@
-# Baixada Santista Game Jam
-Game made for [Baixada Game Jam][BGJ-website], written in [Nelua][nelua-website] using [Raylib][raylib-website]
+# Castle Escape
+Game originally made for [Baixada Game Jam][BGJ-website], written in [Nelua][nelua-website] using [Raylib][raylib-website]
 
 ![Castle Game Preview GIF](preview.gif)
 
