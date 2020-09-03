@@ -44,6 +44,10 @@ Options:
 Example:
 `$ nelua -r "-D DEFAULT_LANG='pt-BR'" -D WIN_WIDTH=800 main.nelua`
 
+# Screenshot
+
+![Castle Game screenshot](screenshot.png)
+
 [BGJ-website]: https://itch.io/jam/baixada-gamejam/
 [itch-io-page]: https://andre-la.itch.io/castle-escape/
 [github-page]: https://andre-la.github.io/baixada-game-jam-game/index.html
