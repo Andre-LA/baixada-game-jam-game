@@ -26,7 +26,7 @@ if compiler.get_cc_info().is_emscripten then
    cflags '-s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s TOTAL_MEMORY=40632320'
    cflags '-I/home/andre_la/Downloads/git/nelua-projs/nelua-raylib/raylib-3.0.0/build/src/ /home/andre_la/Downloads/git/nelua-projs/nelua-raylib/raylib-3.0.0/build/src/libraylib.bc'
    cflags '--preload-file resources'
-   cflags '--shell-file ./shell.html'
+   cflags '--shell-file ./docs/extra/shell.html'
 else
   linklib 'raylib'
 end
