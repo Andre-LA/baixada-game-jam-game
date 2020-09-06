@@ -23,7 +23,7 @@ global Collider = @record{
    is_immovable: boolean
 } ## is_component(Collider)
 
-local function get_center(r: Rectangle*): Vector2
+local function get_center(r: *Rectangle): Vector2
    return (@Vector2){ r.x + r.width/2, r.y + r.height/2 }
 end
 

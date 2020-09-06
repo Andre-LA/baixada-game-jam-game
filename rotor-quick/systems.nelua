@@ -11,7 +11,7 @@ global SpritePainterRunner = @record{
    sorted: boolean,
 }
 
-function SpritePainterRunner:before_all(system_data: SystemData*)
+function SpritePainterRunner:before_all(system_data: *SystemData)
    local sys_len = #system_data.components_indexes
 
    self.draw_order:clear()
@@ -56,7 +56,7 @@ function SpritePainterRunner:before_all(system_data: SystemData*)
    end
 end
 
-function SpritePainterRunner:after_all(system_data: SystemData*)
+function SpritePainterRunner:after_all(system_data: *SystemData)
    for i = 0, < #system_data.components_indexes do
       local ids = system_data.components_indexes[ self.draw_order[i] ]
 
@@ -95,10 +95,10 @@ global SpritePainterSystem = @MakeSystem(SpritePainterRunner, true, false, true,
 global CollidersSyncRunner = @record{}
 
 function CollidersSyncRunner:run(
-   position: Position*,
-   velocity: Velocity*,
-   collider: Collider*,
-   system_data: SystemData*
+   position: *Position,
+   velocity: *Velocity,
+   collider: *Collider,
+   system_data: *SystemData
 )
    collider.cycles_without_sync = collider.cycles_without_sync + 1
    collider:sync_with_position(position.position)
@@ -112,7 +112,7 @@ global CollidersSyncSystem = @MakeSystem(CollidersSyncRunner, false, true, false
 
 global AnimationRunner = @record{}
 
-function AnimationRunner:run(animations: Animations*, sprite: Sprite*, system_data: SystemData*)
+function AnimationRunner:run(animations: *Animations, sprite: *Sprite, system_data: *SystemData)
    if not animations.paused then
       animations.elapsed_time = animations.elapsed_time + Globals.dt
       local current_animation: AnimationData* = animations.animations[animations.current_animation_index]
@@ -133,9 +133,9 @@ global AnimationSystem = @MakeSystem(AnimationRunner, false, true, false, 0, rec
 
 global ShowCollisionsRunner = @record{}
 
-function ShowCollisionsRunner:run(position: Position*, collisions: Collisions*, system_data: SystemData*)
+function ShowCollisionsRunner:run(position: *Position, collisions: *Collisions, system_data: *SystemData)
    for j = 0, < #collisions.intersections do
-      local intersection: Intersection* = collisions.intersections[j]
+      local intersection: *Intersection = collisions.intersections[j]
       local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
       Raylib.DrawLineV(position.position, (@Vector2){ intersection.rect.x, intersection.rect.y}, rect_color)
       Raylib.DrawRectangleLinesEx(intersection.rect, 1, rect_color)
@@ -149,7 +149,7 @@ global ShowCollisionsSystem = @MakeSystem(ShowCollisionsRunner, false, true, fal
 
 global ShowCollidersRunner = @record{}
 
-function ShowCollidersRunner:run(collider: Collider*, system_data: SystemData*)
+function ShowCollidersRunner:run(collider: *Collider, system_data: *SystemData)
    Raylib.DrawRectangleLinesEx(collider.global_rect, 1, GREEN)
 end
 
@@ -159,7 +159,7 @@ global ShowCollidersSystem = @MakeSystem(ShowCollidersRunner, false, true, false
 
 global ShowPositionsRunner = @record{}
 
-function ShowPositionsRunner:run(position: Position*, system_data: SystemData*)
+function ShowPositionsRunner:run(position: *Position, system_data: *SystemData)
    local H_start: Vector2 = { -5, 0 }
    local H_end  : Vector2 = {  5, 0 }
    local V_start: Vector2 = { 0, -5 }
@@ -176,13 +176,13 @@ global ShowPositionsSystem = @MakeSystem(ShowPositionsRunner, false, true, false
 global ShowObstaclesRunner = @record{}
 
 function ShowObstaclesRunner:run(
-   position: Position*,
-   obstacles: Obstacles*,
-   collisions: Collisions*,
-   system_data: SystemData*
+   position: *Position,
+   obstacles: *Obstacles,
+   collisions: *Collisions,
+   system_data: *SystemData
 )
    for j = 0, < #collisions.intersections do
-      local intersection: Intersection* = collisions.intersections[j]
+      local intersection: *Intersection = collisions.intersections[j]
 
        --if intersected with a obstacle entity
       if intersection:contains_tag(obstacles.mask) then
@@ -211,12 +211,12 @@ local function is_past_collision(intersections: vector(Intersection)*, entity_id
 end
 
 -- TODO: Optimize this
-function CollisionDetectionRunner:run(collider: Collider*, collisions: Collisions*, system_data: SystemData*)
+function CollisionDetectionRunner:run(collider: *Collider, collisions: *Collisions, system_data: *SystemData)
    local collider_was_recently_moved = not collider.is_immovable and collider.cycles_without_sync < 2
 
    for i = 0, < #storages.collider.generations do
       if storages.collider.generations[i].filled then
-         local collider_i: Collider* = storages.collider.entries[i]
+         local collider_i: *Collider = storages.collider.entries[i]
          local collider_i_was_recently_moved = not collider_i.is_immovable and collider_i.cycles_without_sync < 2
 
          if (collider_was_recently_moved or collider_i_was_recently_moved) and collider.entity_id ~= collider_i.entity_id then
@@ -227,7 +227,7 @@ function CollisionDetectionRunner:run(collider: Collider*, collisions: Collision
                local intersection_rect = Raylib.GetCollisionRec(collider.global_rect, collider_i.global_rect)
 
                if possible_past_collision >= 0 then
-                  local intersection: Intersection* = collisions.intersections[possible_past_collision]
+                  local intersection: *Intersection = collisions.intersections[possible_past_collision]
                   intersection.state = CollisionState.Stay
                   intersection.rect = intersection_rect
                else
@@ -253,13 +253,13 @@ global CollisionDetectionSystem = @MakeSystem(CollisionDetectionRunner, false, t
 global ObstaclesRunner = @record{}
 
 function ObstaclesRunner:run(
-   obstacles: Obstacles*,
-   collisions: Collisions*,
-   velocity: Velocity*,
-   system_data: SystemData*
+   obstacles: *Obstacles,
+   collisions: *Collisions,
+   velocity: *Velocity,
+   system_data: *SystemData
 )
    for j = 0, < #collisions.intersections do
-      local intersection: Intersection* = collisions.intersections[j]
+      local intersection: *Intersection = collisions.intersections[j]
 
       -- if intersected with a obstacle entity
       if intersection:contains_tag(obstacles.mask) then
@@ -284,7 +284,7 @@ global ObstaclesSystem = @MakeSystem(ObstaclesRunner, false, true, false, 2, rec
 
 global VelocityRunner = @record{}
 
-function VelocityRunner:run(velocity: Velocity*, position: Position*, system_data: SystemData*)
+function VelocityRunner:run(velocity: *Velocity, position: *Position, system_data: *SystemData)
    position.position.x = position.position.x + velocity.direction.x * velocity.speed
    position.position.y = position.position.y + velocity.direction.y * velocity.speed
 end
@@ -296,11 +296,11 @@ global VelocitySystem = @MakeSystem(VelocityRunner, false, true, false, 1, recor
 
 global FollowerRunner = @record{}
 
-function FollowerRunner:run(follower: Follower*, position: Position*, system_data: SystemData*)
+function FollowerRunner:run(follower: *Follower, position: *Position, system_data: *SystemData)
    local opt_followed_position = storages.position:get_entry(follower.followed_id)
 
    if opt_followed_position.filled then
-      local followed_position: Position* = opt_followed_position:get()
+      local followed_position: *Position = opt_followed_position:get()
 
       position.position = followed_position.position + follower.offset;
    end

@@ -14,12 +14,12 @@ local BACKGROUND_COLOR: Color <const> = { 0x22, 0x20, 0x34, 255 }
 local Language  = @enum {en_US = 0, pt_BR = 1}
 local current_lang: Language = #[DEFAULT_LANG]# == 'en-US' and Language.en_US or Language.pt_BR
 
-local txt_text: stringview[2] <const> = {
+local txt_text: [2]stringview <const> = {
    "After so much effort, the princess\ncan finally escape this \nterrible prison!",
    "Após tanto esforço, a princesa\nfinalmente poderá escapar desta \nterrível prisão!"
 }
 
-local txt_credits: stringview[2] <const> = {
+local txt_credits: [2]stringview <const> = {
 [[ == Castle Escape ==
 
 Made by:
@@ -218,7 +218,7 @@ local GameSystems = @record{
    show_positions: ShowPositionsSystem,
 }
 
-function GameSystems:update_all(entity: Entity*)
+function GameSystems:update_all(entity: *Entity)
    self.follower_system.system.system_data:update(entity)
 
    self.colliders_sync.system.system_data:update(entity)
@@ -309,7 +309,7 @@ local function update_draw_frame()
    ## end
 
    local player_position_opt = storages.position:get_entry(player_entity.position_id)
-   local player_position: Position* = player_position_opt:get()
+   local player_position: *Position = player_position_opt:get()
 
    local pos_to_finalize <comptime> = 2600
    local game_finalized = player_position.position.y < pos_to_finalize
@@ -321,7 +321,7 @@ local function update_draw_frame()
       update_player_input_values()
    else
       local player_velocity_opt = storages.velocity:get_entry(player_entity.velocity_id)
-      local player_velocity: Velocity* = player_velocity_opt:get()
+      local player_velocity: *Velocity = player_velocity_opt:get()
       player_velocity.direction.y = 1
    end
 

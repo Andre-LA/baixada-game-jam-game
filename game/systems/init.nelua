@@ -10,10 +10,10 @@ require 'rotor-quick.makers'
 global PlayerControllerRunner = @record{}
 
 function PlayerControllerRunner:run(
-   player: Player*,
-   velocity: Velocity*,
-   animations: Animations*,
-   system_data: SystemData*
+   player: *Player,
+   velocity: *Velocity,
+   animations: *Animations,
+   system_data: *SystemData
 )
    velocity.direction = Globals.player_input.direction
 
@@ -79,11 +79,11 @@ global PlayerControllerSystem = @MakeSystem(PlayerControllerRunner, false, true,
 global BoxControllerRunner = @record{}
 
 function BoxControllerRunner:run(
-   box: Box*,
-   position: Position*,
-   collisions: Collisions*,
-   velocity: Velocity*,
-   system_data: SystemData*
+   box: *Box,
+   position: *Position,
+   collisions: *Collisions,
+   velocity: *Velocity,
+   system_data: *SystemData
 )
    if Raylib.IsKeyDown(KeyboardKey.KEY_R) then
       position.position = box.start_position
@@ -92,7 +92,7 @@ function BoxControllerRunner:run(
 
    if Globals.player_input.action and #collisions.intersections > 0 then
       for j = 0, < #collisions.intersections do
-         local intersection: Intersection* = collisions.intersections[j]
+         local intersection: *Intersection = collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.Player) then
             velocity.direction = Globals.player_input.direction
@@ -116,12 +116,12 @@ global BoxControllerSystem = @MakeSystem(BoxControllerRunner, false, true, false
 global GearControllerRunner = @record{}
 
 function GearControllerRunner:run(
-   gear: Gear*,
-   collisions: Collisions*,
-   velocity: Velocity*,
-   position: Position*,
-   animations: Animations*,
-   system_data: SystemData*
+   gear: *Gear,
+   collisions: *Collisions,
+   velocity: *Velocity,
+   position: *Position,
+   animations: *Animations,
+   system_data: *SystemData
 )
    if Raylib.IsKeyDown(KeyboardKey.KEY_R) and not gear.engaged then
       position.position = gear.start_position
@@ -130,7 +130,7 @@ function GearControllerRunner:run(
 
    if not gear.engaged then
       for j = 0, < #collisions.intersections do
-         local intersection: Intersection* = collisions.intersections[j]
+         local intersection: *Intersection = collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.Player) and Globals.player_input.action and #Globals.player_input.direction > 0.01 then
             local dir: Vector2 = { 0, 0 }
@@ -154,7 +154,7 @@ function GearControllerRunner:run(
       end
    else
       for j = 0, < #collisions.intersections do
-         local intersection: Intersection* = collisions.intersections[j]
+         local intersection: *Intersection = collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.GearSlot) then
             position.position.x = intersection.collider.global_rect.x
@@ -187,9 +187,9 @@ global GearControllerSystem = @MakeSystem(GearControllerRunner, false, true, fal
 
 global EngageRunner = @record{}
 
-function EngageRunner:run(collisions: Collisions*, gear_slot: GearSlot*, system_data: SystemData*)
+function EngageRunner:run(collisions: *Collisions, gear_slot: *GearSlot, system_data: SystemData*)
    for i = 0, < #collisions.intersections do
-      local intersection: Intersection* = collisions.intersections[i]
+      local intersection: *Intersection = collisions.intersections[i]
 
       if intersection:contains_tag(EntityTag.Gear) then
          Globals.engaged_slots[gear_slot.slot_idx] = true
@@ -205,7 +205,7 @@ global EngageSystem = @MakeSystem(EngageRunner, false, true, false, 1, record{
 
 global BridgeRunner = @record{}
 
-function BridgeRunner:run(bridge: Bridge*, collider: Collider*, sprite: Sprite*, system_data: SystemData*)
+function BridgeRunner:run(bridge: *Bridge, collider: *Collider, sprite: *Sprite, system_data: SystemData*)
    if Globals.engaged_slots[bridge.slot_idx] then
       collider.entity_tag = EntityTag.OpenBridge
       sprite.visible = true
