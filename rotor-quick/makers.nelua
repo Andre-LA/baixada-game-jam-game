@@ -71,7 +71,7 @@ global nprof: NProf = {}
       end
    ## end
 
-   function new_entity.new(entity_storage: Storage(Entity)*, values: VlCollection): (new_entity, Entity*)
+   function new_entity.new(entity_storage: *Storage(Entity), values: VlCollection): (new_entity, *Entity)
       local result: new_entity = {}
 
       local entity_id, entity = entity_storage:new_entry(Entity.new())
@@ -133,7 +133,7 @@ global System = @record{
    local storagesCollectionT = @record{}
 
    ## for i, name in ipairs(component_names) do
-      local opt_T = @optional(#[ component_types[i] ]#*)
+      local opt_T = @optional(*#[ component_types[i] ]#)
       ## optCollectionT.value:add_field(name, opt_T.value)
 
       local stor_T = @pointer(Storage( #[ component_types[i] ]# ))
