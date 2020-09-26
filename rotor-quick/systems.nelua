@@ -115,7 +115,7 @@ global AnimationRunner = @record{}
 function AnimationRunner:run(animations: *Animations, sprite: *Sprite, system_data: *SystemData)
    if not animations.paused then
       animations.elapsed_time = animations.elapsed_time + Globals.dt
-      local current_animation: AnimationData* = animations.animations[animations.current_animation_index]
+      local current_animation: *AnimationData = animations.animations[animations.current_animation_index]
 
       if animations.elapsed_time > current_animation.frame_duration then
          animations.current_frame_index = (animations.current_frame_index + 1) % #current_animation.frame_indexes
@@ -201,7 +201,7 @@ global ShowObstaclesSystem = @MakeSystem(ShowObstaclesRunner, false, true, false
 
 global CollisionDetectionRunner = @record{}
 
-local function is_past_collision(intersections: vector(Intersection)*, entity_id: GenerationalIndex): integer
+local function is_past_collision(intersections: *vector(Intersection), entity_id: GenerationalIndex): integer
    for i = 0, < #intersections do
       if intersections[i].collider.entity_id == entity_id then
          return i
