@@ -92,7 +92,7 @@ function BoxControllerRunner:run(
 
    if Globals.player_input.action and #collisions.intersections > 0 then
       for j = 0, < #collisions.intersections do
-         local intersection: *Intersection = collisions.intersections[j]
+         local intersection: *Intersection = &collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.Player) then
             velocity.direction = Globals.player_input.direction
@@ -130,7 +130,7 @@ function GearControllerRunner:run(
 
    if not gear.engaged then
       for j = 0, < #collisions.intersections do
-         local intersection: *Intersection = collisions.intersections[j]
+         local intersection: *Intersection = &collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.Player) and Globals.player_input.action and #Globals.player_input.direction > 0.01 then
             local dir: Vector2 = { 0, 0 }
@@ -154,7 +154,7 @@ function GearControllerRunner:run(
       end
    else
       for j = 0, < #collisions.intersections do
-         local intersection: *Intersection = collisions.intersections[j]
+         local intersection: *Intersection = &collisions.intersections[j]
 
          if intersection:contains_tag(EntityTag.GearSlot) then
             position.position.x = intersection.collider.global_rect.x
@@ -189,7 +189,7 @@ global EngageRunner = @record{}
 
 function EngageRunner:run(collisions: *Collisions, gear_slot: *GearSlot, system_data: *SystemData)
    for i = 0, < #collisions.intersections do
-      local intersection: *Intersection = collisions.intersections[i]
+      local intersection: *Intersection = &collisions.intersections[i]
 
       if intersection:contains_tag(EntityTag.Gear) then
          Globals.engaged_slots[gear_slot.slot_idx] = true

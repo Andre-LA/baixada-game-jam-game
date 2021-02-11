@@ -115,7 +115,7 @@ global AnimationRunner = @record{}
 function AnimationRunner:run(animations: *Animations, sprite: *Sprite, system_data: *SystemData)
    if not animations.paused then
       animations.elapsed_time = animations.elapsed_time + Globals.dt
-      local current_animation: *AnimationData = animations.animations[animations.current_animation_index]
+      local current_animation: *AnimationData = &animations.animations[animations.current_animation_index]
 
       if animations.elapsed_time > current_animation.frame_duration then
          animations.current_frame_index = (animations.current_frame_index + 1) % #current_animation.frame_indexes
@@ -135,7 +135,7 @@ global ShowCollisionsRunner = @record{}
 
 function ShowCollisionsRunner:run(position: *Position, collisions: *Collisions, system_data: *SystemData)
    for j = 0, < #collisions.intersections do
-      local intersection: *Intersection = collisions.intersections[j]
+      local intersection: *Intersection = &collisions.intersections[j]
       local rect_color: Color = intersection.state == CollisionState.Enter and BLUE or RED
       Raylib.DrawLineV(position.position, (@Vector2){ intersection.rect.x, intersection.rect.y}, rect_color)
       Raylib.DrawRectangleLinesEx(intersection.rect, 1, rect_color)
@@ -182,7 +182,7 @@ function ShowObstaclesRunner:run(
    system_data: *SystemData
 )
    for j = 0, < #collisions.intersections do
-      local intersection: *Intersection = collisions.intersections[j]
+      local intersection: *Intersection = &collisions.intersections[j]
 
        --if intersected with a obstacle entity
       if intersection:contains_tag(obstacles.mask) then
@@ -216,7 +216,7 @@ function CollisionDetectionRunner:run(collider: *Collider, collisions: *Collisio
 
    for i = 0, < #storages.collider.generations do
       if storages.collider.generations[i].filled then
-         local collider_i: *Collider = storages.collider.entries[i]
+         local collider_i: *Collider = &storages.collider.entries[i]
          local collider_i_was_recently_moved = not collider_i.is_immovable and collider_i.cycles_without_sync < 2
 
          if (collider_was_recently_moved or collider_i_was_recently_moved) and collider.entity_id ~= collider_i.entity_id then
@@ -227,7 +227,7 @@ function CollisionDetectionRunner:run(collider: *Collider, collisions: *Collisio
                local intersection_rect = Raylib.GetCollisionRec(collider.global_rect, collider_i.global_rect)
 
                if possible_past_collision >= 0 then
-                  local intersection: *Intersection = collisions.intersections[possible_past_collision]
+                  local intersection: *Intersection = &collisions.intersections[possible_past_collision]
                   intersection.state = CollisionState.Stay
                   intersection.rect = intersection_rect
                else
@@ -259,7 +259,7 @@ function ObstaclesRunner:run(
    system_data: *SystemData
 )
    for j = 0, < #collisions.intersections do
-      local intersection: *Intersection = collisions.intersections[j]
+      local intersection: *Intersection = &collisions.intersections[j]
 
       -- if intersected with a obstacle entity
       if intersection:contains_tag(obstacles.mask) then

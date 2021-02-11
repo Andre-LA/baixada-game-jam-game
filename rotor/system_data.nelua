@@ -74,6 +74,6 @@ end
 
 function SystemData:mark_available(idx: isize)
    self.available_indexes:push(idx)
-   local idx_components_indexes: *vector(GenerationalIndex) = self.components_indexes[idx]
+   local idx_components_indexes: *vector(GenerationalIndex) = &self.components_indexes[idx]
    idx_components_indexes:clear()
 end
