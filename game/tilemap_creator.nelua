@@ -134,7 +134,7 @@ global function create_tiles(origin: Vector2, tilemap: *vector(vector(Tile)))
       local tile_line = tilemap[i]
 
       for j = 0, < #tile_line do
-         local tile: *Tile = tile_line[j]
+         local tile: *Tile = &tile_line[j]
          if is_bridge(tile.kind) then
             create_bridge(origin, i, j, tile)
          elseif tile.kind == TileKind.Gear then

@@ -187,14 +187,14 @@ global System = @record{
          defer nprof:pop() end
       ## end
 
-      local runner: *T = self.runner
+      local runner: *T = &self.runner
 
       ## if use_before then
          runner:before_all(self.system.system_data)
       ## end
 
       ## if use_run then
-         local system_data: *SystemData = self.system.system_data
+         local system_data: *SystemData = &self.system.system_data
 
          for i = 0, < #system_data.components_indexes do
             local ids = system_data.components_indexes[i]

@@ -1547,8 +1547,8 @@ function Vector2.Scale(v: Vector2, scale: float32): Vector2 <cimport'Vector2Scal
 
 
 -- Multiply vector by vector
-function Raymath.Vector2MultiplyV(v1: Vector2, v2: Vector2): Vector2 <cimport'Vector2MultiplyV', cinclude'<raymath.h>', nodecl> end 
-function Vector2.MultiplyV(v1: Vector2, v2: Vector2): Vector2 <cimport'Vector2MultiplyV', cinclude'<raymath.h>', nodecl> end 
+function Raymath.Vector2MultiplyV(v1: Vector2, v2: Vector2): Vector2 <cimport'Vector2Multiply', cinclude'<raymath.h>', nodecl> end 
+function Vector2.MultiplyV(v1: Vector2, v2: Vector2): Vector2 <cimport'Vector2Multiply', cinclude'<raymath.h>', nodecl> end 
 
 
 -- Negate vector
